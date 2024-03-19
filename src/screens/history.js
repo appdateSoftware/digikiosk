@@ -39,32 +39,19 @@ const styles = StyleSheet.create({
 });
 
 // OrdersA
-const  OrdersA = ({navigation, feathersStore}) => {
+const  HistoryScreen = ({navigation, feathersStore}) => {
 
   const [orders, setOrders] = useState(null);
   
   useEffect (() => {
-    initOrders();
+    initReceipta();
   }, []);
 
-  const initOrders = async() => {
-    let orders = await feathersStore.ordersPerUser();         
-    setOrders(orders);
+  const initReceipts = async() => {
+  
   }
   
-  const navigateToProduct = (item) => {    
-    feathersStore.getProduct(item.product_id).then(prod => {     
-      prod && navigation.navigate("Product", {product: JSON.stringify(prod)});
-    })
-  };
 
-  const goBack = () => {    
-    navigation.goBack();
-  };
-
-  const navigateTo = screen => () => {   
-    navigation.navigate(screen);
-  };
 
   const keyExtractor = item => item._id;
 
@@ -103,4 +90,4 @@ const  OrdersA = ({navigation, feathersStore}) => {
     );  
 }
 
-export default inject('feathersStore')(observer(OrdersA))
+export default inject('feathersStore')(observer(HistoryScreen))
