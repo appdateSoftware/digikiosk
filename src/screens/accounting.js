@@ -7,8 +7,7 @@ import {
   Image,
 } from 'react-native';
 import Text from '../components/Text';
-import Card from '../components/Card';
-import ItemDelivery from '../containers/ItemDelivery';
+import Card from '../components/buttons/Card';
 //import Loading from '../containers/Loading';
 
 import {getStatusBarHeight} from 'react-native-status-bar-height';
@@ -39,40 +38,19 @@ const AccountingScreen = ({navigation, route, feathersStore}) => {
 
     return ( 
       <>
-      { ((!loading && deliveries.length < 1) || !status) ?
+    
      
         <View style={styles.viewEmpty}>
     
 
           <Card style={styles.cardEmpty}>
-            {require('../assets/images/empty.png') && <Image source={require('../assets/images/empty.png')} />}
+            {require('../assets/img/empty.png') && <Image source={require('../assets/img/empty.png')} />}
             <Text third medium h3 h3Style={styles.textEmpty}>
               {common.textEmpty}
             </Text>
           </Card>
         </View>
-      :    
-      <FlatList
-        data={deliveries?.filter(d => d.deliveryStatus === status)}
-        keyExtractor={item => item._id}
-        renderItem={({item, index}) => (
-          <ItemDelivery
-            item={item}
-            style={[
-              styles.itemDelivery,
-              index === deliveries.length - 1 && styles.itemDeliveryEnd,
-            ]}         
-          />
-        )}
-        ListHeaderComponent={headerComponent}
-     //   onEndReached={this.handleLoadMore}
-        onEndReachedThreshold={0.5}
-        ListFooterComponent={renderFooter}
-    //    refreshing={refreshing}
-    //    onRefresh={this.handleRefresh}
-        showsVerticalScrollIndicator={false}
-      />
-    }
+     
     </>
     );
           

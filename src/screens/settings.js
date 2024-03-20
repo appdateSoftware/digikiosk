@@ -102,7 +102,7 @@ const SettingsA = ({navigation, feathersStore}) => {
   
   let common = _useTranslate(feathersStore.language);
  
-  const[avatarUrl, setAvatarUrl] = useState(require("../../assets/img/face.png"));
+  const[avatarUrl, setAvatarUrl] = useState(require("../assets/img/face.png"));
   const [loading, setLoading] = useState(false);
   const [languageModal, setLanguageModal] = useState(false);
   const [refund, setRefund] = useState("0");

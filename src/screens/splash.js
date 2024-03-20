@@ -6,6 +6,8 @@ import Colors from "../theme/colors";
 import ErrorModal from "../components/modals/ErrorModal";
 import { getUniqueId } from 'react-native-device-info';
 
+const DEFAULT_EMAIL = "defaultUser@gmail.com";
+
 const DEFAULT_PSW = ")j~nKj/,N}N6,8&cVVV#G!=F*y";
 
 const SplashScreen = ({navigation, feathersStore}) => { 
@@ -27,17 +29,16 @@ const SplashScreen = ({navigation, feathersStore}) => {
   }, [])
 
   useEffect(() => {
-    if(feathersStore.isAuthenticated && feathersStore.user._id !== "5e109aaccf07d534f841e677")
+    if(feathersStore.isAuthenticated)
       navigation.navigate('HomeNavigator', {screen: "Home"});  
-  }, [feathersStore?.isAuthenticated, feathersStore?.user?._id])
+  }, [feathersStore?.isAuthenticated])
  
   const load = async () => {
     try{  
       const uniqueId = await getUniqueId();  
-      console.log(uniqueId);
-      await feathersStore.connect();   
-       
-      await feathersStore.login(uniqueId, DEFAULT_PSW)
+      console.log(uniqueId );
+      await feathersStore.connect();      
+      await feathersStore.login(uniqueId + "@gmail.com", DEFAULT_PSW)
     }catch (error){
       setErrorModal(true);
       console.log(error);

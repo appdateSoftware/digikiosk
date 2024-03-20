@@ -17,8 +17,8 @@ import SettingsScreen from './src/screens/settings';
 import AccountingScreen from './src/screens/accounting';
 import HistoryScreen from './src/screens/history';
 import { RealmProvider } from '@realm/react';
-import { Receipt } from "./src/services/receipt-service"
-
+import { AppSchema } from "./src/services/receipt-service"
+import TabBar from './src/containers/TabBar';
 
 import { LogBox } from 'react-native';
  
@@ -58,7 +58,11 @@ const MainTab = () => {
 
   return (
     <Provider feathersStore={feathersStore} >
-      <RealmProvider schema={[Receipt]} deleteRealmIfMigrationNeeded={true}>
+      <RealmProvider schema={[AppSchema.ReceiptSchema, AppSchema.CompanySchema, AppSchema.CounterSchema,
+        AppSchema.LanguageSchema, AppSchema.ProductSchema, AppSchema.SectionsSchema, AppSchema.UserSchema, 
+        AppSchema.VatSchema]} 
+        deleteRealmIfMigrationNeeded={true}
+      >
         <NavigationContainer>
           <Stack.Navigator initialRouteName= 'Splash'>    
             <Stack.Screen

@@ -10,7 +10,7 @@ import {
   Linking
 } from 'react-native';
 import Text from '../components/Text';
-import Card from '../components/Card';
+import Card from '../components/buttons/Card';
 import {getStatusBarHeight} from 'react-native-status-bar-height';
 import {shadowDefault} from '../utils/shadow';
 import axios from 'axios';
@@ -96,7 +96,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
             {common?.newVersion}
           </Text>
         } 
-        {feathersStore?.user && <InfoUser style={styles.user} user={feathersStore?.user} />}
+       
               
 
       </View>
@@ -112,7 +112,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
           {headerComponent()}
 
           <Card style={styles.cardEmpty}>
-            {require('../assets/images/empty.png') && <Image source={require('../assets/images/empty.png')} />}
+            {require('../assets/img/empty.png') && <Image source={require('../assets/img/empty.png')} />}
             <Text third medium h3 h3Style={styles.textEmpty}>
               {common.textEmpty}
             </Text>

@@ -18,7 +18,7 @@ const diacriticsMappings ={
   'ω': 'ωώΩΏ'  
 }
 
-const API_URL = "digikiosk.hellochat.gr"
+const API_URL = "https://digikiosk.hellochat.gr"
 
 class FeathersStore{  
    
@@ -109,7 +109,6 @@ class FeathersStore{
         }));
   
     this.isConnecting = true;
-
     await this.setObservables();
 
     
@@ -143,7 +142,8 @@ class FeathersStore{
    //    this.setCategories(tree.youTree);    
   //      await this.fetchSettings();               
       }catch(error){       
-      
+              console.log("VOOO")
+
       }
   }
 
