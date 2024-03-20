@@ -31,7 +31,7 @@ class FeathersStore{
   orderItem = {};
   language = "el";
  
-  currentVersion = "0.0.0";
+  currentVersion = "1.0.1";
 
   constructor(){
     makeObservable(this,  {     

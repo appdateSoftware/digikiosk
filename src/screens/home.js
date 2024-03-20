@@ -10,6 +10,8 @@ import {
   Linking
 } from 'react-native';
 import Text from '../components/Text';
+import NumericKeyboard from '../components/NumericKeyboard';
+
 import Card from '../components/buttons/Card';
 import {getStatusBarHeight} from 'react-native-status-bar-height';
 import {shadowDefault} from '../utils/shadow';
@@ -32,10 +34,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState('Pending'); 
 
-  useEffect(() => {  
-    fetchDeliveries('');  
-  }, [feathersStore?.isAuthenticated,
-     feathersStore.loadingNotification, feathersStore.ordersChangedEvent]); 
+ 
 
   useEffect( () => { //Check for updates  
     checkForUpdates();
@@ -66,7 +65,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   const checkForUpdates = async() => {
     const versionPath = 'https://sites.appdate.gr/versions.json';
      const res = await axios.get(versionPath);
-     const newVersion = res.data?.deliveryBoy;
+     const newVersion = res.data?.digiKiosk;
      if(newVersion === feathersStore.currentVersion)        
      feathersStore.setNewVersion(false);
      else feathersStore.setNewVersion(true);
@@ -117,6 +116,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
               {common.textEmpty}
             </Text>
           </Card>
+          <NumericKeyboard/>
         </View>
     
     </>

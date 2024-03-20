@@ -7,7 +7,6 @@
 
 import React from "react";
 import {
-  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -19,7 +18,7 @@ import Icon from "react-native-vector-icons/Ionicons";
 import Colors from "../theme/colors";
 
 // NumericKeyboard backspace icon name config
-const backspace = Platform.OS === "ios" ? "ios-backspace" : "md-backspace";
+const backspace = "backspace";
 
 // NumericKeyboard & ActionButton Styles
 const styles = StyleSheet.create({

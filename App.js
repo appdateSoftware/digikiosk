@@ -41,17 +41,17 @@ const MainTab = () => {
         name="Settings"
         component={SettingsScreen}
         options={{headerShown: false}}
-      />
-      <Tab.Screen
-        name="Accounting"
-        component={AccountingScreen}
-        options={{headerShown: false}}
-      />
+      />   
       <Tab.Screen
         name="History"
         component={HistoryScreen}
         options={{headerShown: false}}
       />
+      <Tab.Screen
+        name="Accounting"
+        component={AccountingScreen}
+        options={{headerShown: false}}
+      />   
     </Tab.Navigator>
   );
 }

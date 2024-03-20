@@ -9,7 +9,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Alert,
-  Platform,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -44,21 +43,13 @@ import InputModal from "../components/modals/InputModal";
 
 
 // SettingsA Config
-const IOS = Platform.OS === "ios";
 const DIVIDER_MARGIN_LEFT = 60;
 const arrowIcon = "ios-arrow-forward";
-const tableIcon = IOS
-  ? "ios-apps"
-  : "md-apps";
-const appsIcon = IOS ? "ios-apps-outline" : "md-apps-outline";
-const paymentIcon = IOS ? "ios-card" : "md-card";
-const ordersIcon = IOS ? "ios-list" : "md-list";
-const termsIcon = IOS ? "ios-paper" : "document-text-outline";
-const aboutIcon = IOS
-  ? "ios-information-circle-outline"
-  : "md-information-circle-outline";
-const logoutIcon = IOS ? "ios-log-out" : "md-log-out";
-const loginIcon = IOS ? "ios-log-in" : "md-log-in";
+const ordersIcon = "reader-outline";
+const termsIcon = "document-text-outline";
+const aboutIcon = "storefront-outline";
+const logoutIcon = "log-out-outline";
+const loginIcon = "log-in-outline";
 
 const greek = require("../assets/img/languages/greek.png");
 const english = require("../assets/img/languages/us.png");
@@ -212,23 +203,7 @@ const SettingsA = ({navigation, feathersStore}) => {
     }
   }
   
-  const myPosVoid = async() => {
-    try{  
-      const transactionResult = await MyPosModule.makeMyPosVoidPayment();
-      if (transactionResult.slice(-1) === "0" ) {      
-        console.log("SUCCESS: ", transactionResult);
-      }else{
-        console.log("ERROR: ", transactionResult);      
-        setMyPosError(true);
-        setMyPosErrorMessage(transactionResult);
-      }
-
-    }catch(error){
-      setMyPosError(true);
-      setMyPosErrorMessage(error);
-    }
-  }
-
+ 
   const closeErrorModal = () => {
     setMyPosError(false);
     setMyPosErrorMessage("");
@@ -285,9 +260,7 @@ const SettingsA = ({navigation, feathersStore}) => {
           }
 
            
-          <Subtitle1 style={[styles.mediumText, styles.alignCenter]}>
-            {`${common.table}: ${feathersStore?.selectedTable?.tableName || common.tableError}`}
-          </Subtitle1>
+       
          
           <Divider />       
           
@@ -302,20 +275,7 @@ const SettingsA = ({navigation, feathersStore}) => {
             </>
           }          
 
-          <Setting
-            onPress={navigateTo("Metafora")}
-            icon={tableIcon}
-            title={common.metafora}
-            disabled={!feathersStore?.selectedTable?.order?.items?.length > 0}
-          />
-          <Divider type="inset" marginLeft={DIVIDER_MARGIN_LEFT} />
-
-          <Setting
-            onPress={navigateTo("MerikiMetafora")}
-            icon={appsIcon}
-            title={common.merikiMetafora}
-            disabled={!feathersStore?.selectedTable?.order?.items?.length > 0}        
-          />
+        
           <Divider type="inset" marginLeft={DIVIDER_MARGIN_LEFT} />
           {feathersStore.isAuthenticated && feathersStore.user?.firstname !== "default" && 
             <>

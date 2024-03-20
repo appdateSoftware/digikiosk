@@ -21,8 +21,9 @@ import {
 import Colors from "../../theme/colors";
 import Icon from "../../components/Icon";
 import { inject, observer } from "mobx-react";
+import {useRealm} from '@realm/react';
 
-const CLOSE_ICON = Platform.OS === "ios" ? "ios-close" : "md-close";
+const CLOSE_ICON = "close";
 
 const ripple = {
   borderless: true,
@@ -125,12 +126,13 @@ const LanguageModal = ({
   cancelButton,
   visible = false,  
   feathersStore,
-  store1
 }) => {
 
+  const realm = useRealm();
+
   const toggleLanguage = lang => () => {
-    store1.realm.write(()=>{
-      store1.realm.objects('Language')[0].name = lang     
+    realm.write(()=>{
+      realm.objects('Language')[0].name = lang     
     })
     feathersStore.setLanguage(lang);
   //  handleClose();
@@ -227,4 +229,4 @@ const LanguageModal = ({
   </Modal>
 )};
 
-export default inject('store1', 'feathersStore')(observer(LanguageModal));
+export default inject('feathersStore')(observer(LanguageModal));

@@ -44,7 +44,7 @@ const  HistoryScreen = ({navigation, feathersStore}) => {
   const [orders, setOrders] = useState(null);
   
   useEffect (() => {
-    initReceipta();
+    initReceipts();
   }, []);
 
   const initReceipts = async() => {
