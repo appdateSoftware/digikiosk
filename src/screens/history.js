@@ -21,7 +21,7 @@ import OrderItem from "../components/OrderItemB";
 //import mobx
 import { inject, observer } from "mobx-react";
 // import colors
-import Colors from "../../theme/colors";
+import Colors from "../theme/colors";
 
 // OrdersA Styles
 const styles = StyleSheet.create({

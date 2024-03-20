@@ -1,5 +1,5 @@
 /**
- * Food Delivery - React Native Template
+ * Digi Kiosk - React Native Template
  *
  * @format
  * @flow

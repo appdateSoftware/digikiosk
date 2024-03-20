@@ -1,9 +1,9 @@
 import React from 'react';
 import { StyleSheet, TouchableOpacity, View, ImageBackground, Text } from 'react-native';
-import Colors from '../../theme/colors';
+import Colors from '../theme/colors';
 import { inject, observer } from "mobx-react";
-import Validators from '../../utils/validators';
-import { LabelText, LevelText } from '../../components/text/CustomText';
+import Validators from '../utils/validators';
+import { LabelText, LevelText } from '../components/text/CustomText';
 
 const PositionButton = ({item, onClick, selected, feathersStore}) => {  
 

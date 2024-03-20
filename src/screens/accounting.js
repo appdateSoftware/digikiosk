@@ -9,7 +9,7 @@ import {
 import Text from '../components/Text';
 import Card from '../components/Card';
 import ItemDelivery from '../containers/ItemDelivery';
-import Loading from '../containers/Loading';
+//import Loading from '../containers/Loading';
 
 import {getStatusBarHeight} from 'react-native-status-bar-height';
 import {shadowDefault} from '../utils/shadow';

@@ -10,16 +10,16 @@ import React from 'react';
 import { StyleSheet, View, Text } from 'react-native';
 
 // import components
-import Button from '../buttons/Button';
-import { Caption, Subtitle1, Subtitle2 } from '../text/CustomText';
-import TouchableItem from '../TouchableItem';
+import Button from './buttons/Button';
+import { Caption, Subtitle1, Subtitle2 } from './text/CustomText';
+import TouchableItem from './TouchableItem';
 
 // import colors. layout
-import Colors from '../../theme/colors';
-import Layout from '../../theme/layout';
+import Colors from '../theme/colors';
+import Layout from '../theme/layout';
 
 import { inject, observer } from "mobx-react";
-import _useTranslate from '../../hooks/_useTranslate';
+import _useTranslate from '../hooks/_useTranslate';
 
 
 const OrderItemB = ({

@@ -4,11 +4,11 @@ import { inject, observer } from "mobx-react";
 import { useFocusEffect } from '@react-navigation/native';
 import Colors from "../theme/colors";
 import ErrorModal from "../components/modals/ErrorModal";
+import { getUniqueId } from 'react-native-device-info';
 
-const DEFAULT_EMAIL = "defaultUser@gmail.com";
 const DEFAULT_PSW = ")j~nKj/,N}N6,8&cVVV#G!=F*y";
 
-const SplashScreen = ({navigation, store1, feathersStore}) => { 
+const SplashScreen = ({navigation, feathersStore}) => { 
   
   const [errorModal, setErrorModal] = useState(false) ;
 
@@ -22,7 +22,7 @@ const SplashScreen = ({navigation, store1, feathersStore}) => {
     }, [])
   );
 
-  useEffect(() => {
+  useEffect(() => {   
     load(); 
   }, [])
 
@@ -32,9 +32,12 @@ const SplashScreen = ({navigation, store1, feathersStore}) => {
   }, [feathersStore?.isAuthenticated, feathersStore?.user?._id])
  
   const load = async () => {
-    try{   
-      await feathersStore.connect();    
-      await feathersStore.login(DEFAULT_EMAIL, DEFAULT_PSW)
+    try{  
+      const uniqueId = await getUniqueId();  
+      console.log(uniqueId);
+      await feathersStore.connect();   
+       
+      await feathersStore.login(uniqueId, DEFAULT_PSW)
     }catch (error){
       setErrorModal(true);
       console.log(error);
@@ -98,4 +101,4 @@ const styles = StyleSheet.create({
   }
 })
 
-export default inject('store1', 'feathersStore')(observer(SplashScreen));
+export default inject('feathersStore')(observer(SplashScreen));
