@@ -5,12 +5,15 @@ import { useFocusEffect } from '@react-navigation/native';
 import Colors from "../theme/colors";
 import ErrorModal from "../components/modals/ErrorModal";
 import { getUniqueId } from 'react-native-device-info';
+import {useRealm} from '@realm/react';
 
 const DEFAULT_EMAIL = "defaultUser@gmail.com";
 
 const DEFAULT_PSW = ")j~nKj/,N}N6,8&cVVV#G!=F*y";
 
 const SplashScreen = ({navigation, feathersStore}) => { 
+
+  const realm = useRealm();
   
   const [errorModal, setErrorModal] = useState(false) ;
 
@@ -23,6 +26,21 @@ const SplashScreen = ({navigation, feathersStore}) => {
       )   
     }, [])
   );
+
+  useEffect(() => {
+    let lang = "el"
+    if(realm){      
+      realm.objects('Language')?.length == 0 ?
+      realm.write(()=>{
+        realm.create('Language',{
+          name: 'el'
+        })
+      })
+    :
+    lang = realm.objects('Language')[0]?.name; 
+    feathersStore.setLanguage(lang); 
+    }  
+  }, [realm]); 
 
   useEffect(() => {   
     load(); 

@@ -29,6 +29,28 @@ const ripple = {
   borderless: true,
 }
 
+const targetLanguages = [{
+  "code" : "en",
+  "name" : "English",
+  "image" : "us"
+}, {
+  "code" : "de",
+  "name" : "German",
+  "image" : "germany"
+}, {
+  "code" : "fr",
+  "name" : "French",
+  "image" : "france"
+}, {
+  "code" : "es",
+  "name" : "Spanish",
+  "image" : "spain"
+}, {
+  "code" : "it",
+  "name" : "Italian",
+  "image" : "italy"
+}]
+
 const styles = StyleSheet.create({
   centeredView: {
     flex: 1,
@@ -198,7 +220,7 @@ const LanguageModal = ({
             />
           </View>
         </TouchableHighlight>
-        {feathersStore.settings?.targetLanguages?.map(lang =>
+        {targetLanguages?.map(lang =>
         <TouchableHighlight
           key={lang?.code}
           style={{ ...styles.languageButton  }}

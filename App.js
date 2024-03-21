@@ -19,10 +19,17 @@ import HistoryScreen from './src/screens/history';
 import { RealmProvider } from '@realm/react';
 import { AppSchema } from "./src/services/receipt-service"
 import TabBar from './src/containers/TabBar';
+import Sections from './src/screens/sections/Sections';
+import AddSection from './src/screens/sections/AddSection';
+import Users from './src/screens/users/Users';
+import AddUser from './src/screens/users/AddUser';
+import _useTranslate from './src/hooks/_useTranslate';
 
 import { LogBox } from 'react-native';
  
 export default App = () => {
+
+  let common = _useTranslate(feathersStore.language);
 
 LogBox.ignoreLogs(['new NativeEventEmitter']);
 
@@ -74,6 +81,48 @@ const MainTab = () => {
               options={{headerShown: false}}
               name="HomeNavigator"
               component={MainTab}
+            />
+            <Stack.Screen
+              name='Sections'
+              component={Sections}
+              options= {{       
+                title: common.sections,
+                headerStyle: {
+                  elevation: 1,
+                  shadowOpacity: 0
+                }
+              }}
+            />
+            <Stack.Screen
+              name='AddSection'
+              component={AddSection}
+              options= {{       
+                headerStyle: {
+                  elevation: 1,
+                  shadowOpacity: 0
+              }
+              }}
+            />
+             <Stack.Screen
+              name='Users'
+              component={Users}
+              options= {{       
+                title: common.users,
+                headerStyle: {
+                  elevation: 1,
+                  shadowOpacity: 0
+                }
+              }}
+            />
+            <Stack.Screen
+              name='AddUser'
+              component={AddUser}
+              options= {{       
+                headerStyle: {
+                  elevation: 1,
+                  shadowOpacity: 0
+              }
+              }}
             />
           </Stack.Navigator>
         </NavigationContainer>

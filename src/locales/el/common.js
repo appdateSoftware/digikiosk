@@ -1,4 +1,15 @@
 export const commonEL = {
+    sections: "Τμήματα",
+    section: "Τμήμα",
+    users: "Χρήστες",
+    userLC: "Χρήστης",
+    changeSection: "Επεξεργασία Τμήματος",
+    color: "Χρώμα",
+    addSection: "Προσθήκη νέου Τμήματος",
+    changeUser: "Επεξεργασία Χρήστη",
+    addUser: "Προσθήκη νέου Χρήστη",    
+    otherName: "Επιλέξτε άλλο όνομα",
+
     firstName : "Όνομα",
     lastName : "Επώνυμο",
     street : "Οδός",

@@ -1,4 +1,15 @@
 export const commonEN = {
+  sections: "Sections",
+  section: "Section",
+  users: "Users",
+  userLC: "User",
+  changeSection: "Edit Section",
+  color: "Color",
+  addSection: "Add new Section",
+  changeUser: "Edit User",
+  addUser: "Add new User",
+  otherName: "Choose another name",
+
     firstName : "First Name",
     lastName : "Last Name",
     street : "Street",

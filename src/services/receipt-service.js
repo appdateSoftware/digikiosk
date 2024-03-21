@@ -51,13 +51,6 @@ export class AppSchema extends Realm.Object {
   };
 
   static CounterSchema = {
-    name: 'Counter',      
-    properties: {
-      name: {type: 'string', default: 'el'},       
-    }
-  };
-
-  static CounterSchema = {
     name: 'Counter',
     primaryKey: 'sequence_value',      
     properties: {
@@ -110,7 +103,7 @@ export class AppSchema extends Realm.Object {
       'name': {type: 'string', default: 'ΔΙΑΦΟΡΑ 24%'},  
       'nameEnglish': {type: 'string', default: 'VARIOUS 24%'},  
       'color': {type: 'string', default: 'blue'},  
-      'vat': {type: 'int', default: '24'}    
+      'vat': {type: 'int', default: '1'}
     }
   };
 

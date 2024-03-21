@@ -44,9 +44,9 @@ import InputModal from "../components/modals/InputModal";
 
 // SettingsA Config
 const DIVIDER_MARGIN_LEFT = 60;
-const arrowIcon = "ios-arrow-forward";
-const ordersIcon = "reader-outline";
-const termsIcon = "document-text-outline";
+const arrowIcon = "arrow-forward";
+const sectionsIcon = "grid-outline";
+const usersIcon = "people-outline";
 const aboutIcon = "storefront-outline";
 const logoutIcon = "log-out-outline";
 const loginIcon = "log-in-outline";
@@ -230,7 +230,7 @@ const SettingsA = ({navigation, feathersStore}) => {
           <View style={styles.titleContainer}>
             <Heading6 style={styles.titleText}>{common.settings}</Heading6>
           </View>
-          {feathersStore.isAuthenticated && feathersStore.user?.firstname !== "default" && 
+          {feathersStore.isAuthenticated &&
           <>
           <TouchableItem useForeground onPress={navigateTo("EditProfile")}>
             <View style={[styles.row, styles.profileContainer]}>
@@ -252,8 +252,7 @@ const SettingsA = ({navigation, feathersStore}) => {
               </View>
             </View>
           </TouchableItem>
-
-          <Divider />        
+     
         
           <Divider type="inset" marginLeft={DIVIDER_MARGIN_LEFT} />
           </>
@@ -262,27 +261,25 @@ const SettingsA = ({navigation, feathersStore}) => {
            
        
          
-          <Divider />       
           
-          {feathersStore.isAuthenticated && feathersStore.user?.firstname !== "default" && 
+          {feathersStore.isAuthenticated && 
             <>
               <Setting
-                onPress={navigateTo("OrdersOfDay")}
-                icon={ordersIcon}
-                title={common.ordersOfDay}
+                onPress={navigateTo("Sections")}
+                icon={sectionsIcon}
+                title={common.sections}
               />
               <Divider type="inset" marginLeft={DIVIDER_MARGIN_LEFT} />            
             </>
           }          
 
         
-          <Divider type="inset" marginLeft={DIVIDER_MARGIN_LEFT} />
-          {feathersStore.isAuthenticated && feathersStore.user?.firstname !== "default" && 
+          {feathersStore.isAuthenticated &&  
             <>
               <Setting
-                onPress={navigateTo("OrdersOfMonth")}
-                icon={termsIcon}
-                title={common.ordersOfMonth}
+                onPress={navigateTo("Users")}
+                icon={usersIcon}
+                title={common.users}
               />
               <Divider type="inset" marginLeft={DIVIDER_MARGIN_LEFT} />
             </>
