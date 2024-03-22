@@ -5,8 +5,8 @@
  * @flow
  */
 
-import React, { useState, useEffect } from "react";
-import { Keyboard, StatusBar, StyleSheet, View, SafeAreaView,
+import React, { useState, useEffect, useRef } from "react";
+import { Keyboard, StatusBar, StyleSheet, View, SafeAreaView, Text,
   KeyboardAvoidingView, ScrollView} from "react-native";
 import {Picker} from '@react-native-picker/picker';
 import ActivityIndicatorModal from "../components/modals/ActivityIndicatorModal";
@@ -17,6 +17,7 @@ import UnderlineTextInput from "../components/text/UnderlineTextInput";
 import cloneDeep from 'lodash/cloneDeep';
 
 import Colors from "../theme/colors";
+import Validators from '../utils/validators';
 
 import { inject, observer } from "mobx-react";
 
@@ -32,7 +33,51 @@ const BUTTON_BORDER_RADIUS = 4;
 
 const Company = ({route, navigation, feathersStore }) => {
 
-  const originsArray = []  
+  const originsArray = [{
+    "id" : 1,
+    "label" : "Αττική1",
+    "labelEnglish" : "Attica1"
+  }, {
+    "id" : 2,
+    "label" : "Ανατολική Μακεδονία και Θράκη",
+    "labelEnglish" : "East Macedonia"
+  }, {
+    "id" : 3,
+    "label" : "Κεντρική Μακεδονία",
+    "labelEnglish" : "Central Macedonia"
+  }, {
+    "id" : 4,
+    "label" : "Δυτική Μακεδονία",
+    "labelEnglish" : "West Macedonia"
+  }, {
+    "id" : 5,
+    "label" : "Ήπειρος",
+    "labelEnglish" : "Epirus"
+  }, {
+    "id" : 6,
+    "label" : "Θεσσαλία",
+    "labelEnglish" : "Thessaly"
+  }, {
+    "id" : 7,
+    "label" : "Ιόνια νησιά",
+    "labelEnglish" : "Ionian Islands"
+  }, {
+    "id" : 8,
+    "label" : "Δυτική Ελλάδα",
+    "labelEnglish" : "West Greece"
+  }, {
+    "id" : 9,
+    "label" : "Κεντρική Ελλάδα",
+    "labelEnglish" : "Central Greece"
+  }, {
+    "id" : 10,
+    "label" : "Πελοπόνησος",
+    "labelEnglish" : "Peloponese"
+  }, {
+    "id" : 11,
+    "label" : "Βόρειο Αιγαίο",
+    "labelEnglish" : "North Aegean"
+  }]; 
 
   let common = _useTranslate(feathersStore.language);
 
@@ -40,6 +85,7 @@ const Company = ({route, navigation, feathersStore }) => {
 
   const afmElement = useRef(null);
   const nameElement = useRef(null);
+  const legalNameElement = useRef(null);
   const nameEnglishElement = useRef(null);
   const doyDescriptionElement = useRef(null);
   const legalDescriptionElement = useRef(null);
@@ -56,6 +102,7 @@ const Company = ({route, navigation, feathersStore }) => {
   
   const [afm, setAfm] = useState('');
   const [name, setName] = useState(''); 
+  const [legalName, setLegalName] = useState(''); 
   const [nameEnglish, setNameEnglish] = useState('');
   const [doyDescription, setDoyDescription] = useState(''); 
   const [legalDescription, setLegalDescription] = useState('');
@@ -68,10 +115,12 @@ const Company = ({route, navigation, feathersStore }) => {
   const [companyPhone, setCompanyPhone] = useState('');
   const [companyEmail, setCompanyEmail] = useState('');
   const [token, setToken] = useState("");   
-  const [ypahes, setYpahes] = useState(""); 
+  const [ypahes, setYpahes] = useState("");  
+  const [origins, setOrigins] = useState([]);
   
   const [afmFocused, setAfmFocused] = useState(false);
   const [nameFocused, setNameFocused] = useState(false); 
+  const [legalNameFocused, setLegalNameFocused] = useState(false);
   const [nameEnglishFocused, setNameEnglishFocused] = useState(false);
   const [doyDescriptionFocused, setDoyDescriptionFocused] = useState(false); 
   const [legalDescriptionFocused, setLegalDescriptionFocused] = useState(false);
@@ -86,8 +135,9 @@ const Company = ({route, navigation, feathersStore }) => {
   const [tokenFocused, setTokenFocused] = useState(false);
   const [ypahesFocused, setYpahesFocused] = useState(false);          
  
-  const [afmError, setAfmError] = useState(true);
+  const [afmError, setAfmError] = useState(false);
   const [nameError, setNameError] = useState(false); 
+  const [legalNameError, setLegalNameError] = useState(false);
   const [nameEnglishError, setNameEnglishError] = useState(false);
   const [doyDescriptionError, setDoyDescriptionError] = useState(false); 
   const [legalDescriptionError, setLegalDescriptionError] = useState(false);
@@ -99,13 +149,12 @@ const Company = ({route, navigation, feathersStore }) => {
   const [companyPhoneError, setCompanyPhoneError] = useState(false);
   const [companyEmailError, setCompanyEmailError] = useState(false);
   const [tokenError, setTokenError] = useState(false);
-  const [ypahesError, setYpahesError] = useState(false);
+  const [ypahesError, setYpahesError] = useState(false); 
+
  
   const [isLoading, setIsLoading] = useState(false);
   const [edit, setEdit] = useState(false);  
-  const [errorModal, setErrorModal] = useState(false) ;
-  const [errorText, setErrorText] = useState(false);
-     
+  const [errorModal, setErrorModal] = useState(false) ;   
 
   useEffect(() => {    
       const realmItems = realm.objects('Company');
@@ -117,7 +166,7 @@ const Company = ({route, navigation, feathersStore }) => {
 
   useEffect(()=> {
     setOrigins(originsArray);    
-  },[feathersStore?.isAuthenticated]);
+  },[]);
 
   useEffect(() => {
     const keyboardDidHideListener = Keyboard.addListener(
@@ -132,6 +181,7 @@ const Company = ({route, navigation, feathersStore }) => {
  const loadCompany = (companyFromDB) => {  
     setNameEnglish(companyFromDB.nameEnglish);
     setName(companyFromDB.name);
+    setLegalName(companyFromDB.legalName);
     setAfm(companyFromDB.afm);
     setLegalDescription(companyFromDB.legalDescription);    
     setDoyDescription(companyFromDB.doyDescription)
@@ -149,6 +199,7 @@ const Company = ({route, navigation, feathersStore }) => {
 
   const keyboardDidHide = () => {    
       setNameFocused(false);
+      setLegalNameFocused(false);
       setNameEnglishFocused(false);
       setAfmFocused(false);  
       setDoyDescriptionFocused(false);
@@ -179,6 +230,11 @@ const Company = ({route, navigation, feathersStore }) => {
       case "name" : {
         setName(text);
         nameValidation(text);
+      };
+      break;  
+      case "legalName" : {
+        setLegalName(text);
+        legalNameValidation(text);
       };
       break;     
       case "afm" : {
@@ -244,6 +300,8 @@ const Company = ({route, navigation, feathersStore }) => {
       break;
       case "nameFocused" : setNameFocused(true);
       break;
+      case "legalNameFocused" : setLegalNameFocused(true);
+      break;
       case "afmFocused" : setAfmFocused(true);
       break;
       case "doyDescriptionFocused" : setDoyDescriptionFocused(true);
@@ -278,6 +336,14 @@ const Company = ({route, navigation, feathersStore }) => {
         setNameError(true);
       }else{
         setNameError(false);
+      }   
+    }
+
+    const legalNameValidation = val => {
+      if (!Validators.validateNonEmpty(val) ) {
+        setLegalNameError(true);
+      }else{
+        setLegalNameError(false);
       }   
     }
     
@@ -396,7 +462,7 @@ const Company = ({route, navigation, feathersStore }) => {
     Keyboard.dismiss();      
 
     const data = {
-      afm: +afm, nameEnglish,  name, doyDescription, legalDescription, firmActDescription,
+      afm: +afm, nameEnglish,  name, legalName, doyDescription, legalDescription, firmActDescription,
       companyOrigin, postalAddress, postalAddressNo, postalAreaDescription, postalZipCode, companyPhone,
       companyEmail, token, ypahes
     };        
@@ -407,10 +473,11 @@ const Company = ({route, navigation, feathersStore }) => {
           updt[0].afm = afm;
           updt[0].nameEnglish = nameEnglish;
           updt[0].name = name;
+          updt[0].legalName = legalName;
           updt[0].doyDescription = doyDescription;
           updt[0].legalDescription = legalDescription;
           updt[0].firmActDescription = firmActDescription;
-          updt[0].companyOrigin = companyOrigin;
+          updt[0].companyOrigin = +companyOrigin;
           updt[0].postalAddress = postalAddress;
           updt[0].postalAddressNo = postalAddressNo;
           updt[0].postalAreaDescription = postalAreaDescription;
@@ -477,6 +544,28 @@ const Company = ({route, navigation, feathersStore }) => {
         />
         <View style={styles.errorContainer}>
           {nameError && <Text style={styles.errorText}>{common.nameError}</Text>}
+        </View>
+
+        <UnderlineTextInput   
+          ref={legalNameElement}
+          value={legalName}  
+          onChangeText={onChangeText("legalName")}
+          onFocus={onFocus("legalNameFocused")}
+          inputFocused={legalNameFocused}
+          onSubmitEditing={focusOn(nameEnglishElement)}
+          returnKeyType="next"
+          blurOnSubmit={false}
+          placeholder={common.legalName}
+          placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
+          inputTextColor={INPUT_TEXT_COLOR}
+          borderColor={INPUT_BORDER_COLOR}
+          focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
+          inputStyle={styles.inputStyle}
+          inputContainerStyle={styles.inputContainerStyle}
+          editable={true}
+        />
+        <View style={styles.errorContainer}>
+          {legalNameError && <Text style={styles.errorText}>{common.legalNameError}</Text>}
         </View>
 
         <UnderlineTextInput
@@ -577,7 +666,7 @@ const Company = ({route, navigation, feathersStore }) => {
           onSubmitEditing={focusOn(companyOriginElement)}
           returnKeyType="next"
           blurOnSubmit={false}
-          placeholder={common.afm}
+          placeholder={common.firmActDescription}
           placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
           inputTextColor={INPUT_TEXT_COLOR}
           borderColor={INPUT_BORDER_COLOR}
@@ -709,28 +798,6 @@ const Company = ({route, navigation, feathersStore }) => {
         />
         <View style={styles.errorContainer}>
           {companyPhoneError && <Text style={styles.errorText}>{common.companyPhoneError}</Text>}
-        </View>
-
-        <UnderlineTextInput
-          ref={companyEmailElement}
-          value={companyEmail}  
-          onChangeText={onChangeText("companyEmail")}
-          onFocus={onFocus("companyEmailFocused")}
-          inputFocused={companyEmailFocused}
-          onSubmitEditing={focusOn(tokenElement)}
-          returnKeyType="next"
-          blurOnSubmit={false}
-          placeholder={common.companyEmail}
-          placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
-          inputTextColor={INPUT_TEXT_COLOR}
-          borderColor={INPUT_BORDER_COLOR}
-          focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
-          inputStyle={styles.inputStyle}
-          inputContainerStyle={styles.inputContainerStyle}
-          editable={true}
-        />
-        <View style={styles.errorContainer}>
-          {companyEmailError && <Text style={styles.errorText}>{common.companyEmailError}</Text>}
         </View>
 
         <UnderlineTextInput

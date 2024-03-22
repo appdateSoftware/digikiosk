@@ -89,15 +89,21 @@ export class AppSchema extends Realm.Object {
 
   static CompanySchema = {   
     name: 'Company',      
-    properties: {
+    properties: { 
+      'afm': {type: 'string'},  
       'name': {type: 'string'},  
       'nameEnglish': {type: 'string'}, 
-      'legalName': {type: 'string'},        
-      'afm': {type: 'string'},  
-      'token': {type: 'string'},  
-      'doy': {type: 'string'},
-      'address': {type: 'string'},
-      'phone': {type: 'string', optional: true},
+      'doyDescription': {type: 'string'},
+      'legalDescription': {type: 'string'}, 
+      'firmActDescription': {type: 'string'},      
+      'companyOrigin': {type: 'int'},
+      'postalAddress': {type: 'string'},   
+      'postalAddressNo': {type: 'string'},
+      'postalAreaDescription': {type: 'string'},        
+      'postalZipCode': {type: 'string'}, 
+      'companyPhone': {type: 'string'}, 
+      'companyEmail': {type: 'string'}, 
+      'token': {type: 'string'},     
       'ypahes': {type: 'string', default: 'https://simply.gr'},  
     }
   };

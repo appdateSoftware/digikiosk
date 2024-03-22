@@ -10,6 +10,23 @@ export const commonEN = {
   addUser: "Add new User",
   otherName: "Choose another name",
   company: "Company",
+  firstNameError : "Παρακαλώ συμπληρώστε ένα όνομα.",
+  lastNameError : "Παρακαλώ συμπληρώστε ένα επώνυμο.",
+  phoneError : "Παρακαλώ συμπληρώστε ένα έγκυρο τηλέφωνο.",
+  emailError : "Παρακαλώ συμπληρώστε ένα έγκυρο email.",
+  afmError: "Παρακαλώ συμπληρώστε ένα έγκυρο ΑΦΜ.",
+  legalNameError: "",
+  doyDescriptionError: "",
+  legalDescriptionError: "",
+  firmActDescriptionError: "",
+  cityError : "Παρακαλώ συμπληρώστε μία πόλη.",
+  streetError: "Παρακαλώ συμπληρώστε μία οδό",
+  streetNumberError: "Παρακαλώ συμπληρώστε έναν αριθμό",
+  postcodeError: "Παρακαλώ συμπληρώστε ένα ταχ. κώδικα",
+  save : "ΑΠΟΘΗΚΕΥΣΗ",
+  saveSmall:"Αποθήκευση",
+  name: "Όνομα",
+
 
 
     firstName : "First Name",
