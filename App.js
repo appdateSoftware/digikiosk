@@ -23,6 +23,8 @@ import Sections from './src/screens/sections/Sections';
 import AddSection from './src/screens/sections/AddSection';
 import Users from './src/screens/users/Users';
 import AddUser from './src/screens/users/AddUser';
+import Company from './src/screens/Company';
+
 import _useTranslate from './src/hooks/_useTranslate';
 
 import { LogBox } from 'react-native';
@@ -118,6 +120,17 @@ const MainTab = () => {
               name='AddUser'
               component={AddUser}
               options= {{       
+                headerStyle: {
+                  elevation: 1,
+                  shadowOpacity: 0
+              }
+              }}
+            />
+              <Stack.Screen
+              name='Company'
+              component={Company}
+              options= {{   
+                title: common.company,    
                 headerStyle: {
                   elevation: 1,
                   shadowOpacity: 0

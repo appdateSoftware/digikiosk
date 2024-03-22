@@ -9,6 +9,7 @@ export const commonEL = {
     changeUser: "Επεξεργασία Χρήστη",
     addUser: "Προσθήκη νέου Χρήστη",    
     otherName: "Επιλέξτε άλλο όνομα",
+    company: "Εταιρία",
 
     firstName : "Όνομα",
     lastName : "Επώνυμο",

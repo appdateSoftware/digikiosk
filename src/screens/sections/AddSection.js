@@ -5,7 +5,7 @@
  * @flow
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Keyboard, StatusBar, StyleSheet, View, SafeAreaView,
   KeyboardAvoidingView, ScrollView} from "react-native";
 import {Picker} from '@react-native-picker/picker';
@@ -15,6 +15,7 @@ import Button from "../../components/buttons/Button";
 import { Caption, Paragraph,   Subtitle1, Subtitle2 } from "../../components/text/CustomText";
 import UnderlineTextInput from "../../components/text/UnderlineTextInput";
 import cloneDeep from 'lodash/cloneDeep';
+import Validators from '../../utils/validators';
 
 import Colors from "../../theme/colors";
 
@@ -105,14 +106,15 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     paddingLeft: 6
   },
+  errorContainer: { height: 14},
+  errorText: {
+    color: Colors.error,
+    fontSize: 12, 
+    marginBottom: -12    
+  },
 });
 
-let nameEnglishElement;
-let nameElement;
-let vatElement;
-let colorElement;
 
-// AddSectionA
 const AddSection = ({route, navigation, feathersStore }) => {
 
   const vatsArray = [{
@@ -177,7 +179,15 @@ const AddSection = ({route, navigation, feathersStore }) => {
   const [index, setIndex] = useState('');  
   const [errorModal, setErrorModal] = useState(false) ;   
   const [pickerColorsArray, setPickerColorsArray] = useState([]);
-  const [pickerVatsArray, setPickerVatsArray] = useState([]);  
+  const [pickerVatsArray, setPickerVatsArray] = useState([]);
+
+  const[nameError, setNameError] = useState(false); 
+  const[nameEnglishError, setNameEnglishError] = useState(false); 
+  
+  const nameEnglishElement = useRef(null);
+  const nameElement = useRef(null);
+  const vatElement = useRef(null);
+  const colorElement = useRef(null);
 
   useEffect(() => {    
     const {title} = route.params;
@@ -224,9 +234,15 @@ const AddSection = ({route, navigation, feathersStore }) => {
   
   const onChangeText = key => (text) => {
     switch(key){
-      case "nameEnglish" : setNameEnglish(text);
+      case "nameEnglish" : {
+        setNameEnglish(text);
+        nameEnglishValidation(text);
+      };
       break;
-      case "name" : setName(text);
+      case "name" : {
+        setName(text);
+        nameValidation(text);
+      };
       break;
     }
   };
@@ -254,6 +270,22 @@ const AddSection = ({route, navigation, feathersStore }) => {
       nextField.focus();
     }
   };
+
+  const nameValidation = val => {
+    if (!Validators.validateNonEmpty(val) ) {
+      setNameError(true);
+    }else{
+      setNameError(false);
+    }   
+  }
+  
+  const nameEnglishValidation = val => {
+    if (!Validators.validateNonEmpty(val) ) {
+      setNameEnglishError(true);
+    }else{
+      setNameEnglishError(false);
+    }   
+  } 
 
   const saveSection = async() => {
     Keyboard.dismiss();      
@@ -335,6 +367,9 @@ const AddSection = ({route, navigation, feathersStore }) => {
                 focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
                 inputStyle={styles.inputStyle}
               />
+               <View style={styles.errorContainer}>
+                  {nameEnglishError && <Text style={styles.errorText}>{common.nameEnglishError}</Text>}
+              </View>
             </View>
 
             <View style={styles.inputContainer}>
@@ -354,10 +389,13 @@ const AddSection = ({route, navigation, feathersStore }) => {
                 focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
                 inputStyle={styles.inputStyle}
               />
+               <View style={styles.errorContainer}>
+                  {nameError && <Text style={styles.errorText}>{common.nameError}</Text>}
+              </View>
             </View>
 
             <View style={[styles.row, styles.inputContainerStyle]}>      
-              <Subtitle2 style={[styles.small,  styles.cityTitle]}>{common.partyOf}</Subtitle2>
+              <Subtitle2 style={[styles.small,  styles.cityTitle]}>{common.vat}</Subtitle2>
               <Picker
                 style={[ styles.picker]}
                 ref={vatElement}
@@ -376,7 +414,7 @@ const AddSection = ({route, navigation, feathersStore }) => {
             </View>
 
             <View style={[styles.row, styles.inputContainerStyle]}>      
-              <Subtitle2 style={[styles.small,  styles.cityTitle]}>{common.partyOf}</Subtitle2>
+              <Subtitle2 style={[styles.small,  styles.cityTitle]}>{common.color}</Subtitle2>
               <Picker
                 style={[ styles.picker]}
                 ref={colorElement}

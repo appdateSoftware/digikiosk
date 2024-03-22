@@ -5,7 +5,7 @@
  * @flow
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Keyboard, StatusBar, StyleSheet, View, SafeAreaView,
   KeyboardAvoidingView, ScrollView} from "react-native";
 import {Picker} from '@react-native-picker/picker';
@@ -104,12 +104,14 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     paddingLeft: 6
   },
+  errorContainer: { height: 14},
+  errorText: {
+    color: Colors.error,
+    fontSize: 12, 
+    marginBottom: -12    
+  },
 });
 
-let nameEnglishElement;
-let nameElement;
-let roleElement;
-let passwordElement;
 
 const AddUser = ({route, navigation, feathersStore }) => {
 
@@ -149,6 +151,15 @@ const AddUser = ({route, navigation, feathersStore }) => {
   const [index, setIndex] = useState('');  
   const [errorModal, setErrorModal] = useState(false) ;   
   const [pickerRolesArray, setPickerRolesArray] = useState([]);  
+
+  const nameEnglishElement = useRef(null);
+  const nameElement = useRef(null);
+  const roleElement = useRef(null);
+  const passwordElement = useRef(null);
+
+  const[nameError, setNameError] = useState(false); 
+  const[nameEnglishError, setNameEnglishError] = useState(false); 
+  const[passwordError, setPasswordError] = useState(false); 
 
   useEffect(() => {    
     const {title} = route.params;
@@ -194,11 +205,20 @@ const AddUser = ({route, navigation, feathersStore }) => {
   
   const onChangeText = key => (text) => {
     switch(key){
-      case "nameEnglish" : setNameEnglish(text);
+      case "nameEnglish" : { 
+        setNameEnglish(text);
+        nameEnglishValidation(text);
+      };
       break;
-      case "name" : setName(text);
+      case "name" : {
+        setName(text);
+        nameValidation(text);
+      };
       break;
-      case "password" : setPassword(text);
+      case "password" :  {
+        setPassword(text);
+        passwordValidation(text);
+      };
       break;
     }
   };
@@ -226,6 +246,30 @@ const AddUser = ({route, navigation, feathersStore }) => {
       nextField.focus();
     }
   };
+
+  const nameValidation = val => {
+    if (!Validators.validateNonEmpty(val) ) {
+      setNameError(true);
+    }else{
+      setNameError(false);
+    }   
+  }
+  
+  const nameEnglishValidation = val => {
+    if (!Validators.validateNonEmpty(val) ) {
+      setNameEnglishError(true);
+    }else{
+      setNameEnglishError(false);
+    }   
+  }  
+  
+  const passwordValidation = val => {
+    if (!Validators.validateNonEmpty(val) ) {
+      setPasswordError(true);
+    }else{
+      setPasswordError(false);
+    }   
+  }
 
   const saveUser = async() => {
     Keyboard.dismiss();      
@@ -304,6 +348,9 @@ const AddUser = ({route, navigation, feathersStore }) => {
                 focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
                 inputStyle={styles.inputStyle}
               />
+              <View style={styles.errorContainer}>
+                  {nameEnglishError && <Text style={styles.errorText}>{common.nameEnglishError}</Text>}
+              </View>
             </View>
 
             <View style={styles.inputContainer}>
@@ -323,6 +370,9 @@ const AddUser = ({route, navigation, feathersStore }) => {
                 focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
                 inputStyle={styles.inputStyle}
               />
+              <View style={styles.errorContainer}>
+                {nameError && <Text style={styles.errorText}>{common.nameError}</Text>}
+              </View>
             </View>
 
             <View style={styles.inputContainer}>
@@ -342,10 +392,13 @@ const AddUser = ({route, navigation, feathersStore }) => {
                 focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
                 inputStyle={styles.inputStyle}
               />
+              <View style={styles.errorContainer}>
+                {passwordError && <Text style={styles.errorText}>{common.passwordError}</Text>}
+              </View>
             </View>
 
             <View style={[styles.row, styles.inputContainerStyle]}>      
-              <Subtitle2 style={[styles.small,  styles.cityTitle]}>{common.partyOf}</Subtitle2>
+              <Subtitle2 style={[styles.small,  styles.cityTitle]}>{common.role}</Subtitle2>
               <Picker
                 style={[ styles.picker]}
                 ref={roleElement}

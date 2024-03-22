@@ -9,6 +9,8 @@ export const commonEN = {
   changeUser: "Edit User",
   addUser: "Add new User",
   otherName: "Choose another name",
+  company: "Company",
+
 
     firstName : "First Name",
     lastName : "Last Name",

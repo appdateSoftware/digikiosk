@@ -286,9 +286,9 @@ const SettingsA = ({navigation, feathersStore}) => {
           }       
 
           <Setting
-            onPress={navigateTo("AboutUs")}
+            onPress={navigateTo("Company")}
             icon={aboutIcon}
-            title={common.aboutUs}
+            title={common.company}
           />
           <Divider type="inset" marginLeft={DIVIDER_MARGIN_LEFT} />
 

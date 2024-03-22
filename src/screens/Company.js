@@ -9,18 +9,18 @@ import React, { useState, useEffect } from "react";
 import { Keyboard, StatusBar, StyleSheet, View, SafeAreaView,
   KeyboardAvoidingView, ScrollView} from "react-native";
 import {Picker} from '@react-native-picker/picker';
-import ActivityIndicatorModal from "../../components/modals/ActivityIndicatorModal";
-import ErrorModal from "../../components/modals/ErrorModal";
-import Button from "../../components/buttons/Button";
-import { Caption, Paragraph, Subtitle1, Subtitle2 } from "../../components/text/CustomText";
-import UnderlineTextInput from "../../components/text/UnderlineTextInput";
+import ActivityIndicatorModal from "../components/modals/ActivityIndicatorModal";
+import ErrorModal from "../components/modals/ErrorModal";
+import ContainedButton from "../components/buttons/ContainedButton";
+import { Caption, Paragraph, Subtitle1, Subtitle2 } from "../components/text/CustomText";
+import UnderlineTextInput from "../components/text/UnderlineTextInput";
 import cloneDeep from 'lodash/cloneDeep';
 
-import Colors from "../../theme/colors";
+import Colors from "../theme/colors";
 
 import { inject, observer } from "mobx-react";
 
-import _useTranslate from '../../hooks/_useTranslate';
+import _useTranslate from '../hooks/_useTranslate';
 
 import {useRealm} from '@realm/react';
 
@@ -30,119 +30,82 @@ const INPUT_BORDER_COLOR = "rgba(0, 0, 0, 0.2)";
 const INPUT_FOCUSED_BORDER_COLOR = "#000";
 const BUTTON_BORDER_RADIUS = 4;
 
-const styles = StyleSheet.create({
-  screenContainer: {
-    flex: 1,
-    backgroundColor: Colors.background,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: 24
-  }, 
-  instructionContainer: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  picker: {
-    justifyContent: "center",
-    alignItems: "center",
-    width: 104
-  },
-  touchArea: {
-    marginHorizontal: 16,
-    marginBottom: 6,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(35, 47, 52, 0.12)",
-    overflow: "hidden"
-  },
-  iconContainer: {
-    justifyContent: "center",
-    alignItems: "center",
-    width: 44,
-    height: 44,
-    borderRadius: 22
-  },
-  instruction: {
-    marginTop: 32,
-    paddingHorizontal: 40,
-    fontSize: 14,
-    textAlign: "center"
-  },
-  form: {
-    padding: 12
-  },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    width: "100%"
-  },
-  inputContainer: {
-    margin: 8
-  },
-  small: {
-    flex: 2
-  },
-  large: {
-    flex: 5
-  },
-  inputStyle: {
-    textAlign: "left"
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    marginTop: 20,
-    justifyContent: "center" 
-  }, 
-  inputContainerStyle: {
-    marginTop: 0,
-    paddingVertical: 0,
-    paddingHorizontal: 0
-  },
-  cityTitle: {
-    color: PLACEHOLDER_TEXT_COLOR,
-    alignSelf: "center",
-    paddingLeft: 6
-  },
-});
-
-let nameEnglishElement;
-let nameElement;
-let afmElement;
-let legalNameElement;
-let tokenElement;
-let doyElement;
-let addressElement;
-let phoneElement;
-let ypahesElement;
-
 const Company = ({route, navigation, feathersStore }) => {
+
+  const originsArray = []  
 
   let common = _useTranslate(feathersStore.language);
 
   const realm = useRealm();
-   
-  const [name, setName] = useState("");  
-  const [nameFocused, setNameFocused] = useState(false);   
-  const [nameEnglish, setNameEnglish] = useState("");   
-  const [nameEnglishFocused, setNameEnglishFocused] = useState(false);   
-  const [legalName, setLegalName] = useState("");    
-  const [legalNameFocused, setLegalNameFocused] = useState(false);   
-  const [afm, setAfm] = useState("");    
-  const [afmFocused, setAfmFocused] = useState(false);    
-  const [token, setToken] = useState("");    
-  const [tokenFocused, setTokenFocused] = useState(false);    
-  const [doy, setDoy] = useState("");    
-  const [doyFocused, setDoyFocused] = useState(false); 
-  const [address, setAddress] = useState("");    
-  const [addressFocused, setAddressFocused] = useState(false);   
-  const [phone, setPhone] = useState("");    
-  const [phoneFocused, setPhoneFocused] = useState(false);  
-  const [ypahes, setYpahes] = useState("");    
+
+  const afmElement = useRef(null);
+  const nameElement = useRef(null);
+  const nameEnglishElement = useRef(null);
+  const doyDescriptionElement = useRef(null);
+  const legalDescriptionElement = useRef(null);
+  const firmActDescriptionElement = useRef(null);
+  const companyOriginElement = useRef(null);
+  const postalAddressElement = useRef(null);
+  const postalAddressNoElement = useRef(null);  
+  const postalAreaDescriptionElement = useRef(null);
+  const postalZipCodeElement = useRef(null);
+  const companyPhoneElement = useRef(null);
+  const companyEmailElement = useRef(null);
+  const tokenElement = useRef(null);
+  const ypahesElement = useRef(null);
+  
+  const [afm, setAfm] = useState('');
+  const [name, setName] = useState(''); 
+  const [nameEnglish, setNameEnglish] = useState('');
+  const [doyDescription, setDoyDescription] = useState(''); 
+  const [legalDescription, setLegalDescription] = useState('');
+  const [firmActDescription, setFirmActDescription] = useState('');
+  const [companyOrigin, setCompanyOrigin] = useState(1);
+  const [postalAddress, setPostalAddress] = useState('');
+  const [postalAddressNo, setPostalAddressNo] = useState('');  
+  const [postalAreaDescription, setPostalAreaDescription] = useState('');
+  const [postalZipCode, setPostalZipCode] = useState('');
+  const [companyPhone, setCompanyPhone] = useState('');
+  const [companyEmail, setCompanyEmail] = useState('');
+  const [token, setToken] = useState("");   
+  const [ypahes, setYpahes] = useState(""); 
+  
+  const [afmFocused, setAfmFocused] = useState(false);
+  const [nameFocused, setNameFocused] = useState(false); 
+  const [nameEnglishFocused, setNameEnglishFocused] = useState(false);
+  const [doyDescriptionFocused, setDoyDescriptionFocused] = useState(false); 
+  const [legalDescriptionFocused, setLegalDescriptionFocused] = useState(false);
+  const [firmActDescriptionFocused, setFirmActDescriptionFocused] = useState(false);
+  const [companyOriginFocused, setCompanyOriginFocused] = useState(false);
+  const [postalAddressFocused, setPostalAddressFocused] = useState(false);
+  const [postalAddressNoFocused, setPostalAddressNoFocused] = useState(false);  
+  const [postalAreaDescriptionFocused, setPostalAreaDescriptionFocused] = useState(false);
+  const [postalZipCodeFocused, setPostalZipCodeFocused] = useState(false);
+  const [companyPhoneFocused, setCompanyPhoneFocused] = useState(false);
+  const [companyEmailFocused, setCompanyEmailFocused] = useState(false);
+  const [tokenFocused, setTokenFocused] = useState(false);
   const [ypahesFocused, setYpahesFocused] = useState(false);          
-  const [modalVisible, setModalVisible] = useState(false);    
+ 
+  const [afmError, setAfmError] = useState(true);
+  const [nameError, setNameError] = useState(false); 
+  const [nameEnglishError, setNameEnglishError] = useState(false);
+  const [doyDescriptionError, setDoyDescriptionError] = useState(false); 
+  const [legalDescriptionError, setLegalDescriptionError] = useState(false);
+  const [firmActDescriptionError, setFirmActDescriptionError] = useState(false);
+  const [postalAddressError, setPostalAddressError] = useState(false);
+  const [postalAddressNoError, setPostalAddressNoError] = useState(false);  
+  const [postalAreaDescriptionError, setPostalAreaDescriptionError] = useState(false);
+  const [postalZipCodeError, setPostalZipCodeError] = useState(false);
+  const [companyPhoneError, setCompanyPhoneError] = useState(false);
+  const [companyEmailError, setCompanyEmailError] = useState(false);
+  const [tokenError, setTokenError] = useState(false);
+  const [ypahesError, setYpahesError] = useState(false);
+ 
+  const [isLoading, setIsLoading] = useState(false);
   const [edit, setEdit] = useState(false);  
-  const [errorModal, setErrorModal] = useState(false) ;   
+  const [errorModal, setErrorModal] = useState(false) ;
+  const [errorText, setErrorText] = useState(false);
+     
 
   useEffect(() => {    
       const realmItems = realm.objects('Company');
@@ -151,6 +114,10 @@ const Company = ({route, navigation, feathersStore }) => {
         setEdit(true);
       }
   }, [realm]);
+
+  useEffect(()=> {
+    setOrigins(originsArray);    
+  },[feathersStore?.isAuthenticated]);
 
   useEffect(() => {
     const keyboardDidHideListener = Keyboard.addListener(
@@ -166,23 +133,35 @@ const Company = ({route, navigation, feathersStore }) => {
     setNameEnglish(companyFromDB.nameEnglish);
     setName(companyFromDB.name);
     setAfm(companyFromDB.afm);
-    setLegalName(companyFromDB.legalName); 
-    setToken(companyFromDB.token)
-    setDoy(companyFromDB.doy)  
-    setAddress(companyFromDB.address)  
-    setPhone(companyFromDB.phone)
-    setYpahes(companyFromDB.ypahes)
+    setLegalDescription(companyFromDB.legalDescription);    
+    setDoyDescription(companyFromDB.doyDescription)
+    setFirmActDescription(companyFromDB.firmActDescription);
+    setCompanyOrigin(companyFromDB.companyOrigin);
+    setPostalAddress(companyFromDB.postalAddress);
+    setPostalAddressNo(companyFromDB.postalAddressNo);
+    setPostalAreaDescription(companyFromDB.postalAreaDescription);
+    setPostalZipCode(companyFromDB.postalZipCode);
+    setCompanyPhone(companyFromDB.companyPhone);
+    setCompanyEmail(companyFromDB.companyEmail);
+    setToken(companyFromDB.token);  
+    setYpahes(companyFromDB.ypahes); 
   }
 
   const keyboardDidHide = () => {    
       setNameFocused(false);
       setNameEnglishFocused(false);
-      setLegalNameFocused(false);
       setAfmFocused(false);  
+      setDoyDescriptionFocused(false);
+      setLegalDescriptionFocused(false);
+      setFirmActDescriptionFocused(false);
+      setCompanyOriginFocused(false);
+      setPostalAddressFocused(false);
+      setPostalAddressNoFocused(false);
+      setPostalAreaDescriptionFocused(false);
+      setPostalZipCodeFocused(false);
+      setCompanyPhoneFocused(false);
+      setCompanyEmailFocused(false);
       setTokenFocused(false);
-      setDoyFocused(false);
-      setAddressFocused(false);
-      setPhoneFocused(false);
       setYpahesFocused(false);
   }
 
@@ -192,59 +171,220 @@ const Company = ({route, navigation, feathersStore }) => {
   
   const onChangeText = key => (text) => {
     switch(key){
-      case "nameEnglish" : setNameEnglish(text);
+      case "nameEnglish" : {
+        setNameEnglish(text);
+        nameEnglishValidation(text);
+      };
       break;
-      case "name" : setName(text);
+      case "name" : {
+        setName(text);
+        nameValidation(text);
+      };
+      break;     
+      case "afm" : {
+        setAfm(text);
+        afmValidation(text);
+      };
       break;
-      case "legalName" : setLegalName(text);
+      case "doyDescription" : {
+        setDoyDescription(text);
+        doyDescriptionValidation(text);
+      };
       break;
-      case "afm" : setAfm(text);
+      case "legalDescription" : {
+        setLegalDescription(text);
+        legalDescriptionValidation(text);
+      };
+      case "firmActDescription" : {
+        setFirmActDescription(text);
+        firmActDescriptionValidation(text);
+      };
+      case "postalAddress" : {
+        setPostalAddress(text);
+        postalAddressValidation(text);
+      };
+      case "postalAddressNo" : {
+        setPostalAddressNo(text);
+        postalAddressNoValidation(text);
+      };
+      case "postalAreaDescription" : {
+        setPostalAreaDescription(text);
+        postalAreaDescriptionValidation(text);
+      };
+      case "postalZipCode" : {
+        setPostalZipCode(text);
+        postalZipCodeValidation(text);
+      };
+      case "companyPhone" : {
+        setCompanyPhone(text);
+        companyPhoneValidation(text);
+      };
+      case "companyEmail" : {
+        setCompanyEmail(text);
+        companyEmailValidation(text);
+      };
+      case "token" : {
+        setToken(text);
+        tokenValidation(text);
+      };
       break;
-      case "token" : setToken(text);
-      break;
-      case "doy" : setDoy(text);
-      break;
-      case "address" : setAddress(text);
-      break;
-      case "phone" : setPhone(text);
-      break;
-      case "ypahes" : setYpahes(text);
+      case "ypahes" : {
+        setYpahes(text);
+        ypahesValidation(text);
+      };
       break;
     }
   };
 
   const onFocus = key => () => {    
-    setNameFocused(false);
-    setNameEnglishFocused(false);
-    setLegalNameFocused(false);
-    setAfmFocused(false);  
-    setTokenFocused(false);
-    setDoyFocused(false);
-    setAddressFocused(false);
-    setPhoneFocused(false);
-    setYpahesFocused(false);
-   
-      switch(key){
-        case "nameEnglishFocused" : setNameEnglishFocused(true);
-        break;
-        case "nameFocused" : setNameFocused(true);
-        break;
-        case "afmFocused" : setAfmFocused(true);
-        break;
-        case "legalNameFocused" : setLegalNameFocused(true);
-        break;  
-        case "tokenFocused" : setTokenFocused(true);
-        break;
-        case "doyFocused" : setDoyFocused(true);
-        break;
-        case "addressFocused" : setAddressFocused(true);
-        break;
-        case "phoneFocused" : setPhoneFocused(true);
-        break;
-        case "ypahesFocused" : setYpahesFocused(true);
-        break;      
-      }
+    keyboardDidHide();  
+    
+    switch(key){
+      case "nameEnglishFocused" : setNameEnglishFocused(true);
+      break;
+      case "nameFocused" : setNameFocused(true);
+      break;
+      case "afmFocused" : setAfmFocused(true);
+      break;
+      case "doyDescriptionFocused" : setDoyDescriptionFocused(true);
+      break;  
+      case "legalDescriptionFocused" : setLegalDescriptionFocused(true);
+      break;
+      case "firmActDescriptionFocused" : setFirmActDescriptionFocused(true);
+      break;
+      case "companyOriginFocused" : setCompanyOriginFocused(true);
+      break;
+      case "postalAddressFocused" : setPostalAddressFocused(true);
+      break;
+      case "postalAddressNoFocused" : setPostalAddressNoFocused(true);
+      break;
+      case "postalAreaDescriptionFocused" : setPostalAreaDescriptionFocused(true);
+      break;
+      case "postalZipCodeFocused" : setPostalZipCodeFocused(true);
+      break;
+      case "companyPhoneFocused" : setCompanyPhoneFocused(true);
+      break;
+      case "companyEmailFocused" : setCompanyEmailFocused(true);
+      break;
+      case "tokenFocused" : setTokenFocused(true);
+      break;  
+      case "ypahesFocused" : setYpahesFocused(true);
+      break;      
+    }
   };
+
+    const nameValidation = val => {
+      if (!Validators.validateNonEmpty(val) ) {
+        setNameError(true);
+      }else{
+        setNameError(false);
+      }   
+    }
+    
+    const nameEnglishValidation = val => {
+      if (!Validators.validateNonEmpty(val) ) {
+        setNameEnglishError(true);
+      }else{
+        setNameEnglishError(false);
+      }   
+    } 
+
+    const afmValidation = val => {
+      if (!Validators.validateAfm(val) ) {
+        setAfmError(true);
+      }else{
+        setAfmError(false);
+      }   
+    }
+    
+    const doyDescriptionValidation = val => {
+      if (!Validators.validateNonEmpty(val) ) {
+        setDoyDescriptionError(true);
+      }else{
+        setDoyDescriptionError(false);
+      }   
+    } 
+  
+    const legalDescriptionValidation = val => {
+      if (!Validators.validateNonEmpty(val) ) {
+        setLegalDescriptionError(true);
+      }else{
+        setLegalDescriptionError(false);
+      }   
+    } 
+  
+    const firmActDescriptionValidation = val => {
+      if (!Validators.validateNonEmpty(val) ) {
+        setFirmActDescriptionError(true);
+      }else{
+        setFirmActDescriptionError(false);
+      }   
+    } 
+  
+    const postalAddressValidation = val => {
+      if (!Validators.validateNonEmpty(val) ) {
+        setPostalAddressError(true);
+      }else{
+        setPostalAddressError(false);
+      }   
+    } 
+  
+    const postalAddressNoValidation = val => {
+      if (!Validators.validateNonEmpty(val) ) {
+        setPostalAddressNoError(true);
+      }else{
+        setPostalAddressNoError(false);
+      }   
+    } 
+  
+    const postalAreaDescriptionValidation = val => {
+      if (!Validators.validateNonEmpty(val) ) {
+        setPostalAreaDescriptionError(true);
+      }else{
+        setPostalAreaDescriptionError(false);
+      }  
+    }   
+    
+    const postalZipCodeValidation = val => {
+      if (!Validators.validateNonEmpty(val) ) {
+        setPostalZipCodeError(true);
+      }else{
+        setPostalZipCodeError(false);
+      }  
+    }  
+  
+    const companyPhoneValidation = val => {
+      if (!Validators.validatePhone(val) ) {
+        setCompanyPhoneError(true);
+      }else{
+        setCompanyPhoneError(false);
+      }  
+    }  
+  
+    const companyEmailValidation = val => {
+      if (!Validators.validateEmail(val) ) {
+        setCompanyEmailError(true);
+      }else{
+        setCompanyEmailError(false);
+      }  
+    }  
+  
+    const tokenValidation = val => {
+      if (!Validators.validateNonEmpty(val) ) {
+        setTokenError(true);
+      }else{
+        setTokenError(false);
+      }  
+    }  
+
+    const ypahesValidation = val => {
+      if (!Validators.validateNonEmpty(val) ) {
+        setYpahesError(true);
+      }else{
+        setYpahesError(false);
+      }  
+    }
+  
 
   const focusOn = nextField => () => {
     if (nextField) {
@@ -254,21 +394,30 @@ const Company = ({route, navigation, feathersStore }) => {
 
   const saveCompany = async() => {
     Keyboard.dismiss();      
-    setModalVisible(true);  
-    const data = {afm: +afm, nameEnglish,  name, legalName};        
+
+    const data = {
+      afm: +afm, nameEnglish,  name, doyDescription, legalDescription, firmActDescription,
+      companyOrigin, postalAddress, postalAddressNo, postalAreaDescription, postalZipCode, companyPhone,
+      companyEmail, token, ypahes
+    };        
     try{
       if(edit){      //---------> Edit
-        let updt = realm.objects('Company');
-         
+        let updt = realm.objects('Company');         
         realm.write(()=>{     
           updt[0].afm = afm;
           updt[0].nameEnglish = nameEnglish;
           updt[0].name = name;
-          updt[0].legalName = legalName;
-          updt[0].token = token;
-          updt[0].doy = doy;
-          updt[0].address = address;
-          updt[0].phone = phone;
+          updt[0].doyDescription = doyDescription;
+          updt[0].legalDescription = legalDescription;
+          updt[0].firmActDescription = firmActDescription;
+          updt[0].companyOrigin = companyOrigin;
+          updt[0].postalAddress = postalAddress;
+          updt[0].postalAddressNo = postalAddressNo;
+          updt[0].postalAreaDescription = postalAreaDescription;
+          updt[0].postalZipCode = postalZipCode;
+          updt[0].companyPhone = companyPhone;
+          updt[0].companyEmail = companyEmail;
+          updt[0].token = token;        
           updt[0].ypahes = ypahes;
         }) 
       } else{   //------------> Create
@@ -278,13 +427,13 @@ const Company = ({route, navigation, feathersStore }) => {
       } 
       closeModal();
     }catch (err){
-      setModalVisible(false);
+      setIsLoading(false);
       setErrorModal(true);
     }
   };
 
   const closeModal = () => {    
-    setModalVisible(false);    
+    setIsLoading(false);    
     goBack();
   };
 
@@ -292,230 +441,450 @@ const Company = ({route, navigation, feathersStore }) => {
     setErrorModal(false); 
   };
 
-  const afmChange = p => {    
-    setAfm(p);
-  };
-
- 
+   
   return (  
-      <SafeAreaView style={styles.screenContainer}>
-        <StatusBar
-          backgroundColor={Colors.statusBarColor}
-          barStyle="dark-content"
+    <SafeAreaView style={styles.screenContainer}>
+      <StatusBar
+        backgroundColor={Colors.statusBarColor}
+        barStyle="dark-content"
+      />
+
+    <KeyboardAvoidingView
+      behavior= {"height"}
+      style={styles.formContainer}  
+      keyboardVerticalOffset = {100}
+    >
+      <ScrollView style={styles.form}>    
+
+        <UnderlineTextInput   
+          autoFocus={true}
+          ref={nameElement}
+          value={name}  
+          onChangeText={onChangeText("name")}
+          onFocus={onFocus("nameFocused")}
+          inputFocused={nameFocused}
+          onSubmitEditing={focusOn(legalNameElement)}
+          returnKeyType="next"
+          blurOnSubmit={false}
+          placeholder={common.name}
+          placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
+          inputTextColor={INPUT_TEXT_COLOR}
+          borderColor={INPUT_BORDER_COLOR}
+          focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
+          inputStyle={styles.inputStyle}
+          inputContainerStyle={styles.inputContainerStyle}
+          editable={true}
         />
+        <View style={styles.errorContainer}>
+          {nameError && <Text style={styles.errorText}>{common.nameError}</Text>}
+        </View>
 
-      <KeyboardAvoidingView
-        behavior={"height"}           
-      >  
-        <ScrollView> 
-
-          <View style={styles.instructionContainer}>
-            <Paragraph style={styles.instruction}>
-              {"Add"}
-            </Paragraph>
-          </View>
-
-          <View style={styles.form}>
-
-            <View style={styles.inputContainer}>
-              <UnderlineTextInput
-                ref={nameEnglishElement}
-                value={nameEnglish}                
-                onChangeText={onChangeText("nameEnglish")}
-                onFocus={onFocus("nameEnglishFocused")}
-                inputFocused={nameEnglishFocused}
-                onSubmitEditing={focusOn(nameElement)}
-                returnKeyType="next"
-                blurOnSubmit={false}
-                placeholder={common.nameEnglish}
-                placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
-                inputTextColor={INPUT_TEXT_COLOR}
-                borderColor={INPUT_BORDER_COLOR}
-                focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
-                inputStyle={styles.inputStyle}
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <UnderlineTextInput
-                ref={nameElement}
-                value={name}  
-                onChangeText={onChangeText("name")}
-                onFocus={onFocus("nameFocused")}
-                inputFocused={nameFocused}
-                onSubmitEditing={focusOn(afmElement)}
-                returnKeyType="next"
-                blurOnSubmit={false}
-                placeholder={common.name}
-                placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
-                inputTextColor={INPUT_TEXT_COLOR}
-                borderColor={INPUT_BORDER_COLOR}
-                focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
-                inputStyle={styles.inputStyle}
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <UnderlineTextInput
-                ref={legalNameElement}
-                value={legalName}  
-                onChangeText={onChangeText("legalName")}
-                onFocus={onFocus("legalNameFocused")}
-                inputFocused={legalNameFocused}
-                onSubmitEditing={focusOn(afmElement)}
-                returnKeyType="next"
-                blurOnSubmit={false}
-                placeholder={common.legalName}
-                placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
-                inputTextColor={INPUT_TEXT_COLOR}
-                borderColor={INPUT_BORDER_COLOR}
-                focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
-                inputStyle={styles.inputStyle}
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <UnderlineTextInput
-                ref={afmElement}
-                value={legalName}  
-                onChangeText={onChangeText("afm")}
-                onFocus={onFocus("afmFocused")}
-                inputFocused={legalNameFocused}
-                onSubmitEditing={focusOn(afmElement)}
-                returnKeyType="next"
-                blurOnSubmit={false}
-                placeholder={common.legalName}
-                placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
-                inputTextColor={INPUT_TEXT_COLOR}
-                borderColor={INPUT_BORDER_COLOR}
-                focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
-                inputStyle={styles.inputStyle}
-              />
-            </View>   
-
-            <View style={styles.inputContainer}>
-              <UnderlineTextInput
-                ref={legalNameElement}
-                value={legalName}  
-                onChangeText={onChangeText("legalName")}
-                onFocus={onFocus("legalNameFocused")}
-                inputFocused={legalNameFocused}
-                onSubmitEditing={focusOn(afmElement)}
-                returnKeyType="next"
-                blurOnSubmit={false}
-                placeholder={common.legalName}
-                placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
-                inputTextColor={INPUT_TEXT_COLOR}
-                borderColor={INPUT_BORDER_COLOR}
-                focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
-                inputStyle={styles.inputStyle}
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <UnderlineTextInput
-                ref={legalNameElement}
-                value={legalName}  
-                onChangeText={onChangeText("legalName")}
-                onFocus={onFocus("legalNameFocused")}
-                inputFocused={legalNameFocused}
-                onSubmitEditing={focusOn(afmElement)}
-                returnKeyType="next"
-                blurOnSubmit={false}
-                placeholder={common.legalName}
-                placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
-                inputTextColor={INPUT_TEXT_COLOR}
-                borderColor={INPUT_BORDER_COLOR}
-                focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
-                inputStyle={styles.inputStyle}
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <UnderlineTextInput
-                ref={legalNameElement}
-                value={legalName}  
-                onChangeText={onChangeText("legalName")}
-                onFocus={onFocus("legalNameFocused")}
-                inputFocused={legalNameFocused}
-                onSubmitEditing={focusOn(afmElement)}
-                returnKeyType="next"
-                blurOnSubmit={false}
-                placeholder={common.legalName}
-                placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
-                inputTextColor={INPUT_TEXT_COLOR}
-                borderColor={INPUT_BORDER_COLOR}
-                focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
-                inputStyle={styles.inputStyle}
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <UnderlineTextInput
-                ref={legalNameElement}
-                value={legalName}  
-                onChangeText={onChangeText("legalName")}
-                onFocus={onFocus("legalNameFocused")}
-                inputFocused={legalNameFocused}
-                onSubmitEditing={focusOn(afmElement)}
-                returnKeyType="next"
-                blurOnSubmit={false}
-                placeholder={common.legalName}
-                placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
-                inputTextColor={INPUT_TEXT_COLOR}
-                borderColor={INPUT_BORDER_COLOR}
-                focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
-                inputStyle={styles.inputStyle}
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <UnderlineTextInput
-                ref={legalNameElement}
-                value={legalName}  
-                onChangeText={onChangeText("legalName")}
-                onFocus={onFocus("legalNameFocused")}
-                inputFocused={legalNameFocused}
-                onSubmitEditing={focusOn(afmElement)}
-                returnKeyType="next"
-                blurOnSubmit={false}
-                placeholder={common.legalName}
-                placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
-                inputTextColor={INPUT_TEXT_COLOR}
-                borderColor={INPUT_BORDER_COLOR}
-                focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
-                inputStyle={styles.inputStyle}
-              />
-            </View>
-
-
-          </View>
-
-          <View style={styles.buttonContainer}>
-            <Button
-              onPress={saveUser}
-              disabled={false}
-              borderRadius={BUTTON_BORDER_RADIUS}
-              small
-              title={common.save}
-            />
-          </View>
-        </ScrollView>
-        </KeyboardAvoidingView>
-        <ActivityIndicatorModal
-          message={common.wait}
-          onRequestClose={closeModal}
-          title={common.waitStorage}
-          visible={modalVisible}
+        <UnderlineTextInput
+          ref={nameEnglishElement}
+          value={nameEnglish}                
+          onChangeText={onChangeText("nameEnglish")}
+          onFocus={onFocus("nameEnglishFocused")}
+          inputFocused={nameEnglishFocused}
+          onSubmitEditing={focusOn(nameElement)}
+          returnKeyType="next"
+          blurOnSubmit={false}
+          placeholder={common.nameEnglish}
+          placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
+          inputTextColor={INPUT_TEXT_COLOR}
+          borderColor={INPUT_BORDER_COLOR}
+          focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
+          inputStyle={styles.inputStyle}
+          inputContainerStyle={styles.inputContainerStyle}
+          editable={true}          
         />
-        <ErrorModal
-          cancelButton={closeErrorModal}
-          errorText={common.otherName}
-          visible={errorModal}
-        />        
-      </SafeAreaView>
-    );
-  
+        <View style={styles.errorContainer}>
+          {nameEnglishError && <Text style={styles.errorText}>{common.nameEnglishError}</Text>}
+        </View>
+
+        <UnderlineTextInput         
+          ref={afmElement}
+          value={afm}
+          onChangeText={onChangeText("afm")}
+          onFocus={onFocus("afmFocused")}
+          inputFocused={afmFocused}
+          onSubmitEditing={focusOn(legalDescriptionElement)}            
+          returnKeyType="next"
+          blurOnSubmit={false}
+          placeholder={`${common.companyAfm}*`}
+          placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
+          inputTextColor={INPUT_TEXT_COLOR}
+          borderColor={INPUT_BORDER_COLOR}
+          focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
+          inputStyle={styles.inputStyle}
+          inputContainerStyle={styles.inputContainerStyle}
+          editable={true}          
+          keyboardType='number-pad'
+        />
+        <View style={styles.errorContainer}>
+          {afmError && <Text style={styles.errorText}>{common.afmError}</Text>}
+        </View>
+
+        <UnderlineTextInput
+          ref={legalDescriptionElement}
+          value={legalDescription}  
+          onChangeText={onChangeText("legalDescription")}
+          onFocus={onFocus("legalDescriptionFocused")}
+          inputFocused={legalDescriptionFocused}
+          onSubmitEditing={focusOn(doyDescriptionElement)}
+          returnKeyType="next"
+          blurOnSubmit={false}
+          placeholder={common.legalName}
+          placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
+          inputTextColor={INPUT_TEXT_COLOR}
+          borderColor={INPUT_BORDER_COLOR}
+          focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
+          inputStyle={styles.inputStyle}
+          inputContainerStyle={styles.inputContainerStyle}
+          editable={true}
+        />
+        <View style={styles.errorContainer}>
+          {legalDescriptionError && <Text style={styles.errorText}>{common.legalNameError}</Text>}
+        </View>
+
+        <UnderlineTextInput
+          ref={doyDescriptionElement}
+          value={doyDescription}  
+          onChangeText={onChangeText("doyDescription")}
+          onFocus={onFocus("doyDescriptionFocused")}
+          inputFocused={doyDescriptionFocused}
+          onSubmitEditing={focusOn(firmActDescriptionElement)}
+          returnKeyType="next"
+          blurOnSubmit={false}
+          placeholder={common.doyDescription}
+          placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
+          inputTextColor={INPUT_TEXT_COLOR}
+          borderColor={INPUT_BORDER_COLOR}
+          focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
+          inputStyle={styles.inputStyle}
+          inputContainerStyle={styles.inputContainerStyle}
+          editable={true}
+        />
+        <View style={styles.errorContainer}>
+          {doyDescriptionError && <Text style={styles.errorText}>{common.doyDescriptionError}</Text>}
+        </View>
+      
+        <UnderlineTextInput
+          ref={firmActDescriptionElement}
+          value={firmActDescription}  
+          onChangeText={onChangeText("firmActDescription")}
+          onFocus={onFocus("firmActDescriptionFocused")}
+          inputFocused={firmActDescriptionFocused}
+          onSubmitEditing={focusOn(companyOriginElement)}
+          returnKeyType="next"
+          blurOnSubmit={false}
+          placeholder={common.afm}
+          placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
+          inputTextColor={INPUT_TEXT_COLOR}
+          borderColor={INPUT_BORDER_COLOR}
+          focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
+          inputStyle={styles.inputStyle}
+          inputContainerStyle={styles.inputContainerStyle}
+          editable={true}
+        />
+        <View style={styles.errorContainer}>
+          {firmActDescriptionError && <Text style={styles.errorText}>{common.firmActDescriptionError}</Text>}
+        </View>
+
+        <Picker
+          ref={companyOriginElement}
+          selectedValue={+companyOrigin}
+          onValueChange={(itemValue, itemIndex) =>
+            setCompanyOrigin(itemValue)
+          }>
+          {origins?.map((i, index)=> (              
+            <Picker.Item key={index}  color={Colors.primaryText} label={i.label} value={+i.id}/>
+          ))}        
+        </Picker>
+
+        <UnderlineTextInput
+          ref={postalAddressElement}
+          value={postalAddress}  
+          onChangeText={onChangeText("postalAddress")}
+          onFocus={onFocus("doyDescriptionFocused")}
+          inputFocused={postalAddressFocused}
+          onSubmitEditing={focusOn(postalAddressNoElement)}
+          returnKeyType="next"
+          blurOnSubmit={false}
+          placeholder={common.postalAddress}
+          placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
+          inputTextColor={INPUT_TEXT_COLOR}
+          borderColor={INPUT_BORDER_COLOR}
+          focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
+          inputStyle={styles.inputStyle}
+          inputContainerStyle={styles.inputContainerStyle}
+          editable={true}
+        />
+        <View style={styles.errorContainer}>
+          {postalAddressError && <Text style={styles.errorText}>{common.postalAddressError}</Text>}
+        </View>
+
+        <UnderlineTextInput
+          ref={postalAddressNoElement}
+          value={postalAddressNo}  
+          onChangeText={onChangeText("postalAddressNo")}
+          onFocus={onFocus("doyDescriptionFocused")}
+          inputFocused={postalAddressNoFocused}
+          onSubmitEditing={focusOn(postalAreaDescriptionElement)}
+          returnKeyType="next"
+          blurOnSubmit={false}
+          placeholder={common.postalAddressNo}
+          placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
+          inputTextColor={INPUT_TEXT_COLOR}
+          borderColor={INPUT_BORDER_COLOR}
+          focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
+          inputStyle={styles.inputStyle}
+          inputContainerStyle={styles.inputContainerStyle}
+          editable={true}
+        />
+        <View style={styles.errorContainer}>
+          {postalAddressNoError && <Text style={styles.errorText}>{common.postalAddressNoError}</Text>}
+        </View>
+
+        <UnderlineTextInput
+          ref={postalAreaDescriptionElement}
+          value={postalAreaDescription}  
+          onChangeText={onChangeText("postalAreaDescription")}
+          onFocus={onFocus("doyDescriptionFocused")}
+          inputFocused={postalAreaDescriptionFocused}
+          onSubmitEditing={focusOn(postalZipCodeElement)}
+          returnKeyType="next"
+          blurOnSubmit={false}
+          placeholder={common.postalAreaDescription}
+          placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
+          inputTextColor={INPUT_TEXT_COLOR}
+          borderColor={INPUT_BORDER_COLOR}
+          focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
+          inputStyle={styles.inputStyle}
+          inputContainerStyle={styles.inputContainerStyle}
+          editable={true}
+        />
+        <View style={styles.errorContainer}>
+          {postalAreaDescriptionError && <Text style={styles.errorText}>{common.postalAreaDescriptionError}</Text>}
+        </View>
+        
+        <UnderlineTextInput
+          ref={postalZipCodeElement}
+          value={postalAreaDescription}  
+          onChangeText={onChangeText("postalZipCode")}
+          onFocus={onFocus("postalZipCodeFocused")}
+          inputFocused={postalZipCodeFocused}
+          onSubmitEditing={focusOn(companyPhoneElement)}
+          returnKeyType="next"
+          blurOnSubmit={false}
+          placeholder={common.postalZipCode}
+          placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
+          inputTextColor={INPUT_TEXT_COLOR}
+          borderColor={INPUT_BORDER_COLOR}
+          focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
+          inputStyle={styles.inputStyle}
+          inputContainerStyle={styles.inputContainerStyle}
+          editable={true}
+        />
+        <View style={styles.errorContainer}>
+          {postalZipCodeError && <Text style={styles.errorText}>{common.postalZipCodeError}</Text>}
+        </View>
+
+        <UnderlineTextInput
+          ref={companyPhoneElement}
+          value={companyPhone}  
+          onChangeText={onChangeText("companyPhone")}
+          onFocus={onFocus("companyPhoneFocused")}
+          inputFocused={companyPhoneFocused}
+          onSubmitEditing={focusOn(companyEmailElement)}
+          returnKeyType="next"
+          blurOnSubmit={false}
+          placeholder={common.companyPhone}
+          placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
+          inputTextColor={INPUT_TEXT_COLOR}
+          borderColor={INPUT_BORDER_COLOR}
+          focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
+          inputStyle={styles.inputStyle}
+          inputContainerStyle={styles.inputContainerStyle}
+          editable={true}
+        />
+        <View style={styles.errorContainer}>
+          {companyPhoneError && <Text style={styles.errorText}>{common.companyPhoneError}</Text>}
+        </View>
+
+        <UnderlineTextInput
+          ref={companyEmailElement}
+          value={companyEmail}  
+          onChangeText={onChangeText("companyEmail")}
+          onFocus={onFocus("companyEmailFocused")}
+          inputFocused={companyEmailFocused}
+          onSubmitEditing={focusOn(tokenElement)}
+          returnKeyType="next"
+          blurOnSubmit={false}
+          placeholder={common.companyEmail}
+          placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
+          inputTextColor={INPUT_TEXT_COLOR}
+          borderColor={INPUT_BORDER_COLOR}
+          focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
+          inputStyle={styles.inputStyle}
+          inputContainerStyle={styles.inputContainerStyle}
+          editable={true}
+        />
+        <View style={styles.errorContainer}>
+          {companyEmailError && <Text style={styles.errorText}>{common.companyEmailError}</Text>}
+        </View>
+
+        <UnderlineTextInput
+          ref={companyEmailElement}
+          value={companyEmail}  
+          onChangeText={onChangeText("companyEmail")}
+          onFocus={onFocus("companyEmailFocused")}
+          inputFocused={companyEmailFocused}
+          onSubmitEditing={focusOn(tokenElement)}
+          returnKeyType="next"
+          blurOnSubmit={false}
+          placeholder={common.companyEmail}
+          placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
+          inputTextColor={INPUT_TEXT_COLOR}
+          borderColor={INPUT_BORDER_COLOR}
+          focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
+          inputStyle={styles.inputStyle}
+          inputContainerStyle={styles.inputContainerStyle}
+          editable={true}
+        />
+        <View style={styles.errorContainer}>
+          {companyEmailError && <Text style={styles.errorText}>{common.companyEmailError}</Text>}
+        </View>
+
+        <UnderlineTextInput
+          ref={tokenElement}
+          value={token}  
+          onChangeText={onChangeText("token")}
+          onFocus={onFocus("tokenFocused")}
+          inputFocused={tokenFocused}
+          onSubmitEditing={focusOn(ypahesElement)}
+          returnKeyType="next"
+          blurOnSubmit={false}
+          placeholder={common.token}
+          placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
+          inputTextColor={INPUT_TEXT_COLOR}
+          borderColor={INPUT_BORDER_COLOR}
+          focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
+          inputStyle={styles.inputStyle}
+          inputContainerStyle={styles.inputContainerStyle}
+          editable={true}
+        />
+        <View style={styles.errorContainer}>
+          {tokenError && <Text style={styles.errorText}>{common.tokenError}</Text>}
+        </View>
+
+        <UnderlineTextInput
+          ref={ypahesElement}
+          value={ypahes}  
+          onChangeText={onChangeText("ypahes")}
+          onFocus={onFocus("tokenFocused")}
+          inputFocused={ypahesFocused}
+          returnKeyType="next"
+          blurOnSubmit={false}
+          placeholder={common.ypahes}
+          placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
+          inputTextColor={INPUT_TEXT_COLOR}
+          borderColor={INPUT_BORDER_COLOR}
+          focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
+          inputStyle={styles.inputStyle}
+          inputContainerStyle={styles.inputContainerStyle}
+          editable={true}
+        />
+        <View style={styles.errorContainer}>
+          {ypahesError && <Text style={styles.errorText}>{common.ypahesError}</Text>}
+        </View>
+
+        <View style={styles.vSpacer}></View> 
+        <View style={styles.saveButton}>                       
+          <ContainedButton
+            onPress={saveCompany}
+            color={Colors.primaryColor}
+            socialIconName="check"
+            iconColor={Colors.onPrimaryColor} 
+            title={common.save}
+            titleColor={Colors.onPrimaryColor} 
+            titleStyle={styles.buttonTitle} 
+            disabled={!companyPhone || companyPhoneError || 
+              !companyEmail || companyEmailError || !aadeResponseRef.current}
+          /> 
+        </View>
+
+      </ScrollView>
+    </KeyboardAvoidingView>
+    <ActivityIndicatorModal
+      message={common.wait}
+      onRequestClose={closeModal}
+      title={common.waitStorage}
+      visible={isLoading}
+    />
+    <ErrorModal
+      cancelButton={closeErrorModal}
+      errorText={common.otherName}
+      visible={errorModal}
+    />        
+  </SafeAreaView>
+);  
 }
 
-export default inject('feathersStore')(observer(AddUser));
+const styles = StyleSheet.create({
+  screenContainer: {
+    flex: 1,
+    backgroundColor: Colors.background,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 24
+  }, 
+ 
+  picker: {
+    justifyContent: "center",
+    alignItems: "center",
+    width: 104
+  },  
+ 
+  inputStyle: {
+    textAlign: "left"
+  }, 
+
+  formContainer: {
+    flex: 1,      
+    backgroundColor: Colors.background,
+    justifyContent: "space-between", 
+  },
+  form: {       
+    paddingHorizontal: 20
+  },
+ 
+  inputContainerStyle: {
+    marginTop: 0,
+    paddingVertical: 0,
+    paddingHorizontal: 0
+  },
+ 
+  errorText: {
+    color: Colors.error,
+    fontSize: 12, 
+    marginBottom: -12    
+  },
+  errorContainer: { height: 14},
+  footer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 16
+  }, 
+
+  buttonTitle: {
+    paddingHorizontal: 0,
+    fontSize: 15,
+    fontWeight: "700"
+  },
+  vSpacer: {
+    height: 25
+  },  
+});
+
+export default inject('feathersStore')(observer(Company));
