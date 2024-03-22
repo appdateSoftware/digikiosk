@@ -50,6 +50,13 @@ export class AppSchema extends Realm.Object {
     }
   };
 
+  static ActiveUserSchema = {
+    name: 'ActiveUser',      
+    properties: {
+      user: {type:'object', objectType:  'User'},     
+    }
+  };
+
   static CounterSchema = {
     name: 'Counter',
     primaryKey: 'sequence_value',      
@@ -90,8 +97,7 @@ export class AppSchema extends Realm.Object {
       'token': {type: 'string'},  
       'doy': {type: 'string'},
       'address': {type: 'string'},
-      'phone': {type: 'string'},
-      'receiptKind': {type: 'string'},
+      'phone': {type: 'string', optional: true},
       'ypahes': {type: 'string', default: 'https://simply.gr'},  
     }
   };
