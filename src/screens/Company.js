@@ -222,73 +222,66 @@ const Company = ({route, navigation, feathersStore }) => {
   
   const onChangeText = key => (text) => {
     switch(key){
-      case "nameEnglish" : {
+      case "nameEnglish" : 
         setNameEnglish(text);
-        nameEnglishValidation(text);
-      };
-      break;
-      case "name" : {
+        nameEnglishValidation(text);      
+        break;
+      case "name" : 
         setName(text);
-        nameValidation(text);
-      };
-      break;  
-      case "legalName" : {
+        nameValidation(text);      
+        break;  
+      case "legalName" : 
         setLegalName(text);
-        legalNameValidation(text);
-      };
-      break;     
-      case "afm" : {
+        legalNameValidation(text);       
+        break;     
+      case "afm" : 
         setAfm(text);
-        afmValidation(text);
-      };
-      break;
-      case "doyDescription" : {
+        afmValidation(text);      
+        break;
+      case "doyDescription" : 
         setDoyDescription(text);
         doyDescriptionValidation(text);
-      };
-      break;
-      case "legalDescription" : {
+        break;
+      case "legalDescription" : 
         setLegalDescription(text);
         legalDescriptionValidation(text);
-      };
-      case "firmActDescription" : {
+        break;
+      case "firmActDescription" : 
         setFirmActDescription(text);
         firmActDescriptionValidation(text);
-      };
-      case "postalAddress" : {
+        break;
+      case "postalAddress" : 
         setPostalAddress(text);
         postalAddressValidation(text);
-      };
-      case "postalAddressNo" : {
+        break;
+      case "postalAddressNo" : 
         setPostalAddressNo(text);
         postalAddressNoValidation(text);
-      };
-      case "postalAreaDescription" : {
+        break;
+      case "postalAreaDescription" : 
         setPostalAreaDescription(text);
         postalAreaDescriptionValidation(text);
-      };
-      case "postalZipCode" : {
+        break;
+      case "postalZipCode" : 
         setPostalZipCode(text);
         postalZipCodeValidation(text);
-      };
-      case "companyPhone" : {
+        break;
+      case "companyPhone" : 
         setCompanyPhone(text);
         companyPhoneValidation(text);
-      };
-      case "companyEmail" : {
+        break;
+      case "companyEmail" : 
         setCompanyEmail(text);
         companyEmailValidation(text);
-      };
-      case "token" : {
+        break;
+      case "token" : 
         setToken(text);
-        tokenValidation(text);
-      };
-      break;
-      case "ypahes" : {
+        tokenValidation(text);        
+       break;
+      case "ypahes" : 
         setYpahes(text);
         ypahesValidation(text);
-      };
-      break;
+        break;
     }
   };
 
@@ -622,7 +615,7 @@ const Company = ({route, navigation, feathersStore }) => {
           onSubmitEditing={focusOn(doyDescriptionElement)}
           returnKeyType="next"
           blurOnSubmit={false}
-          placeholder={common.legalName}
+          placeholder={common.legalDescription}
           placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
           inputTextColor={INPUT_TEXT_COLOR}
           borderColor={INPUT_BORDER_COLOR}
@@ -758,7 +751,7 @@ const Company = ({route, navigation, feathersStore }) => {
         
         <UnderlineTextInput
           ref={postalZipCodeElement}
-          value={postalAreaDescription}  
+          value={postalZipCode}  
           onChangeText={onChangeText("postalZipCode")}
           onFocus={onFocus("postalZipCodeFocused")}
           inputFocused={postalZipCodeFocused}

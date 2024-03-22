@@ -181,7 +181,7 @@ const Users =({navigation, feathersStore}) => {
             <ContainedButton
               onPress={addButtonPressed}
               color={Colors.primaryColor}
-              socialIconName="add-outline"
+              socialIconName="plus"
               iconColor={Colors.onPrimaryColor} 
               title={common.addUser}
               titleColor={Colors.onPrimaryColor} 
@@ -212,7 +212,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background
   },
   container: {
-    flex: 1
+    flex: 1,
+    padding: 12
   },
   header: {
     flexDirection: "row",

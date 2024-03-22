@@ -11,7 +11,7 @@ import { Keyboard, StatusBar, StyleSheet, View, SafeAreaView,
 import {Picker} from '@react-native-picker/picker';
 import ActivityIndicatorModal from "../../components/modals/ActivityIndicatorModal";
 import ErrorModal from "../../components/modals/ErrorModal";
-import Button from "../../components/buttons/Button";
+import ContainedButton from "../../components/buttons/ContainedButton";
 import { Caption, Paragraph,   Subtitle1, Subtitle2 } from "../../components/text/CustomText";
 import UnderlineTextInput from "../../components/text/UnderlineTextInput";
 import cloneDeep from 'lodash/cloneDeep';
@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
   picker: {
     justifyContent: "center",
     alignItems: "center",
-    width: 104
+    width: 204
   },
   touchArea: {
     marginHorizontal: 16,
@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
     textAlign: "center"
   },
   form: {
-    padding: 12
+    padding: 12,
   },
   row: {
     flexDirection: "row",
@@ -112,6 +112,14 @@ const styles = StyleSheet.create({
     fontSize: 12, 
     marginBottom: -12    
   },
+  buttonTitle: {
+    paddingHorizontal: 0,
+    fontSize: 15,
+    fontWeight: "700"
+  },
+  vSpacer: {
+    height: 25
+  },  
 });
 
 
@@ -409,8 +417,7 @@ const AddSection = ({route, navigation, feathersStore }) => {
               {pickerVatsArray?.map((i, index)=> (              
                 <Picker.Item key={index}  color={Colors.primaryText} label={i.label} value={i.id}/>
               ))}        
-              </Picker>
-              <Subtitle1 style={[styles.small,  styles.numberTitle]}>{vat}</Subtitle1>
+              </Picker>              
             </View>
 
             <View style={[styles.row, styles.inputContainerStyle]}>      
@@ -428,19 +435,23 @@ const AddSection = ({route, navigation, feathersStore }) => {
               {pickerColorsArray?.map((i, index)=> (              
                 <Picker.Item key={index}  color={i.value} label={i.id} value={i.id}/>
               ))}        
-              </Picker>
-              <Subtitle1 style={[styles.small,  styles.numberTitle]}>{color}</Subtitle1>
+              </Picker>             
             </View>
-          </View>
+         
 
-          <View style={styles.buttonContainer}>
-            <Button
+          <View style={styles.vSpacer}></View> 
+          <View style={styles.saveButton}>                       
+            <ContainedButton
               onPress={saveSection}
-              disabled={false}
-              borderRadius={BUTTON_BORDER_RADIUS}
-              small
+              color={Colors.primaryColor}
+              socialIconName="check"
+              iconColor={Colors.onPrimaryColor} 
               title={common.save}
-            />
+              titleColor={Colors.onPrimaryColor} 
+              titleStyle={styles.buttonTitle} 
+              disabled={false}
+            /> 
+          </View> 
           </View>
         </ScrollView>
         </KeyboardAvoidingView>

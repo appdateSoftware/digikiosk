@@ -46,6 +46,11 @@ export const commonEL = {
     name: "Ονομασία",
     nameEnglish: "Ονομασία στα αγγλικά",
     legalName: "Επίσημη Ονομασία",
+    ypahes: "ΥΠΑΗΕΣ",
+    token: "Token",
+    ypahesError: "Παρακαλώ καταχωρείστε ένα έγκυρο url",
+    tokenError: "Παρακαλώ καταχωρείστε ένα έγκυρο token",
+    vat: "ΦΠΑ",
 
     firstName : "Όνομα",
     lastName : "Επώνυμο",
