@@ -27,7 +27,7 @@ import TouchableItem from "../../components/TouchableItem";
 import ActivityIndicatorModal from "../../components/modals/ActivityIndicatorModal";
 import ContainedButton from "../../components/buttons/ContainedButton";
 import DeleteModal from "../../components/modals/DeleteModal";
-import {useRealm} from '@realm/react';
+import {useRealm, useQuery } from '@realm/react';
 
 import Colors from "../../theme/colors";
 
@@ -42,6 +42,52 @@ const saveIcon = "checkmark-outline";
 const editIcon = "create-outline";
 const trashIcon = "trash-outline";
 
+const vatsArray = [{
+  "id" : 1,
+  "label" : 24
+}, {
+  "id" : 2,
+  "label" : 13
+}, {
+  "id" : 3,
+  "label" : 6
+}, {
+  "id" : 4,
+  "label" : 17
+}, {
+  "id" : 5,
+  "label" : 9
+}, {
+  "id" : 6,
+  "label" : 4
+}, {
+  "id" : 7,
+  "label" : 0
+}];
+
+const colorsArray = [{
+  "id" : "blue",
+  "value" : Colors.primaryColor
+}, {
+  "id" : "turquize",
+  "value" : Colors.accentColor
+}, {
+  "id" : "red",
+  "value" : Colors.tertiaryColor
+}, {
+  "id" : "light yellow",
+  "value" : Colors.overlayColor
+}, {
+  "id" : "orange",
+  "value" : Colors.selection
+}, {
+  "id" : "black",
+  "value" : Colors.black
+}, {
+  "id" : "dark blue",
+  "value" : Colors.primaryColorDark
+}]
+
 // DeliverySectionA Component
 const Section = ({  
   editSection,
@@ -49,16 +95,19 @@ const Section = ({
   name,
   colorCaption,
   color,
+  colorValue,
+  vatCaption,
+  vat,
   itemIndex
 }) => (
   
-    <View style={[styles.sectionCard]}>
+    <View style={[styles.sectionCard, {borderColor: colorValue}]}>
       <View style={styles.leftAddresContainer}>       
         <View style={styles.sectionInfo}>         
           <Subtitle1 style={styles.sectionText}>
             {`${name}`}
           </Subtitle1>
-          <Subtitle2>{colorCaption}: {`${color}`}</Subtitle2>
+          <Subtitle2>{colorCaption}: {`${color}`},  {vatCaption}: {`${vat}`}%</Subtitle2>
         </View>
       </View>
 
@@ -84,10 +133,11 @@ const Section = ({
 const Sections =({navigation, feathersStore}) => {
 
   const realm = useRealm();
+  const realm_sections = useQuery('Section');
 
   let common = _useTranslate(feathersStore.language);
 
-  const [realm_sections, setRealm_sections] = useState([]);   
+//  const [realm_sections, setRealm_sections] = useState([]);   
   const [indicatorModal, setIndicatorModal] = useState(false) ;
   const [deleteModal, setDeleteModal] = useState(false) ;
   const [itemToDelete, setItemToDelete] = useState(null) ;
@@ -105,19 +155,24 @@ const Sections =({navigation, feathersStore}) => {
         />
       )
   })}, [navigation]);
-
+/*
   useFocusEffect(
     useCallback(() => {
       const sectionsFromStorage = realm.objects('Section');
       setRealm_sections([...sectionsFromStorage])
     }, [realm])
   ); 
+  */
 
   const  editSection = item => () => {       
     const index = realm_sections.indexOf(item);      
     navigation.navigate('AddSection', 
       {item: JSON.stringify(item), index, title: common.changeSection});    
-  };   
+  };    
+  
+  const addButtonPressed = () => {  
+    navigation.navigate("AddSection", {title: common.addSection}) 
+  }  
 
   const openDeleteModal = item => () => {
     setItemToDelete(item);
@@ -128,7 +183,7 @@ const Sections =({navigation, feathersStore}) => {
     setDeleteModal(false);   
     setIndicatorModal(true);        
     realm.write(()=>{ 
-      realm.delete(realm_products[itemToDelete])                        
+      realm.delete(itemToDelete)                        
     }); 
     setIndicatorModal(false); 
   };  
@@ -141,18 +196,25 @@ const Sections =({navigation, feathersStore}) => {
       editSection={editSection(item)}
       deleteSection={openDeleteModal(item)}     
       name={item?.name || ""}
-      color={item?.color || ""}    
-      colorCaption={common.color}     
+      color={item?.color || ""}   
+      colorValue={findColor(item?.color)} 
+      colorCaption={common.color}   
+      vatCaption={common.vat}
+      vat={findVat(item?.vat)}  
       itemIndex={index}
     />
   );
 
   const renderSeparator = () => <Divider />;
 
-  const addButtonPressed = () => {  
-    navigation.navigate("AddSection", {title: common.addSection}) 
+  const findVat = (id) => {
+    return vatsArray.find(vat => +vat.id === +id)?.label || ""
   }
-  
+
+  const findColor = (id) => {
+    return colorsArray.find(color => color.id === id)?.value || ""
+  }
+ 
   const closeIndicatorModal = () => {    
     setIndicatorModal(false); 
   }; 
@@ -232,7 +294,8 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     paddingTop: 16,
     paddingHorizontal: 16,
-    paddingBottom: 20
+    paddingBottom: 20,    
+    borderWidth: 2
   },
   active: {
     backgroundColor: "#f7f7f7"

@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { Keyboard, StatusBar, StyleSheet, View, SafeAreaView,
-  KeyboardAvoidingView, ScrollView} from "react-native";
+  KeyboardAvoidingView, ScrollView, Text} from "react-native";
 import {Picker} from '@react-native-picker/picker';
 import ActivityIndicatorModal from "../../components/modals/ActivityIndicatorModal";
 import ErrorModal from "../../components/modals/ErrorModal";
@@ -184,10 +184,10 @@ const AddSection = ({route, navigation, feathersStore }) => {
   const [vat, setVat] = useState("");    
   const [vatFocused, setVatFocused] = useState(false);    
   const [modalVisible, setModalVisible] = useState(false);    
-  const [index, setIndex] = useState('');  
   const [errorModal, setErrorModal] = useState(false) ;   
   const [pickerColorsArray, setPickerColorsArray] = useState([]);
   const [pickerVatsArray, setPickerVatsArray] = useState([]);
+  const [editable, setEditable] = useState(false) ;
 
   const[nameError, setNameError] = useState(false); 
   const[nameEnglishError, setNameEnglishError] = useState(false); 
@@ -196,12 +196,19 @@ const AddSection = ({route, navigation, feathersStore }) => {
   const nameElement = useRef(null);
   const vatElement = useRef(null);
   const colorElement = useRef(null);
+  const paramIndex = useRef(null);
 
   useEffect(() => {    
     const {title} = route.params;
     navigation.setOptions({ title });
-    if(route.params?.index) setIndex(route.params.index);
-    route.params?.item && loadSection();
+    if(route.params?.index >= 0) {
+      paramIndex.current = route.params.index; 
+      setEditable(false);
+      route.params?.item && loadSection();
+    }else{
+      setEditable(true);
+      paramIndex.current = null;
+    }  
   }, [route.params]);
 
   useEffect(() => {
@@ -242,11 +249,11 @@ const AddSection = ({route, navigation, feathersStore }) => {
   
   const onChangeText = key => (text) => {
     switch(key){
-      case "nameEnglish" : {
+      case "nameEnglish" : 
         setNameEnglish(text);
         nameEnglishValidation(text);
-      };
-      break;
+      
+        break;
       case "name" : {
         setName(text);
         nameValidation(text);
@@ -256,10 +263,7 @@ const AddSection = ({route, navigation, feathersStore }) => {
   };
 
   const onFocus = key => () => {    
-      setNameFocused(false);
-      setNameEnglishFocused(false);
-      setColorFocused(false);
-      setVatFocused(false);
+      keyboardDidHide();
    
       switch(key){
         case "nameEnglishFocused" : setNameEnglishFocused(true);
@@ -300,22 +304,23 @@ const AddSection = ({route, navigation, feathersStore }) => {
     setModalVisible(true);  
     const data = {vat: +vat, nameEnglish,  name, color};        
     try{
-      if(index){      //---------> Edit
-        let updt = realm.objects('Profile');
-         
+      if(paramIndex?.current >= 0){      //---------> Edit
+        let updt = realm.objects('Section');
+
         realm.write(()=>{     
-          updt[0].vat = +vat;
-          updt[0].nameEnglish = nameEnglish;
-          updt[0].name = name;
-          updt[0].color = color;
+          updt[+paramIndex.current].vat = +vat;
+          updt[+paramIndex.current].nameEnglish = nameEnglish;
+        //  updt[+paramIndex.current].name = name;
+          updt[+paramIndex.current].color = color;
         }) 
       } else{   //------------> Create
         realm.write(()=>{     
-          realm.create('Section', data, false); //do not use primarykey 
+          realm.create('Section', data);
         }) 
       } 
       closeModal();
     }catch (err){
+      console.log(err)
       setModalVisible(false);
       setErrorModal(true);
     }
@@ -356,8 +361,31 @@ const AddSection = ({route, navigation, feathersStore }) => {
             </Paragraph>
           </View>
 
-          <View style={styles.form}>
+          <View style={styles.form}>         
 
+            <View style={styles.inputContainer}>
+              <UnderlineTextInput
+                ref={nameElement}
+                value={name}  
+                onChangeText={onChangeText("name")}
+                onFocus={onFocus("nameFocused")}
+                inputFocused={nameFocused}
+                onSubmitEditing={focusOn(vatElement)}
+                returnKeyType="next"
+                blurOnSubmit={false}
+                placeholder={common.name}
+                placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
+                inputTextColor={INPUT_TEXT_COLOR}
+                borderColor={INPUT_BORDER_COLOR}
+                focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
+                inputStyle={styles.inputStyle}
+                editable={editable}
+              />
+               <View style={styles.errorContainer}>
+                  {nameError && <Text style={styles.errorText}>{common.nameError}</Text>}
+              </View>
+            </View>   
+            
             <View style={styles.inputContainer}>
               <UnderlineTextInput
                 ref={nameEnglishElement}
@@ -377,28 +405,6 @@ const AddSection = ({route, navigation, feathersStore }) => {
               />
                <View style={styles.errorContainer}>
                   {nameEnglishError && <Text style={styles.errorText}>{common.nameEnglishError}</Text>}
-              </View>
-            </View>
-
-            <View style={styles.inputContainer}>
-              <UnderlineTextInput
-                ref={nameElement}
-                value={name}  
-                onChangeText={onChangeText("name")}
-                onFocus={onFocus("nameFocused")}
-                inputFocused={nameFocused}
-                onSubmitEditing={focusOn(vatElement)}
-                returnKeyType="next"
-                blurOnSubmit={false}
-                placeholder={common.name}
-                placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
-                inputTextColor={INPUT_TEXT_COLOR}
-                borderColor={INPUT_BORDER_COLOR}
-                focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
-                inputStyle={styles.inputStyle}
-              />
-               <View style={styles.errorContainer}>
-                  {nameError && <Text style={styles.errorText}>{common.nameError}</Text>}
               </View>
             </View>
 
@@ -449,7 +455,7 @@ const AddSection = ({route, navigation, feathersStore }) => {
               title={common.save}
               titleColor={Colors.onPrimaryColor} 
               titleStyle={styles.buttonTitle} 
-              disabled={false}
+              disabled={!name || nameError || !nameEnglish || nameEnglishError}
             /> 
           </View> 
           </View>

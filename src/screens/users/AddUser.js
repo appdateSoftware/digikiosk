@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { Keyboard, StatusBar, StyleSheet, View, SafeAreaView,
-  KeyboardAvoidingView, ScrollView} from "react-native";
+  KeyboardAvoidingView, ScrollView, Text} from "react-native";
 import {Picker} from '@react-native-picker/picker';
 import ActivityIndicatorModal from "../../components/modals/ActivityIndicatorModal";
 import ErrorModal from "../../components/modals/ErrorModal";
