@@ -11,10 +11,11 @@ import { Keyboard, StatusBar, StyleSheet, View, SafeAreaView,
 import {Picker} from '@react-native-picker/picker';
 import ActivityIndicatorModal from "../../components/modals/ActivityIndicatorModal";
 import ErrorModal from "../../components/modals/ErrorModal";
-import Button from "../../components/buttons/Button";
+import ContainedButton from "../../components/buttons/ContainedButton";
 import { Caption, Paragraph, Subtitle1, Subtitle2 } from "../../components/text/CustomText";
 import UnderlineTextInput from "../../components/text/UnderlineTextInput";
 import cloneDeep from 'lodash/cloneDeep';
+import Validators from '../../utils/validators';
 
 import Colors from "../../theme/colors";
 
@@ -45,7 +46,7 @@ const styles = StyleSheet.create({
   picker: {
     justifyContent: "center",
     alignItems: "center",
-    width: 104
+    width: 204
   },
   touchArea: {
     marginHorizontal: 16,
@@ -110,6 +111,14 @@ const styles = StyleSheet.create({
     fontSize: 12, 
     marginBottom: -12    
   },
+  buttonTitle: {
+    paddingHorizontal: 0,
+    fontSize: 15,
+    fontWeight: "700"
+  },
+  vSpacer: {
+    height: 25
+  },  
 });
 
 
@@ -148,14 +157,15 @@ const AddUser = ({route, navigation, feathersStore }) => {
   const [role, setRole] = useState("");    
   const [roleFocused, setRoleFocused] = useState(false);    
   const [modalVisible, setModalVisible] = useState(false);    
-  const [index, setIndex] = useState('');  
   const [errorModal, setErrorModal] = useState(false) ;   
   const [pickerRolesArray, setPickerRolesArray] = useState([]);  
+  const [editable, setEditable] = useState(false) ;
 
   const nameEnglishElement = useRef(null);
   const nameElement = useRef(null);
   const roleElement = useRef(null);
   const passwordElement = useRef(null);
+  const paramIndex = useRef(null);
 
   const[nameError, setNameError] = useState(false); 
   const[nameEnglishError, setNameEnglishError] = useState(false); 
@@ -164,8 +174,14 @@ const AddUser = ({route, navigation, feathersStore }) => {
   useEffect(() => {    
     const {title} = route.params;
     navigation.setOptions({ title });
-    if(route.params?.index) setIndex(route.params.index);
-    route.params?.item && loadUser();
+   if(route.params?.index >= 0) {
+      paramIndex.current = route.params.index; 
+      setEditable(false);
+      route.params?.item && loadUser();
+    }else{
+      setEditable(true);
+      paramIndex.current = null;
+    } 
   }, [route.params]);
 
   useEffect(() => {
@@ -223,12 +239,9 @@ const AddUser = ({route, navigation, feathersStore }) => {
     }
   };
 
-  const onFocus = key => () => {    
-      setNameFocused(false);
-      setNameEnglishFocused(false);
-      setPasswordFocused(false);
-      setRoleFocused(false);
-   
+  const onFocus = key => () => {        
+      keyboardDidHide();
+
       switch(key){
         case "nameEnglishFocused" : setNameEnglishFocused(true);
         break;
@@ -276,18 +289,18 @@ const AddUser = ({route, navigation, feathersStore }) => {
     setModalVisible(true);  
     const data = {role: +role, nameEnglish,  name, password};        
     try{
-      if(index){      //---------> Edit
+      if(paramIndex?.current >= 0){      //---------> Edit
         let updt = realm.objects('User');
          
         realm.write(()=>{     
-          updt[0].role = role;
+          updt[0].role = +role;
           updt[0].nameEnglish = nameEnglish;
-          updt[0].name = name;
+     //     updt[0].name = name;
           updt[0].password = password;
         }) 
       } else{   //------------> Create
         realm.write(()=>{     
-          realm.create('User', data, false); //do not use primarykey 
+          realm.create('User', data); 
         }) 
       } 
       closeModal();
@@ -323,14 +336,29 @@ const AddUser = ({route, navigation, feathersStore }) => {
       >  
         <ScrollView> 
 
-          <View style={styles.instructionContainer}>
-            <Paragraph style={styles.instruction}>
-              {"Add"}
-            </Paragraph>
-          </View>
-
           <View style={styles.form}>
-
+            <View style={styles.inputContainer}>
+              <UnderlineTextInput
+                ref={nameElement}
+                value={name}  
+                onChangeText={onChangeText("name")}
+                onFocus={onFocus("nameFocused")}
+                inputFocused={nameFocused}
+                onSubmitEditing={focusOn(roleElement)}
+                returnKeyType="next"
+                blurOnSubmit={false}
+                placeholder={common.name}
+                placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
+                inputTextColor={INPUT_TEXT_COLOR}
+                borderColor={INPUT_BORDER_COLOR}
+                focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
+                inputStyle={styles.inputStyle}
+                editable={editable}
+              />
+              <View style={styles.errorContainer}>
+                {nameError && <Text style={styles.errorText}>{common.nameError}</Text>}
+              </View>
+            </View>
             <View style={styles.inputContainer}>
               <UnderlineTextInput
                 ref={nameEnglishElement}
@@ -355,28 +383,6 @@ const AddUser = ({route, navigation, feathersStore }) => {
 
             <View style={styles.inputContainer}>
               <UnderlineTextInput
-                ref={nameElement}
-                value={name}  
-                onChangeText={onChangeText("name")}
-                onFocus={onFocus("nameFocused")}
-                inputFocused={nameFocused}
-                onSubmitEditing={focusOn(roleElement)}
-                returnKeyType="next"
-                blurOnSubmit={false}
-                placeholder={common.name}
-                placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
-                inputTextColor={INPUT_TEXT_COLOR}
-                borderColor={INPUT_BORDER_COLOR}
-                focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
-                inputStyle={styles.inputStyle}
-              />
-              <View style={styles.errorContainer}>
-                {nameError && <Text style={styles.errorText}>{common.nameError}</Text>}
-              </View>
-            </View>
-
-            <View style={styles.inputContainer}>
-              <UnderlineTextInput
                 ref={passwordElement}
                 value={password}  
                 onChangeText={onChangeText("password")}
@@ -385,7 +391,7 @@ const AddUser = ({route, navigation, feathersStore }) => {
                 onSubmitEditing={focusOn(roleElement)}
                 returnKeyType="next"
                 blurOnSubmit={false}
-                placeholder={common.password}
+                placeholder={"Password"}
                 placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
                 inputTextColor={INPUT_TEXT_COLOR}
                 borderColor={INPUT_BORDER_COLOR}
@@ -413,19 +419,22 @@ const AddUser = ({route, navigation, feathersStore }) => {
                 <Picker.Item key={index}  color={Colors.primaryText} label={i.label} value={i.id}/>
               ))}        
               </Picker>
-              <Subtitle1 style={[styles.small,  styles.numberTitle]}>{role}</Subtitle1>
-            </View>            
-          </View>
+            </View> 
+            <View style={styles.vSpacer}></View> 
+            <View style={styles.saveButton}>                       
+              <ContainedButton
+                onPress={saveUser}
+                color={Colors.primaryColor}
+                socialIconName="check"
+                iconColor={Colors.onPrimaryColor} 
+                title={common.save}
+                titleColor={Colors.onPrimaryColor} 
+                titleStyle={styles.buttonTitle} 
+                disabled={!name || nameError || !nameEnglish || nameEnglishError}
+              /> 
+            </View> 
 
-          <View style={styles.buttonContainer}>
-            <Button
-              onPress={saveUser}
-              disabled={false}
-              borderRadius={BUTTON_BORDER_RADIUS}
-              small
-              title={common.save}
-            />
-          </View>
+          </View>        
         </ScrollView>
         </KeyboardAvoidingView>
         <ActivityIndicatorModal

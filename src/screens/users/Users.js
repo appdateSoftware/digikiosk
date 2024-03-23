@@ -27,7 +27,7 @@ import TouchableItem from "../../components/TouchableItem";
 import ActivityIndicatorModal from "../../components/modals/ActivityIndicatorModal";
 import ContainedButton from "../../components/buttons/ContainedButton";
 import DeleteModal from "../../components/modals/DeleteModal";
-import {useRealm} from '@realm/react';
+import {useRealm, useQuery} from '@realm/react';
 
 import Colors from "../../theme/colors";
 
@@ -41,6 +41,26 @@ import _useTranslate from '../../hooks/_useTranslate';
 const saveIcon = "checkmark-outline";
 const editIcon = "create-outline";
 const trashIcon = "trash-outline";
+
+const rolesArray = [{
+  "id" : 1,
+  "label" : "Ταμείας 1"
+}, {
+  "id" : 2,
+  "label" : "Ταμείας 2"
+}, {
+  "id" : 3,
+  "label" : "Ταμείας 3"
+}, {
+  "id" : 4,
+  "label" : "Ταμείας 4"
+}, {
+  "id" : 5,
+  "label" : "Ταμείας 5"
+}, {
+  "id" : 6,
+  "label" : "Διαχειριστής"
+}];
 
 // DeliveryUserA Component
 const User = ({  
@@ -84,10 +104,10 @@ const User = ({
 const Users =({navigation, feathersStore}) => {
 
   const realm = useRealm();
+  const realm_users = useQuery('User');
 
   let common = _useTranslate(feathersStore.language);
 
-  const [realm_users, setRealm_users] = useState([]);   
   const [indicatorModal, setIndicatorModal] = useState(false) ;
   const [deleteModal, setDeleteModal] = useState(false) ;
   const [itemToDelete, setItemToDelete] = useState(null) ;
@@ -106,18 +126,15 @@ const Users =({navigation, feathersStore}) => {
       )
   })}, [navigation]);
 
-  useFocusEffect(
-    useCallback(() => {
-      const usersFromStorage = realm.objects('User');
-      setRealm_users([...usersFromStorage])
-    }, [realm])
-  ); 
-
   const  editUser = item => () => {       
     const index = realm_users.indexOf(item);      
     navigation.navigate('AddUser', 
       {item: JSON.stringify(item), index, title: common.changeUser});    
   };   
+  
+  const addButtonPressed = () => {  
+    navigation.navigate("AddUser", {title: common.addUser}) 
+  }
 
   const openDeleteModal = item => () => {
     setItemToDelete(item);
@@ -128,7 +145,7 @@ const Users =({navigation, feathersStore}) => {
     setDeleteModal(false);   
     setIndicatorModal(true);        
     realm.write(()=>{ 
-      realm.delete(realm_products[itemToDelete])                        
+      realm.delete(itemToDelete)                        
     }); 
     setIndicatorModal(false); 
   };  
@@ -141,16 +158,16 @@ const Users =({navigation, feathersStore}) => {
       editUser={editUser(item)}
       deleteUser={openDeleteModal(item)}     
       name={item?.name || ""}
-      role={item?.role || ""}    
+      role={findRole(item?.role)}    
       password={item?.role || ""}     
       itemIndex={index}
     />
   );
 
-  const renderSeparator = () => <Divider />;
+  const renderSeparator = () => <Divider />;  
 
-  const addButtonPressed = () => {  
-    navigation.navigate("AddUser", {title: common.addUser}) 
+  const findRole = (id) => {
+    return rolesArray.find(role => +role.id === +id)?.label || ""
   }
   
   const closeIndicatorModal = () => {    

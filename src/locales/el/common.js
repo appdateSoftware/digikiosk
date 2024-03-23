@@ -50,7 +50,9 @@ export const commonEL = {
     token: "Token",
     ypahesError: "Παρακαλώ καταχωρείστε ένα έγκυρο url",
     tokenError: "Παρακαλώ καταχωρείστε ένα έγκυρο token",
+    passwordError: "Παρακαλώ καταχωρείστε ένα έγκυρο password.",
     vat: "ΦΠΑ",
+    role: "Ρόλος",
 
     firstName : "Όνομα",
     lastName : "Επώνυμο",

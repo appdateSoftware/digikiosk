@@ -355,12 +355,6 @@ const AddSection = ({route, navigation, feathersStore }) => {
       >  
         <ScrollView> 
 
-          <View style={styles.instructionContainer}>
-            <Paragraph style={styles.instruction}>
-              {"Add"}
-            </Paragraph>
-          </View>
-
           <View style={styles.form}>         
 
             <View style={styles.inputContainer}>
@@ -445,19 +439,19 @@ const AddSection = ({route, navigation, feathersStore }) => {
             </View>
          
 
-          <View style={styles.vSpacer}></View> 
-          <View style={styles.saveButton}>                       
-            <ContainedButton
-              onPress={saveSection}
-              color={Colors.primaryColor}
-              socialIconName="check"
-              iconColor={Colors.onPrimaryColor} 
-              title={common.save}
-              titleColor={Colors.onPrimaryColor} 
-              titleStyle={styles.buttonTitle} 
-              disabled={!name || nameError || !nameEnglish || nameEnglishError}
-            /> 
-          </View> 
+            <View style={styles.vSpacer}></View> 
+            <View style={styles.saveButton}>                       
+              <ContainedButton
+                onPress={saveSection}
+                color={Colors.primaryColor}
+                socialIconName="check"
+                iconColor={Colors.onPrimaryColor} 
+                title={common.save}
+                titleColor={Colors.onPrimaryColor} 
+                titleStyle={styles.buttonTitle} 
+                disabled={!name || nameError || !nameEnglish || nameEnglishError}
+              /> 
+            </View> 
           </View>
         </ScrollView>
         </KeyboardAvoidingView>

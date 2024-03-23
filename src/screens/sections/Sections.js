@@ -137,7 +137,6 @@ const Sections =({navigation, feathersStore}) => {
 
   let common = _useTranslate(feathersStore.language);
 
-//  const [realm_sections, setRealm_sections] = useState([]);   
   const [indicatorModal, setIndicatorModal] = useState(false) ;
   const [deleteModal, setDeleteModal] = useState(false) ;
   const [itemToDelete, setItemToDelete] = useState(null) ;
@@ -155,14 +154,6 @@ const Sections =({navigation, feathersStore}) => {
         />
       )
   })}, [navigation]);
-/*
-  useFocusEffect(
-    useCallback(() => {
-      const sectionsFromStorage = realm.objects('Section');
-      setRealm_sections([...sectionsFromStorage])
-    }, [realm])
-  ); 
-  */
 
   const  editSection = item => () => {       
     const index = realm_sections.indexOf(item);      
