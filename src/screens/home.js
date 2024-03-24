@@ -103,7 +103,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     return <ActivityIndicator animating size="small" />;
   };
 
-  const sectionBtnPressed = (item) => {
+  const sectionBtnPressed = () => (item) => {
     setSection(item);
   }
 
@@ -141,24 +141,25 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   return ( 
     <> 
 
-      <View style={styles.viewEmpty}>
+      <View style={styles.viewContainer}>
         {headerComponent()}
-
-        <Card style={styles.cardEmpty}>
-          {require('../assets/img/empty.png') && <Image source={require('../assets/img/empty.png')} />}
-          <Text third medium h3 h3Style={styles.textEmpty}>
-            {common.textEmpty}
-          </Text>
-        </Card>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          alwaysBounceHorizontal={false}
-          contentContainerStyle={styles.sectionsList}
-        >
-          {realm_sections?.map(( item, index ) => renderSectionItem(item, index))}
-        </ScrollView>  
-        <NumericKeyboard/>
+        <View style={styles.viewContainer}>
+          <View style={styles.cardEmpty}>
+       
+        </View>
+       
+        </View> 
+        <View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            alwaysBounceHorizontal={false}
+            contentContainerStyle={styles.sectionsList}      
+          >
+            {realm_sections?.map(( item, index ) => renderSectionItem(item, index))}
+          </ScrollView>    
+          <NumericKeyboard/>
+        </View>
       </View>
   
     </>
@@ -168,38 +169,19 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
 
 const styles = StyleSheet.create({
   header: {
-    paddingTop: getStatusBarHeight(),
+ //   paddingTop: getStatusBarHeight(),
     paddingHorizontal: 20,
   },
-  loading: {
-    marginTop: 12,
-    marginBottom: 20,
-  },
-  user: {
-    marginTop: 20,
-    marginBottom: 30,
-  },
-  shipping: {
-    marginBottom: 30,
-  },
-  itemDelivery: {
-    marginTop: 12,
-    marginHorizontal: 20,
-  },
-  itemDeliveryEnd: {
-    marginBottom: 20,
-  },
-  testStatus: {
-    marginBottom: 8,
-  },
-  viewEmpty: {
+  
+
+  viewContainer: {
     flex: 1,
   },
   cardEmpty: {
     flex: 1,
-    marginBottom: 30,
-    marginHorizontal: 20,
-    paddingHorizontal: 44,
+    marginBottom: 0,
+    marginHorizontal: 4,
+    paddingHorizontal: 4,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
@@ -226,12 +208,12 @@ const styles = StyleSheet.create({
   card: {
     marginLeft: 8,
     width: 104,
-    height: 72,
+    height: 42,
     borderRadius: 4
   },
   cardContainer: {
     flex: 1,
-    justifyContent: "flex-end",
+    justifyContent: "center",
     alignItems: "center"
   },
   cardTitle: {
