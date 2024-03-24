@@ -14,7 +14,6 @@ import ErrorModal from "../../components/modals/ErrorModal";
 import ContainedButton from "../../components/buttons/ContainedButton";
 import { Caption, Paragraph, Subtitle1, Subtitle2 } from "../../components/text/CustomText";
 import UnderlineTextInput from "../../components/text/UnderlineTextInput";
-import cloneDeep from 'lodash/cloneDeep';
 import Validators from '../../utils/validators';
 
 import Colors from "../../theme/colors";
@@ -30,97 +29,6 @@ const INPUT_TEXT_COLOR = "rgba(0, 0, 0, 0.87)";
 const INPUT_BORDER_COLOR = "rgba(0, 0, 0, 0.2)";
 const INPUT_FOCUSED_BORDER_COLOR = "#000";
 const BUTTON_BORDER_RADIUS = 4;
-
-const styles = StyleSheet.create({
-  screenContainer: {
-    flex: 1,
-    backgroundColor: Colors.background,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: 24
-  }, 
-  instructionContainer: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  picker: {
-    justifyContent: "center",
-    alignItems: "center",
-    width: 204
-  },
-  touchArea: {
-    marginHorizontal: 16,
-    marginBottom: 6,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(35, 47, 52, 0.12)",
-    overflow: "hidden"
-  },
-  iconContainer: {
-    justifyContent: "center",
-    alignItems: "center",
-    width: 44,
-    height: 44,
-    borderRadius: 22
-  },
-  instruction: {
-    marginTop: 32,
-    paddingHorizontal: 40,
-    fontSize: 14,
-    textAlign: "center"
-  },
-  form: {
-    padding: 12
-  },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    width: "100%"
-  },
-  inputContainer: {
-    margin: 8
-  },
-  small: {
-    flex: 2
-  },
-  large: {
-    flex: 5
-  },
-  inputStyle: {
-    textAlign: "left"
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    marginTop: 20,
-    justifyContent: "center" 
-  }, 
-  inputContainerStyle: {
-    marginTop: 0,
-    paddingVertical: 0,
-    paddingHorizontal: 0
-  },
-  cityTitle: {
-    color: PLACEHOLDER_TEXT_COLOR,
-    alignSelf: "center",
-    paddingLeft: 6
-  },
-  errorContainer: { height: 14},
-  errorText: {
-    color: Colors.error,
-    fontSize: 12, 
-    marginBottom: -12    
-  },
-  buttonTitle: {
-    paddingHorizontal: 0,
-    fontSize: 15,
-    fontWeight: "700"
-  },
-  vSpacer: {
-    height: 25
-  },  
-});
-
 
 const AddUser = ({route, navigation, feathersStore }) => {
 
@@ -154,7 +62,7 @@ const AddUser = ({route, navigation, feathersStore }) => {
   const [nameEnglishFocused, setNameEnglishFocused] = useState(false);   
   const [password, setPassword] = useState("");    
   const [passwordFocused, setPasswordFocused] = useState(false);   
-  const [role, setRole] = useState("");    
+  const [role, setRole] = useState(1);    
   const [roleFocused, setRoleFocused] = useState(false);    
   const [modalVisible, setModalVisible] = useState(false);    
   const [errorModal, setErrorModal] = useState(false) ;   
@@ -287,16 +195,16 @@ const AddUser = ({route, navigation, feathersStore }) => {
   const saveUser = async() => {
     Keyboard.dismiss();      
     setModalVisible(true);  
-    const data = {role: +role, nameEnglish,  name, password};        
+    const data = {role: +role, nameEnglish,  name, password};   
     try{
-      if(paramIndex?.current >= 0){      //---------> Edit
+      if(paramIndex?.current && (+paramIndex?.current >= 0)){      //---------> Edit
         let updt = realm.objects('User');
          
         realm.write(()=>{     
-          updt[0].role = +role;
-          updt[0].nameEnglish = nameEnglish;
+          updt[+paramIndex.current].role = +role;
+          updt[+paramIndex.current].nameEnglish = nameEnglish;
      //     updt[0].name = name;
-          updt[0].password = password;
+          updt[+paramIndex.current].password = password;
         }) 
       } else{   //------------> Create
         realm.write(()=>{     
@@ -306,6 +214,7 @@ const AddUser = ({route, navigation, feathersStore }) => {
       closeModal();
     }catch (err){
       setModalVisible(false);
+      console.log(err)
       setErrorModal(true);
     }
   };
@@ -332,109 +241,104 @@ const AddUser = ({route, navigation, feathersStore }) => {
         />
 
       <KeyboardAvoidingView
-        behavior={"height"}           
+        behavior= {"height"}
+        style={styles.formContainer}  
+        keyboardVerticalOffset = {100}
       >  
-        <ScrollView> 
+        <ScrollView style={styles.form}> 
 
-          <View style={styles.form}>
-            <View style={styles.inputContainer}>
-              <UnderlineTextInput
-                ref={nameElement}
-                value={name}  
-                onChangeText={onChangeText("name")}
-                onFocus={onFocus("nameFocused")}
-                inputFocused={nameFocused}
-                onSubmitEditing={focusOn(roleElement)}
-                returnKeyType="next"
-                blurOnSubmit={false}
-                placeholder={common.name}
-                placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
-                inputTextColor={INPUT_TEXT_COLOR}
-                borderColor={INPUT_BORDER_COLOR}
-                focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
-                inputStyle={styles.inputStyle}
-                editable={editable}
-              />
-              <View style={styles.errorContainer}>
-                {nameError && <Text style={styles.errorText}>{common.nameError}</Text>}
-              </View>
-            </View>
-            <View style={styles.inputContainer}>
-              <UnderlineTextInput
-                ref={nameEnglishElement}
-                value={nameEnglish}                
-                onChangeText={onChangeText("nameEnglish")}
-                onFocus={onFocus("nameEnglishFocused")}
-                inputFocused={nameEnglishFocused}
-                onSubmitEditing={focusOn(nameElement)}
-                returnKeyType="next"
-                blurOnSubmit={false}
-                placeholder={common.nameEnglish}
-                placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
-                inputTextColor={INPUT_TEXT_COLOR}
-                borderColor={INPUT_BORDER_COLOR}
-                focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
-                inputStyle={styles.inputStyle}
-              />
-              <View style={styles.errorContainer}>
-                  {nameEnglishError && <Text style={styles.errorText}>{common.nameEnglishError}</Text>}
-              </View>
-            </View>
+          <UnderlineTextInput
+            ref={nameElement}
+            value={name}  
+            onChangeText={onChangeText("name")}
+            onFocus={onFocus("nameFocused")}
+            inputFocused={nameFocused}
+            onSubmitEditing={focusOn(nameEnglishElement.current)}
+            returnKeyType="next"
+            blurOnSubmit={false}
+            placeholder={common.username}
+            placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
+            inputTextColor={INPUT_TEXT_COLOR}
+            borderColor={INPUT_BORDER_COLOR}
+            focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
+            inputStyle={styles.inputStyle}
+            editable={editable}
+          />
+          <View style={styles.errorContainer}>
+            {nameError && <Text style={styles.errorText}>{common.nameError}</Text>}
+          </View>
 
-            <View style={styles.inputContainer}>
-              <UnderlineTextInput
-                ref={passwordElement}
-                value={password}  
-                onChangeText={onChangeText("password")}
-                onFocus={onFocus("passwordFocused")}
-                inputFocused={passwordFocused}
-                onSubmitEditing={focusOn(roleElement)}
-                returnKeyType="next"
-                blurOnSubmit={false}
-                placeholder={"Password"}
-                placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
-                inputTextColor={INPUT_TEXT_COLOR}
-                borderColor={INPUT_BORDER_COLOR}
-                focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
-                inputStyle={styles.inputStyle}
-              />
-              <View style={styles.errorContainer}>
-                {passwordError && <Text style={styles.errorText}>{common.passwordError}</Text>}
-              </View>
-            </View>
+          <UnderlineTextInput
+            ref={nameEnglishElement}
+            value={nameEnglish}                
+            onChangeText={onChangeText("nameEnglish")}
+            onFocus={onFocus("nameEnglishFocused")}
+            inputFocused={nameEnglishFocused}
+            onSubmitEditing={focusOn(passwordElement.current)}
+            returnKeyType="next"
+            blurOnSubmit={false}
+            placeholder={common.usernameEnglish}
+            placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
+            inputTextColor={INPUT_TEXT_COLOR}
+            borderColor={INPUT_BORDER_COLOR}
+            focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
+            inputStyle={styles.inputStyle}
+          />
+          <View style={styles.errorContainer}>
+              {nameEnglishError && <Text style={styles.errorText}>{common.nameEnglishError}</Text>}
+          </View>
 
-            <View style={[styles.row, styles.inputContainerStyle]}>      
-              <Subtitle2 style={[styles.small,  styles.cityTitle]}>{common.role}</Subtitle2>
-              <Picker
-                style={[ styles.picker]}
-                ref={roleElement}
-                onFocus={onFocus("roleFocused")}
-                inputFocused={roleFocused}
-                selectedValue={role}
-                mode={'dropdown'}
-                onValueChange={(itemValue, itemIndex) =>
-                roleChange(itemValue)
-              }>
-              {pickerRolesArray?.map((i, index)=> (              
-                <Picker.Item key={index}  color={Colors.primaryText} label={i.label} value={i.id}/>
-              ))}        
-              </Picker>
-            </View> 
-            <View style={styles.vSpacer}></View> 
-            <View style={styles.saveButton}>                       
-              <ContainedButton
-                onPress={saveUser}
-                color={Colors.primaryColor}
-                socialIconName="check"
-                iconColor={Colors.onPrimaryColor} 
-                title={common.save}
-                titleColor={Colors.onPrimaryColor} 
-                titleStyle={styles.buttonTitle} 
-                disabled={!name || nameError || !nameEnglish || nameEnglishError}
-              /> 
-            </View> 
+          <UnderlineTextInput
+            ref={passwordElement}
+            value={password}  
+            onChangeText={onChangeText("password")}
+            onFocus={onFocus("passwordFocused")}
+            inputFocused={passwordFocused}
+            onSubmitEditing={focusOn(roleElement.current)}
+            returnKeyType="next"
+            blurOnSubmit={false}
+            placeholder={"Password"}
+            placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
+            inputTextColor={INPUT_TEXT_COLOR}
+            borderColor={INPUT_BORDER_COLOR}
+            focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
+            inputStyle={styles.inputStyle}
+          />
+          <View style={styles.errorContainer}>
+            {passwordError && <Text style={styles.errorText}>{common.passwordError}</Text>}
+          </View>
 
-          </View>        
+          <View style={[styles.row, styles.inputContainerStyle]}>      
+            <Subtitle2 style={[styles.small,  styles.cityTitle]}>{common.role}</Subtitle2>
+            <Picker
+              style={[ styles.picker]}
+              ref={roleElement}
+              onFocus={onFocus("roleFocused")}
+              inputFocused={roleFocused}
+              selectedValue={role}
+              mode={'dropdown'}
+              onValueChange={(itemValue, itemIndex) =>
+              roleChange(itemValue)
+            }>
+            {pickerRolesArray?.map((i, index)=> (              
+              <Picker.Item key={index}  color={Colors.primaryText} label={i.label} value={i.id}/>
+            ))}        
+            </Picker>
+          </View> 
+          <View style={styles.vSpacer}></View> 
+          <View style={styles.saveButton}>                       
+            <ContainedButton
+              onPress={saveUser}
+              color={Colors.primaryColor}
+              socialIconName="check"
+              iconColor={Colors.onPrimaryColor} 
+              title={common.save}
+              titleColor={Colors.onPrimaryColor} 
+              titleStyle={styles.buttonTitle} 
+              disabled={!name || nameError || !nameEnglish || nameEnglishError}
+            /> 
+          </View> 
+
         </ScrollView>
         </KeyboardAvoidingView>
         <ActivityIndicatorModal
@@ -452,5 +356,100 @@ const AddUser = ({route, navigation, feathersStore }) => {
     );
   
 }
+
+const styles = StyleSheet.create({
+  screenContainer: {
+    flex: 1,
+    backgroundColor: Colors.background,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 24
+  }, 
+  instructionContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  picker: {
+    justifyContent: "center",
+    alignItems: "center",
+    width: 204
+  },
+  touchArea: {
+    marginHorizontal: 16,
+    marginBottom: 6,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(35, 47, 52, 0.12)",
+    overflow: "hidden"
+  },
+  iconContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    width: 44,
+    height: 44,
+    borderRadius: 22
+  },
+  instruction: {
+    marginTop: 32,
+    paddingHorizontal: 40,
+    fontSize: 14,
+    textAlign: "center"
+  },
+  form: {
+    padding: 12
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    width: "100%"
+  },
+  inputContainer: {
+    margin: 8
+  },
+  small: {
+    flex: 2
+  },
+  large: {
+    flex: 5
+  },
+  inputStyle: {
+    textAlign: "left"
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    marginTop: 20,
+    justifyContent: "center" 
+  }, 
+  inputContainerStyle: {
+    marginTop: 0,
+    paddingVertical: 0,
+    paddingHorizontal: 0
+  },
+  cityTitle: {
+    color: PLACEHOLDER_TEXT_COLOR,
+    alignSelf: "center",
+    paddingLeft: 6
+  },
+  errorContainer: { height: 14},
+  errorText: {
+    color: Colors.error,
+    fontSize: 12, 
+    marginBottom: -12    
+  },
+  buttonTitle: {
+    paddingHorizontal: 0,
+    fontSize: 15,
+    fontWeight: "700"
+  },
+  vSpacer: {
+    height: 25
+  },  
+  formContainer: {
+    flex: 1,      
+    backgroundColor: Colors.background,
+    justifyContent: "space-between", 
+  },
+});
 
 export default inject('feathersStore')(observer(AddUser));

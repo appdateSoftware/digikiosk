@@ -53,6 +53,8 @@ export const commonEL = {
     passwordError: "Παρακαλώ καταχωρείστε ένα έγκυρο password.",
     vat: "ΦΠΑ",
     role: "Ρόλος",
+    username: "'Ονομα",
+    usernameEnglish: "Όνομα στα αγγλικά",
 
     firstName : "Όνομα",
     lastName : "Επώνυμο",

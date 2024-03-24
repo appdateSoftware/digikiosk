@@ -14,7 +14,6 @@ import ErrorModal from "../../components/modals/ErrorModal";
 import ContainedButton from "../../components/buttons/ContainedButton";
 import { Caption, Paragraph,   Subtitle1, Subtitle2 } from "../../components/text/CustomText";
 import UnderlineTextInput from "../../components/text/UnderlineTextInput";
-import cloneDeep from 'lodash/cloneDeep';
 import Validators from '../../utils/validators';
 
 import Colors from "../../theme/colors";
@@ -30,97 +29,6 @@ const INPUT_TEXT_COLOR = "rgba(0, 0, 0, 0.87)";
 const INPUT_BORDER_COLOR = "rgba(0, 0, 0, 0.2)";
 const INPUT_FOCUSED_BORDER_COLOR = "#000";
 const BUTTON_BORDER_RADIUS = 4;
-
-// AddSectionA Styles
-const styles = StyleSheet.create({
-  screenContainer: {
-    flex: 1,
-    backgroundColor: Colors.background,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: 24
-  }, 
-  instructionContainer: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  picker: {
-    justifyContent: "center",
-    alignItems: "center",
-    width: 204
-  },
-  touchArea: {
-    marginHorizontal: 16,
-    marginBottom: 6,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(35, 47, 52, 0.12)",
-    overflow: "hidden"
-  },
-  iconContainer: {
-    justifyContent: "center",
-    alignItems: "center",
-    width: 44,
-    height: 44,
-    borderRadius: 22
-  },
-  instruction: {
-    marginTop: 32,
-    paddingHorizontal: 40,
-    fontSize: 14,
-    textAlign: "center"
-  },
-  form: {
-    padding: 12,
-  },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    width: "100%"
-  },
-  inputContainer: {
-    margin: 8
-  },
-  small: {
-    flex: 2
-  },
-  large: {
-    flex: 5
-  },
-  inputStyle: {
-    textAlign: "left"
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    marginTop: 20,
-    justifyContent: "center" 
-  }, 
-  inputContainerStyle: {
-    marginTop: 0,
-    paddingVertical: 0,
-    paddingHorizontal: 0
-  },
-  cityTitle: {
-    color: PLACEHOLDER_TEXT_COLOR,
-    alignSelf: "center",
-    paddingLeft: 6
-  },
-  errorContainer: { height: 14},
-  errorText: {
-    color: Colors.error,
-    fontSize: 12, 
-    marginBottom: -12    
-  },
-  buttonTitle: {
-    paddingHorizontal: 0,
-    fontSize: 15,
-    fontWeight: "700"
-  },
-  vSpacer: {
-    height: 25
-  },  
-});
 
 
 const AddSection = ({route, navigation, feathersStore }) => {
@@ -179,9 +87,9 @@ const AddSection = ({route, navigation, feathersStore }) => {
   const [nameFocused, setNameFocused] = useState(false);   
   const [nameEnglish, setNameEnglish] = useState("");   
   const [nameEnglishFocused, setNameEnglishFocused] = useState(false);   
-  const [color, setColor] = useState("");    
+  const [color, setColor] = useState(1);    
   const [colorFocused, setColorFocused] = useState(false);   
-  const [vat, setVat] = useState("");    
+  const [vat, setVat] = useState(1);    
   const [vatFocused, setVatFocused] = useState(false);    
   const [modalVisible, setModalVisible] = useState(false);    
   const [errorModal, setErrorModal] = useState(false) ;   
@@ -304,7 +212,7 @@ const AddSection = ({route, navigation, feathersStore }) => {
     setModalVisible(true);  
     const data = {vat: +vat, nameEnglish,  name, color};        
     try{
-      if(paramIndex?.current >= 0){      //---------> Edit
+      if(paramIndex?.current && (+paramIndex?.current >= 0)){      //---------> Edit
         let updt = realm.objects('Section');
 
         realm.write(()=>{     
@@ -350,56 +258,52 @@ const AddSection = ({route, navigation, feathersStore }) => {
           barStyle="dark-content"
         />
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}           
-      >  
-        <ScrollView> 
+        <KeyboardAvoidingView
+          behavior= {"height"}
+          style={styles.formContainer}  
+          keyboardVerticalOffset = {100}
+        >  
+        <ScrollView style={styles.form}> 
 
-          <View style={styles.form}>         
-
-            <View style={styles.inputContainer}>
-              <UnderlineTextInput
-                ref={nameElement}
-                value={name}  
-                onChangeText={onChangeText("name")}
-                onFocus={onFocus("nameFocused")}
-                inputFocused={nameFocused}
-                onSubmitEditing={focusOn(vatElement)}
-                returnKeyType="next"
-                blurOnSubmit={false}
-                placeholder={common.name}
-                placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
-                inputTextColor={INPUT_TEXT_COLOR}
-                borderColor={INPUT_BORDER_COLOR}
-                focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
-                inputStyle={styles.inputStyle}
-                editable={editable}
-              />
-               <View style={styles.errorContainer}>
-                  {nameError && <Text style={styles.errorText}>{common.nameError}</Text>}
-              </View>
-            </View>   
+            <UnderlineTextInput
+              ref={nameElement}
+              value={name}  
+              onChangeText={onChangeText("name")}
+              onFocus={onFocus("nameFocused")}
+              inputFocused={nameFocused}
+              onSubmitEditing={focusOn(nameEnglishElement.current)}
+              returnKeyType="next"
+              blurOnSubmit={false}
+              placeholder={common.name}
+              placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
+              inputTextColor={INPUT_TEXT_COLOR}
+              borderColor={INPUT_BORDER_COLOR}
+              focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
+              inputStyle={styles.inputStyle}
+              editable={editable}
+            />
+              <View style={styles.errorContainer}>
+                {nameError && <Text style={styles.errorText}>{common.nameError}</Text>}
+            </View>
             
-            <View style={styles.inputContainer}>
-              <UnderlineTextInput
-                ref={nameEnglishElement}
-                value={nameEnglish}                
-                onChangeText={onChangeText("nameEnglish")}
-                onFocus={onFocus("nameEnglishFocused")}
-                inputFocused={nameEnglishFocused}
-                onSubmitEditing={focusOn(nameElement)}
-                returnKeyType="next"
-                blurOnSubmit={false}
-                placeholder={common.nameEnglish}
-                placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
-                inputTextColor={INPUT_TEXT_COLOR}
-                borderColor={INPUT_BORDER_COLOR}
-                focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
-                inputStyle={styles.inputStyle}
-              />
-               <View style={styles.errorContainer}>
-                  {nameEnglishError && <Text style={styles.errorText}>{common.nameEnglishError}</Text>}
-              </View>
+            <UnderlineTextInput
+              ref={nameEnglishElement}
+              value={nameEnglish}                
+              onChangeText={onChangeText("nameEnglish")}
+              onFocus={onFocus("nameEnglishFocused")}
+              inputFocused={nameEnglishFocused}
+              onSubmitEditing={focusOn(vatElement.current)}
+              returnKeyType="next"
+              blurOnSubmit={false}
+              placeholder={common.nameEnglish}
+              placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
+              inputTextColor={INPUT_TEXT_COLOR}
+              borderColor={INPUT_BORDER_COLOR}
+              focusedBorderColor={INPUT_FOCUSED_BORDER_COLOR}
+              inputStyle={styles.inputStyle}
+            />
+              <View style={styles.errorContainer}>
+                {nameEnglishError && <Text style={styles.errorText}>{common.nameEnglishError}</Text>}
             </View>
 
             <View style={[styles.row, styles.inputContainerStyle]}>      
@@ -452,7 +356,6 @@ const AddSection = ({route, navigation, feathersStore }) => {
                 disabled={!name || nameError || !nameEnglish || nameEnglishError}
               /> 
             </View> 
-          </View>
         </ScrollView>
         </KeyboardAvoidingView>
         <ActivityIndicatorModal
@@ -467,8 +370,102 @@ const AddSection = ({route, navigation, feathersStore }) => {
           visible={errorModal}
         />        
       </SafeAreaView>
-    );
-  
+    );  
 }
+
+const styles = StyleSheet.create({
+  screenContainer: {
+    flex: 1,
+    backgroundColor: Colors.background,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 24
+  }, 
+  instructionContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  picker: {
+    justifyContent: "center",
+    alignItems: "center",
+    width: 204
+  },
+  touchArea: {
+    marginHorizontal: 16,
+    marginBottom: 6,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(35, 47, 52, 0.12)",
+    overflow: "hidden"
+  },
+  iconContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    width: 44,
+    height: 44,
+    borderRadius: 22
+  },
+  instruction: {
+    marginTop: 32,
+    paddingHorizontal: 40,
+    fontSize: 14,
+    textAlign: "center"
+  },
+  form: {
+    padding: 12,
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    width: "100%"
+  },
+  inputContainer: {
+    margin: 8
+  },
+  small: {
+    flex: 2
+  },
+  large: {
+    flex: 5
+  },
+  inputStyle: {
+    textAlign: "left"
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    marginTop: 20,
+    justifyContent: "center" 
+  }, 
+  inputContainerStyle: {
+    marginTop: 0,
+    paddingVertical: 0,
+    paddingHorizontal: 0
+  },
+  cityTitle: {
+    color: PLACEHOLDER_TEXT_COLOR,
+    alignSelf: "center",
+    paddingLeft: 6
+  },
+  errorContainer: { height: 14},
+  errorText: {
+    color: Colors.error,
+    fontSize: 12, 
+    marginBottom: -12    
+  },
+  buttonTitle: {
+    paddingHorizontal: 0,
+    fontSize: 15,
+    fontWeight: "700"
+  },
+  vSpacer: {
+    height: 25
+  },  
+  formContainer: {
+    flex: 1,      
+    backgroundColor: Colors.background,
+    justifyContent: "space-between", 
+  },
+});
 
 export default inject('feathersStore')(observer(AddSection));
