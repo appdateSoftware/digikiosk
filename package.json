@@ -20,6 +20,7 @@
     "@react-navigation/native-stack": "^6.9.25",
     "@realm/react": "^0.6.2",
     "axios": "^1.6.8",
+    "color": "^4.2.3",
     "diacritic-regex": "^1.1.0",
     "lodash": "^4.17.21",
     "mobx": "^6.12.0",
