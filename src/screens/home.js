@@ -124,10 +124,11 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
 
   const sectionBtnPressed = (item) => () => {
     const product = {
-      section: item,
-      product_totalPrice: 0,
+    //  section: item,
+      name: item.name,
+      product_totalPrice: "923000.00",
       color: item.color,
-      vatAmount: +item.vat,
+      vatAmount: 0,
       underlyingValue: 0
     }
     
@@ -230,6 +231,15 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     setIndexToCancel(index);   
   }
 
+  const cancelItem = () => {
+    setOrderItems(prevVal => {
+      let orderItemsClone = cloneDeep(prevVal);
+      orderItemsClone.splice(+indexToCancel, 1);
+      return orderItemsClone;
+    });
+    setCancelModalVisible(false);
+  }
+
   const resetCashInputs = () => {
     setCashToPay("0");
     setChange("0");
@@ -244,7 +254,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
         key={index}         
         onPress={togglePayment(item, index)}    
         onPressDelete={deleteItem(index)}
-        title={feathersStore._translate(item.section.name , item.section.nameEnglish)}     
+        title={feathersStore._translate(item.name , item.nameEnglish)}     
         price={parse_fix(item.product_totalPrice)}     
         paid={item.paid}  
         toBePaid={item.toBePaid} 
@@ -254,8 +264,6 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   const issueReceipt = async() => { 
   }
 
-  const cancelItem = () => {
-  }
 
   const parse_fix = price => {
     return price ? parseFloat(price).toFixed(2) : 0;

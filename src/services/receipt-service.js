@@ -122,7 +122,11 @@ export class AppSchema extends Realm.Object {
   static ProductSchema = {   
     name: 'Product',      
     properties: {
-      'section': {type:'object', objectType:  'Section'},     
+    //  'section': {type:'object', objectType:  'Section'},  
+      'name': {type: 'string', default: 'ΔΙΑΦΟΡΑ 24%'},  
+      'nameEnglish': {type: 'string', default: 'VARIOUS 24%'},  
+      'color': {type: 'string', default: 'blue'},  
+      'vat': {type: 'int', default: '1'},   
       'product_totalPrice': {type: 'double'},  
       'vatAmount': {type: 'double'},
       'underlyingValue': {type: 'double'}, 

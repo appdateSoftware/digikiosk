@@ -7,7 +7,7 @@
 
 import React from 'react';
 import {
-  StyleSheet, Text, View, Pressable, Platform
+  StyleSheet, Text, View, Pressable, TextInput
 } from 'react-native';
 
 import { Subtitle1 } from "./text/CustomText";
@@ -17,15 +17,16 @@ import { inject, observer } from "mobx-react";
 import _useTranslate from '../hooks/_useTranslate';
 
 const DELETE_ICON = "close";
+const BUTTON_HEIGHT_SM = 22;
+
 
 const ProductOrderedListItem = ({
   onPress,
   onPressDelete,  
   title,
-  price = 0, 
+  price = "0.00", 
   paid=false,
   toBePaid=false,
-  receipt=false,
   feathersStore
 }) => {
 
@@ -49,8 +50,13 @@ const ProductOrderedListItem = ({
         <View style={styles.productInfo}>
           <View style={styles.productDetails}>
             <Text numberOfLines={2} style={styles.title}>
-              {title} {price}€
-            </Text>           
+              {title}
+            </Text>
+            <Text
+              style={{...styles.input, ...styles.price}}
+              >{price}</Text>
+             
+            <Text style={styles.price}>€</Text>
           </View> 
           <View style={styles.subTitleContainer}>          
             {(!paid) ? 
@@ -58,6 +64,7 @@ const ProductOrderedListItem = ({
                 <View style={[styles.iconContainer, styles.deleteIcon]}>
                   <Icon name={DELETE_ICON} size={20} color={Colors.onPrimaryColor} />
                 </View>
+              
               </Pressable>
             : null}
           </View>                         
@@ -98,10 +105,16 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'flex-start',
-    alignItems: 'flex-start',    
+    alignItems: 'center',    
   },
   title: {
     flex: 1,
+    fontWeight: "500",
+    fontSize: 16,
+    color: Colors.primaryText,
+    letterSpacing: 0.15
+  }, 
+  price: {
     fontWeight: "500",
     fontSize: 16,
     color: Colors.primaryText,
@@ -111,15 +124,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   }, 
-  extraText: {   
-    fontWeight: "500",
-    color: Colors.onSurface,
-    marginRight: 4
-  }, 
   iconContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-    marginHorizontal: 8,
+    marginLeft: 2,
+    marginRight: 2,
     width: 28,
     height: 28,
     borderRadius: 14,
@@ -127,6 +136,16 @@ const styles = StyleSheet.create({
   },
   deleteIcon: {
     backgroundColor: Colors.error
+  },
+  input:{
+    height: BUTTON_HEIGHT_SM,
+    width: 80,
+    margin: 1,
+    padding: 1,
+    height: 28,
+    borderWidth: 1,
+    backgroundColor: Colors.surface,
+    textAlign: "right"
   }
 });
 export default inject('feathersStore')(observer(ProductOrderedListItem))
