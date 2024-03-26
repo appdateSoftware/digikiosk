@@ -23,6 +23,7 @@ import Color from "color";
 import {useRealm, useQuery } from '@realm/react';
 import Button from "../components/buttons/Button";
 import FakeButton from "../components/buttons/FakeButton";
+import ButtonWithField from "../components/buttons/ButtonWithField";
 import Icon from "../components/Icon";
 import cloneDeep from 'lodash/cloneDeep';
 import CancelItemModal from "../components/modals/CancelItemModal";
@@ -68,6 +69,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   const [section, setSection] = useState(1); 
   const [orderItems, setOrderItems] = useState([]);
   const [total, setTotal] = useState(0);
+  const [price, setPrice] = useState("0");
   const [unpaid, setUnpaid] = useState(0);
   const [cash, setCash] = useState("0");
   const [cashToPay, setCashToPay] = useState("0");
@@ -75,6 +77,8 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   const [issuingReceipt, setIssuingReceipt] = useState(false);
   const [cancelModalVisible, setCancelModalVisible] = useState(false);
   const [indexToCancel, setIndexToCancel] = useState(null);
+  const [enterPrice, setEnterPrice] = useState(true);
+
 
   useEffect( () => { //Check for updates  
     checkForUpdates();
@@ -122,11 +126,42 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     return <ActivityIndicator animating size="small" />;
   };
 
+  const setCharacterInput = (ch) => () => {      
+   
+    if(enterPrice)setPrice(oldVal => {
+      let priceString = oldVal + ch;
+      if(+priceString >= 1){
+        if(priceString[0] === "0")priceString = priceString.slice(1);       
+      }
+      return priceString;
+    });else setCash(oldVal => {
+      let priceString = oldVal + ch;
+      if(+priceString >= 1){
+        if(priceString[0] === "0")priceString = priceString.slice(1);       
+      }
+      return priceString;
+    });       
+  }
+
+  const setBackspace = () => () => {
+    if(enterPrice){    
+        if(price.length === 1)setPrice("0");
+        else setPrice(oldVal => oldVal.slice(0, -1));
+      }
+    }
+  
+    const receivedPressed = () => () => {
+      console.log("VOOO")
+      setEnterPrice(false)
+    }
+
+
   const sectionBtnPressed = (item) => () => {
+    setPrice("0")
     const product = {
     //  section: item,
       name: item.name,
-      product_totalPrice: "923000.00",
+      product_totalPrice: parseFloat(price),
       color: item.color,
       vatAmount: 0,
       underlyingValue: 0
@@ -135,7 +170,6 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     setOrderItems(prevVal => {
       let orderItemsClone = cloneDeep(prevVal);
       orderItemsClone.push(product);
-      console.log(prevVal)
       return orderItemsClone;
     });
     
@@ -149,6 +183,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       <TouchableItem
         onPress={sectionBtnPressed(item)}
         style={styles.cardContainer}
+        disabled={+price === 0}
         // borderless
       >
         <Text style={styles.cardTitle}>{item.name}</Text>
@@ -295,14 +330,16 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
               contentContainerStyle={styles.productsList}
             >
               <Button
-                title={`${common.receipt}`}
-                disabled={issuingReceipt || total <= 0}
-                onPress={issueReceipt}
+                title={price}
+              //  disabled={issuingReceipt || total <= 0}
+              //  onPress={issueReceipt}
                 titleColor={Colors.onTertiaryColor}
-                color={Colors.tertiaryColor}
+                color={Colors.black}
                 borderColor={Colors.onSurface}
                 buttonStyle={styles.sideButton} 
                 showActivityIndicator={issuingReceipt}
+                textRight={true}
+                biggerFont={true}
               />
               <FakeButton
                 title={`${common.total}: ${total.toFixed(2) || 0}€`}
@@ -328,16 +365,17 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
                 textInput={true}
                 editable={false}
               />         
-              <FakeButton
+              <ButtonWithField
                 title={`${common.received}`}
                 titleColor={Colors.onPrimaryColor}
                 color={Colors.primaryColor}
                 borderColor={Colors.onSurface}
                 buttonStyle={styles.sideButton} 
                 input={cash}
-                inputMethod={onChangeCash}
                 textInput={true}
-                editable={cashToPay > 0}  
+                editable={false}  
+                onPress={receivedPressed}
+                disabled={false}
               />           
               <FakeButton
                 title={`${common.cashChange}`}
@@ -388,7 +426,10 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
           >
             {realm_sections?.map(( item, index ) => renderSectionItem(item, index))}
           </ScrollView>    
-          <NumericKeyboard/>
+          <NumericKeyboard 
+            onPress={setCharacterInput} 
+            pressBackspace={setBackspace}
+          />
         </View>
       </View>
       <CancelItemModal
@@ -484,7 +525,6 @@ const styles = StyleSheet.create({
     textShadowColor: "rgba(0, 0, 0, 0.75)",
     textShadowOffset: { width: -1, height: 1 },
     textShadowRadius: 10
-  },
-});
+  },});
 
 export default inject('feathersStore')(observer(HomeScreen));

@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
   }
 });
 
-const NumericKeyboard = ({ actionButtonTitle, onPress = () => {} }) => (
+const NumericKeyboard = ({ onPress = () => {}, pressBackspace = () => {} }) => (
   <View style={styles.container}>
     <TouchableOpacity onPress={onPress("1")} style={styles.keyboardButton}>
       <Text style={styles.number}>1</Text>
@@ -77,23 +77,14 @@ const NumericKeyboard = ({ actionButtonTitle, onPress = () => {} }) => (
     <TouchableOpacity onPress={onPress("9")} style={styles.keyboardButton}>
       <Text style={styles.number}>9</Text>
     </TouchableOpacity>
-    {actionButtonTitle ? (
-      <TouchableOpacity
-        onPress={onPress(actionButtonTitle)}
-        style={styles.keyboardButton}
-      >
-        <Text style={styles.actionButtonTitle}>
-          {actionButtonTitle.toUpperCase()}
-        </Text>
-      </TouchableOpacity>
-    ) : (
-      <View style={styles.keyboardButton} />
-    )}
+    <TouchableOpacity onPress={onPress(".")} style={styles.keyboardButton}>
+      <Text style={styles.number}>.</Text>
+    </TouchableOpacity>
     <TouchableOpacity onPress={onPress("0")} style={styles.keyboardButton}>
       <Text style={styles.number}>0</Text>
     </TouchableOpacity>
     <TouchableOpacity
-      onPress={onPress("backspace")}
+      onPress={pressBackspace()}
       style={styles.keyboardButton}
     >
       <Icon name={backspace} size={24} color={Colors.black} />

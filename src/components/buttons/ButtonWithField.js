@@ -7,7 +7,7 @@
 
 // import dependencies
 import React from 'react';
-import { StyleSheet, View, TextInput } from 'react-native';
+import { StyleSheet, View, TextInput, TouchableOpacity } from 'react-native';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
 
 // import components
@@ -85,7 +85,10 @@ const styles = StyleSheet.create({
 });
 
 // Button
-const FakeButton = ({  
+const ButtonWithField = ({  
+  onPress,
+  disabled,
+  activeOpacity = 0.85,
   height,
   buttonStyle,
   borderRadius,
@@ -106,7 +109,10 @@ const FakeButton = ({
 }) => {
 
    return( 
-    <View  
+    <TouchableOpacity  
+      onPress={onPress}
+      disabled={disabled}
+      activeOpacity={activeOpacity}
       style={[
         styles.container,
         textInput && styles.rowContainer,
@@ -140,8 +146,8 @@ const FakeButton = ({
         keyboardType="numeric"
         editable={editable}
       />}
-    </View>  
+    </TouchableOpacity>  
   );
 }
 
-export default FakeButton;
+export default ButtonWithField;

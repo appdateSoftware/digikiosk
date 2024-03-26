@@ -54,9 +54,7 @@ const ProductOrderedListItem = ({
             </Text>
             <Text
               style={{...styles.input, ...styles.price}}
-              >{price}</Text>
-             
-            <Text style={styles.price}>€</Text>
+              >{price} €</Text>             
           </View> 
           <View style={styles.subTitleContainer}>          
             {(!paid) ? 
@@ -137,14 +135,8 @@ const styles = StyleSheet.create({
   deleteIcon: {
     backgroundColor: Colors.error
   },
-  input:{
-    height: BUTTON_HEIGHT_SM,
-    width: 80,
+  input:{    
     margin: 1,
-    padding: 1,
-    height: 28,
-    borderWidth: 1,
-    backgroundColor: Colors.surface,
     textAlign: "right"
   }
 });

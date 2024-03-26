@@ -7,9 +7,7 @@
 
 // import dependencies
 import React from 'react';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import type { ColorProp } from 'react-native/Libraries/StyleSheet/ColorPropType';
-import type { StyleProp } from 'react-native/Libraries/StyleSheet/StyleSheetTypes';
+import { StyleSheet, TouchableOpacity, View, ActivityIndicator } from 'react-native';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
 
 // import components
@@ -68,48 +66,18 @@ const styles = StyleSheet.create({
   },
   outlinedTitle: {
     color: Colors.primaryColor
+  },
+  textRight: {
+    flexDirection: "row",  
+    width: BUTTON_WIDTH,
+    justifyContent: "flex-end",   
+  },
+  biggerFont: {
+    fontSize: 18,
+    marginRight: 12
   }
 });
 
-// Button Props
-type Props = {
- 
-   
-  onPress: () => void,
-  disabled: boolean,
-
-  /**
-   * Determines what the opacity of the wrapped view should be when touch is active.
-   * The value should be between 0 and 1
-   */
-  activeOpacity: number,
-  height: number,
-  buttonStyle: StyleProp,
-  borderRadius: number,
-  borderColor: ColorProp,
-
-  /**
-   * Button background color
-   */
-  color: ColorProp,
-  iconColor: ColorProp,
-  socialIconName: string, // Social FontAwesome Icon Name
-  small: boolean,
-
-  /**
-   * Text to display inside the button
-   */
-  title: string,
-
-  /**
-   * Button title color
-   */
-  titleColor: ColorProp,
-  rounded: boolean,
-  outlined: boolean
-};
-
-// Button
 const Button = ({
   onPress,
   disabled,
@@ -125,8 +93,11 @@ const Button = ({
   title,
   titleColor,
   rounded,
-  outlined
-}: Props) => (
+  outlined,
+  showActivityIndicator,
+  textRight,
+  biggerFont
+}) => (
   <TouchableOpacity
     onPress={onPress}
     disabled={disabled}
@@ -143,7 +114,8 @@ const Button = ({
       height && rounded && { borderRadius: height / 2 },
       borderColor && { borderColor },
       disabled && styles.disabled,
-      buttonStyle
+      buttonStyle, 
+      textRight && styles.textRight
     ]}
   >
     {socialIconName && (
@@ -152,10 +124,11 @@ const Button = ({
       </View>
     )}
     <ButtonText
-      style={[styles.title, outlined && styles.outlinedTitle, titleColor && { color: titleColor }]}
+      style={[styles.title, outlined && styles.outlinedTitle, titleColor && { color: titleColor }, biggerFont && styles.biggerFont]}
     >
       {title || 'Button'}
     </ButtonText>
+    {showActivityIndicator && <ActivityIndicator size="small" color="#fff" />}
   </TouchableOpacity>
 );
 
