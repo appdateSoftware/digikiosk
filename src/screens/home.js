@@ -27,6 +27,7 @@ import ButtonWithField from "../components/buttons/ButtonWithField";
 import Icon from "../components/Icon";
 import cloneDeep from 'lodash/cloneDeep';
 import CancelItemModal from "../components/modals/CancelItemModal";
+import { AppSchema } from "../services/receipt-service";
 
 import { inject, observer } from "mobx-react";
 
@@ -278,7 +279,8 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   ), []);
 
   const issueReceipt = (paymentMethod) => async() => { 
-    console.log(paymentMethod)
+    
+    await AppSchema.printLocally(paymentMethod);
   }
 
  const renderFooter = () => {

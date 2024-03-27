@@ -177,13 +177,19 @@ const themes = {
     background: "#fff",
     onBackground: "#212121",
     selection: "#ff8c42", // --> orange
+    selectionNew: "#Ac7919",
     surface: "#fff", 
     onSurface: "#757575",
     error: "#cd040b",
     onError: "#fff",
     black: "#000",
     white: "#fff",
-    googleButton: "#e0210b"
+    googleButton: "#e0210b",
+    paid: "#A2C99B",
+    completed: "#fe5f55", //--> red
+    delivered: "rgb(50, 186, 50)", //--> green
+    waiterDelivered: "#01baef", //--> blue,
+    discount: "#ABA8B2" //-->French grey
   }
 };
 

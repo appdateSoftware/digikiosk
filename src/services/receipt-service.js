@@ -1,6 +1,8 @@
 import React from 'react';
 import { Realm } from '@realm/react';
 import TcpSocket from 'react-native-tcp-socket';
+import {useRealm, useQuery} from '@realm/react';
+
 export class AppSchema extends Realm.Object {
 
   _id;
@@ -106,6 +108,7 @@ export class AppSchema extends Realm.Object {
       'companyEmail': {type: 'string'}, 
       'token': {type: 'string'},     
       'ypahes': {type: 'string', default: 'https://simply.gr'},  
+      'printerIp':  {type: 'string'}
     }
   };
 
@@ -134,17 +137,44 @@ export class AppSchema extends Realm.Object {
     }
   };
 
-  static printLocally = (message) => {
-    
-    const PORT = 9100;
-    const{ip, devid, req} = message;
-    const make = devid.split("_")[0];
-    console.log(make);
+  static UnprintedSchema = {
+    name: 'Unprinted',      
+    properties: {
+      req: {type: 'string'},       
+    }
+  };
+
+  static printLocally = (req) => {
+
+    const realm = useRealm();
+    const realm_unprinted = useQuery('Unprinted');
+    const realm_company = useQuery('Company');
+    const ip = realm_company[0].printerIp;   
+   
+    const options = {
+      port: 9100,
+      host: ip,
+      localAddress: ip,
+      reuseAddress: true,
+      // localPort: 20000,
+      // interface: "wifi",
+    }
+    const make = "zywell";
  
     return new Promise((resolve, reject) => {
 
       const buffer = EscPos.getBufferFromXML(req, make);
-      let device = new net.Socket();
+
+      const device = TcpSocket.createConnection(options, () => {  
+        if(realm_unprinted?.length > 0){
+          realm_unprinted.forEach(async item =>  await this.printLocally(item?.req));
+          realm.write(()=>{ 
+            realm.delete(item)                        
+          }); 
+        };  
+        device.write(buffer);
+        device.emit("close");
+      });
 
       device.on("close", () => {
         if(device) {
@@ -161,32 +191,15 @@ export class AppSchema extends Realm.Object {
           logger.info('Restart'); 
           device.destroy();
           device = null;
-          await this.printLocally(message);   //TODO: Retry up to 10 times   
+          await this.printLocally(req);   //TODO: Retry up to 10 times   
         }else if(ex.code === "ETIMEDOUT"){ //if printer is offline
-          const unprinted = {
-            devid,
-            nonEpos: true,
-            message
-          }
-          await this.localApp.service('unprinted').create(unprinted);
+          realm.write(()=>{     
+            realm.create('Unprinted', req); 
+          }) 
         }
         reject(true);
         return;
-      });
-
-      device.connect(PORT, ip, async() => {
-        logger.info(`OK ${devid}`) //Print the unprinted items
-        const unprintedArray = await this.localApp.service('unprinted').find({query: {"devid": devid, "nonEpos": true}});          
-        if(unprintedArray?.length > 0){
-          logger.info(unprintedArray[0]);
-          unprintedArray.forEach(async item =>  await this.printLocally(item?.message));
-          await this.localApp.service('unprinted').remove(null, {query: {"devid": devid}});
-        };
-        device.write(buffer);
-        device.emit("close");
-      });
-    });
-  
-  };
-  
+      });   
+    });    
+  };  
 };
