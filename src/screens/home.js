@@ -64,21 +64,19 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   const realm_sections = useQuery('Section');
 
   let common = useTranslate(feathersStore.language);
-
-  const [loading, setLoading] = useState(true);
-  const [section, setSection] = useState(1); 
+ 
   const [orderItems, setOrderItems] = useState([]);
   const [total, setTotal] = useState(0);
+  const [unpaid, setUnpaid] = useState(0);  
   const [price, setPrice] = useState("0");
-  const [unpaid, setUnpaid] = useState(0);
   const [cash, setCash] = useState("0");
   const [cashToPay, setCashToPay] = useState("0");
   const [change, setChange] = useState("0");
   const [issuingReceipt, setIssuingReceipt] = useState(false);
   const [cancelModalVisible, setCancelModalVisible] = useState(false);
   const [indexToCancel, setIndexToCancel] = useState(null);
-  const [enterPrice, setEnterPrice] = useState(true);
-
+  const [enterPrice, setEnterPrice] = useState(true); 
+  const [loading, setLoading] = useState(true);
 
   useEffect( () => { //Check for updates  
     checkForUpdates();
@@ -117,45 +115,64 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
 
  const goToPlayStore = () => {
     Linking.openURL("https://play.google.com/store/apps/details?id=com.bringfood_db_android")
-  }  
+  } 
 
-  const renderFooter = () => {
-    if (!loading) {
-      return null;
-    }
-    return <ActivityIndicator animating size="small" />;
-  };
-
-  const setCharacterInput = (ch) => () => {      
-   
-    if(enterPrice)setPrice(oldVal => {
-      let priceString = oldVal + ch;
-      if(+priceString >= 1){
-        if(priceString[0] === "0")priceString = priceString.slice(1);       
-      }
-      return priceString;
-    });else setCash(oldVal => {
-      let priceString = oldVal + ch;
-      if(+priceString >= 1){
-        if(priceString[0] === "0")priceString = priceString.slice(1);       
-      }
-      return priceString;
-    });       
+  const selectAll = () => {
+    setCashToPay(0);   
+    for(const [index, value] of orderItems.entries()){
+      if(!value?.paid){  
+        Object.assign(value, {toBePaid: true})
+        setOrderItems(prevVal => {
+          let orderItemsClone = cloneDeep(prevVal);
+          orderItemsClone.splice(+index, 1, value);
+          return orderItemsClone;
+        });      
+        setCashToPay(prevVal => parse_fix(+prevVal + +value.product_totalPrice).toString());
+      }      
+    }    
   }
 
-  const setBackspace = () => () => {
-    if(enterPrice){    
-        if(price.length === 1)setPrice("0");
-        else setPrice(oldVal => oldVal.slice(0, -1));
-      }
+  const togglePayment = (_item, indexToPay) => async() => {
+    let item = _item;
+    if(item.paid === true) return;
+
+    if(item?.toBePaid){
+      Object.assign(item, {toBePaid: false});
+      setCashToPay(prevVal => parse_fix(prevVal - item.product_totalPrice).toString());
     }
+    else{
+      Object.assign(item, {toBePaid: true});
+      setCashToPay(prevVal => parse_fix(+prevVal + +item.product_totalPrice).toString());
+    }  
+    setOrderItems(prevVal => {
+      let orderItemsClone = cloneDeep(prevVal);
+      orderItemsClone.splice(+indexToPay, 1, item);
+      return orderItemsClone;
+    });
+  } 
+
+  useEffect(() => {
+    setChange(parse_fix(cash - cashToPay).toString())
+  }, [cash, cashToPay])  
+
+  const deleteItem = index => () => {  
+    setCancelModalVisible(true); 
+    setIndexToCancel(index);   
+  }
+
+  const cancelItem = () => {
+    const itemPrice =  parseFloat((orderItems[+indexToCancel].product_totalPrice).toFixed(2));
+    setOrderItems(prevVal => {
+      let orderItemsClone = cloneDeep(prevVal);
+      orderItemsClone.splice(+indexToCancel, 1);
+      return orderItemsClone;
+    });
+    if(orderItems[+indexToCancel]?.toBePaid)setCashToPay(prevVal => parse_fix(+prevVal - itemPrice).toString());
+    setTotal(prevVal => prevVal - itemPrice);
+    setUnpaid(prevVal => prevVal - itemPrice);  
+    setCancelModalVisible(false);
+  }  
   
-    const receivedPressed = () => () => {
-      console.log("VOOO")
-      setEnterPrice(false)
-    }
-
-
   const sectionBtnPressed = (item) => () => {
     setPrice("0")
     const product = {
@@ -172,8 +189,59 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       orderItemsClone.push(product);
       return orderItemsClone;
     });
-    
+    setTotal(prevVal => +prevVal + +price);
+    setUnpaid(prevVal => +prevVal + +price);    
+  } 
+  
+  const setCharacterInput = (ch) => () => {      
+   
+    if(enterPrice)setPrice(oldVal => {
+      let priceString = oldVal + ch;
+      if(+priceString >= 1){
+        if(priceString[0] === "0")priceString = priceString.slice(1);       
+      }
+      return priceString;
+    });else{  
+      let priceString = "";
+      setCash(oldVal => {      
+        priceString = oldVal + ch;
+        if(+priceString >= 1){
+          if(priceString[0] === "0")priceString = priceString.slice(1);       
+        }
+        return priceString;
+      });
+    }       
   }
+
+  const setBackspace = () => () => {
+    if(enterPrice){    
+      if(price.length === 1)setPrice("0");
+      else setPrice(oldVal => oldVal.slice(0, -1));
+    }else{
+      let priceString = "";
+      if(cash.length === 1){
+        setCash("0");
+        priceString = "0"
+      }else setCash(oldVal => {
+        priceString = oldVal.slice(0, -1);
+        return priceString;
+      });
+    }
+  }
+
+  const receivedPressed = () => {
+    setEnterPrice(false)
+  }
+
+  const pricePressed = () => {
+    setEnterPrice(true)
+  }
+
+  const resetCashInputs = () => {
+    setCashToPay("0");
+    setChange("0");
+    setCash("0");
+  } 
 
   const renderSectionItem = (item, index) => (
     <View
@@ -196,93 +264,6 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     return colorsArray.find(color => color.id === id)?.value || ""
   }
 
-  const onChangeCash = text => {
-    setCash(text);
-    calculateChange(text);
-  }
-
-  const calculateChange = (cashText) => {
-    setChange(parse_fix(cashText - cashToPay).toString())   
-  }
-
-  const selectAll = async() => {
-
-    setCashToPay(0);
-   
-      for(const [index, value] of orderItems.entries()){
-        if(!value?.paid){  
-          Object.assign(value, {toBePaid: true})
-          setOrderItems(prevVal => {
-            let orderItemsClone = cloneDeep(prevVal);
-            orderItemsClone.splice(+index, 1, value);
-            return orderItemsClone;
-          });      
-          setCashToPay(prevVal => parse_fix(+prevVal + +value.product_totalPrice).toString());
-        }      
-      }   
-    
-    calculateChange(cash);
-  }
-
-  const togglePayment = (_item, indexToPay) => async() => {
-    let item = _item;
-    if(item.paid === true) return;
-
-    if(item?.toBePaid){
-      Object.assign(item, {toBePaid: false});
-      setCashToPay(prevVal => parse_fix(prevVal - item.product_totalPrice).toString());
-    }
-    else{
-      Object.assign(item, {toBePaid: true});
-      setCashToPay(prevVal => parse_fix(+prevVal + +item.product_totalPrice).toString());
-    }  
-    setOrderItems(prevVal => {
-      let orderItemsClone = cloneDeep(prevVal);
-      orderItemsClone.splice(+indexToPay, 1, item);
-      return orderItemsClone;
-    });
-    calculateChange(cash);
-  }
-
-  const payItems = async(method) => { 
-    let paidSum = 0;
-    orderItems.filter(o => o.toBePaid).forEach(listItem =>  {
-      Object.assign(listItem, {toBePaid: false, paid: true});     
-      paidSum += +listItem.product_totalPrice;
-    });
-    setUnpaid(parseFloat((unpaid - paidSum).toFixed(2)));
-  }  
-
-  const payVisa = async() => {
-    await payItems('Visa');
-  }
-
-  const payCash = async() => {
-    await payItems('Cash');   
-  }
-
-  const deleteItem = index => () => {  
-    setCancelModalVisible(true); 
-    setIndexToCancel(index);   
-  }
-
-  const cancelItem = () => {
-    setOrderItems(prevVal => {
-      let orderItemsClone = cloneDeep(prevVal);
-      orderItemsClone.splice(+indexToCancel, 1);
-      return orderItemsClone;
-    });
-    setCancelModalVisible(false);
-  }
-
-  const resetCashInputs = () => {
-    setCashToPay("0");
-    setChange("0");
-    setCash("0");
-    setTypedDiscount("0");
-    typedDiscountRef.current = 0;
-  } 
-
   const renderProductListItem = useCallback(
     (item, index) => (      
       <ProductOrderedListItem 
@@ -296,9 +277,16 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       />
   ), []);
 
-  const issueReceipt = async() => { 
+  const issueReceipt = (paymentMethod) => async() => { 
+    console.log(paymentMethod)
   }
 
+ const renderFooter = () => {
+    if (!loading) {
+      return null;
+    }
+    return <ActivityIndicator animating size="small" />;
+  };
 
   const parse_fix = price => {
     return price ? parseFloat(price).toFixed(2) : 0;
@@ -313,8 +301,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   );
 
   return ( 
-    <> 
-
+    <>
       <View style={styles.screenContainer}>
         {feathersStore?.newVersion && headerComponent()}
         <View style={styles.container}>
@@ -332,7 +319,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
               <Button
                 title={price}
               //  disabled={issuingReceipt || total <= 0}
-              //  onPress={issueReceipt}
+                onPress={pricePressed}
                 titleColor={Colors.onTertiaryColor}
                 color={Colors.black}
                 borderColor={Colors.onSurface}
@@ -368,7 +355,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
               <ButtonWithField
                 title={`${common.received}`}
                 titleColor={Colors.onPrimaryColor}
-                color={Colors.primaryColor}
+                color={Colors.black}
                 borderColor={Colors.onSurface}
                 buttonStyle={styles.sideButton} 
                 input={cash}
@@ -388,7 +375,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
                 editable={false}
               />        
               <Button
-                onPress={payCash}           
+                onPress={issueReceipt("CASH")}           
                 title={<Icon name={checkIcon} size={32} color={Colors.onSecondaryColor}></Icon>}
                 titleColor={Colors.onSecondaryColor}
                 color={Colors.secondaryColor}
@@ -405,7 +392,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
                 buttonStyle={styles.sideButton}  
               /> 
               <Button
-                onPress={payVisa}           
+                onPress={issueReceipt("VISA")}           
                 title={"VISA"}
                 titleColor={Colors.onPrimaryColor}
                 color={Colors.selectionNew}
