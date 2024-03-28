@@ -97,8 +97,8 @@ const Company = ({route, navigation, feathersStore }) => {
   const postalZipCodeElement = useRef(null);
   const companyPhoneElement = useRef(null);
   const companyEmailElement = useRef(null);
-  const tokenElement = useRef(null);
-  const ypahesElement = useRef(null);
+  const vendorElement = useRef(null);
+  const printerIpElement = useRef(null);
   
   const [afm, setAfm] = useState('');
   const [name, setName] = useState(''); 
@@ -114,8 +114,8 @@ const Company = ({route, navigation, feathersStore }) => {
   const [postalZipCode, setPostalZipCode] = useState('');
   const [companyPhone, setCompanyPhone] = useState('');
   const [companyEmail, setCompanyEmail] = useState('');
-  const [token, setToken] = useState("");   
-  const [ypahes, setYpahes] = useState("");  
+  const [vendor, setVendor] = useState("");   
+  const [printerIp, setPrinterIp] = useState("");  
   const [origins, setOrigins] = useState([]);
   
   const [afmFocused, setAfmFocused] = useState(false);
@@ -132,8 +132,8 @@ const Company = ({route, navigation, feathersStore }) => {
   const [postalZipCodeFocused, setPostalZipCodeFocused] = useState(false);
   const [companyPhoneFocused, setCompanyPhoneFocused] = useState(false);
   const [companyEmailFocused, setCompanyEmailFocused] = useState(false);
-  const [tokenFocused, setTokenFocused] = useState(false);
-  const [ypahesFocused, setYpahesFocused] = useState(false);          
+  const [vendorFocused, setVendorFocused] = useState(false);
+  const [printerIpFocused, setPrinterIpFocused] = useState(false);          
  
   const [afmError, setAfmError] = useState(false);
   const [nameError, setNameError] = useState(false); 
@@ -148,8 +148,8 @@ const Company = ({route, navigation, feathersStore }) => {
   const [postalZipCodeError, setPostalZipCodeError] = useState(false);
   const [companyPhoneError, setCompanyPhoneError] = useState(false);
   const [companyEmailError, setCompanyEmailError] = useState(false);
-  const [tokenError, setTokenError] = useState(false);
-  const [ypahesError, setYpahesError] = useState(false); 
+  const [vendorError, setVendorError] = useState(false);
+  const [printerIpError, setPrinterIpError] = useState(false); 
 
  
   const [isLoading, setIsLoading] = useState(false);
@@ -193,8 +193,8 @@ const Company = ({route, navigation, feathersStore }) => {
     setPostalZipCode(companyFromDB.postalZipCode);
     setCompanyPhone(companyFromDB.companyPhone);
     setCompanyEmail(companyFromDB.companyEmail);
-    setToken(companyFromDB.token);  
-    setYpahes(companyFromDB.ypahes); 
+    setVendor(companyFromDB.vendor);  
+    setPrinterIp(companyFromDB.printerIp); 
   }
 
   const keyboardDidHide = () => {    
@@ -212,8 +212,8 @@ const Company = ({route, navigation, feathersStore }) => {
       setPostalZipCodeFocused(false);
       setCompanyPhoneFocused(false);
       setCompanyEmailFocused(false);
-      setTokenFocused(false);
-      setYpahesFocused(false);
+      setVendorFocused(false);
+      setPrinterIpFocused(false);
   }
 
   const goBack = () => {   
@@ -274,13 +274,13 @@ const Company = ({route, navigation, feathersStore }) => {
         setCompanyEmail(text);
         companyEmailValidation(text);
         break;
-      case "token" : 
-        setToken(text);
-        tokenValidation(text);        
+      case "vendor" : 
+        setVendor(text);
+        vendorValidation(text);        
        break;
-      case "ypahes" : 
-        setYpahes(text);
-        ypahesValidation(text);
+      case "printerIp" : 
+        setPrinterIp(text);
+        printerIpValidation(text);
         break;
     }
   };
@@ -317,9 +317,9 @@ const Company = ({route, navigation, feathersStore }) => {
       break;
       case "companyEmailFocused" : setCompanyEmailFocused(true);
       break;
-      case "tokenFocused" : setTokenFocused(true);
+      case "vendorFocused" : setVendorFocused(true);
       break;  
-      case "ypahesFocused" : setYpahesFocused(true);
+      case "printerIpFocused" : setPrinterIpFocused(true);
       break;      
     }
   };
@@ -428,19 +428,19 @@ const Company = ({route, navigation, feathersStore }) => {
       }  
     }  
   
-    const tokenValidation = val => {
+    const vendorValidation = val => {
       if (!Validators.validateNonEmpty(val) ) {
-        setTokenError(true);
+        setVendorError(true);
       }else{
-        setTokenError(false);
+        setVendorError(false);
       }  
     }  
 
-    const ypahesValidation = val => {
+    const printerIpValidation = val => {
       if (!Validators.validateNonEmpty(val) ) {
-        setYpahesError(true);
+        setPrinterIpError(true);
       }else{
-        setYpahesError(false);
+        setPrinterIpError(false);
       }  
     }
   
@@ -457,7 +457,7 @@ const Company = ({route, navigation, feathersStore }) => {
     const data = {
       afm: +afm, nameEnglish,  name, legalName, doyDescription, legalDescription, firmActDescription,
       companyOrigin, postalAddress, postalAddressNo, postalAreaDescription, postalZipCode, companyPhone,
-      companyEmail, token, ypahes
+      companyEmail, vendor, printerIp
     };        
     try{
       if(edit){      //---------> Edit
@@ -477,8 +477,8 @@ const Company = ({route, navigation, feathersStore }) => {
           updt[0].postalZipCode = postalZipCode;
           updt[0].companyPhone = companyPhone;
           updt[0].companyEmail = companyEmail;
-          updt[0].token = token;        
-          updt[0].ypahes = ypahes;
+          updt[0].vendor = vendor;        
+          updt[0].printerIp = printerIp;
         }) 
       } else{   //------------> Create
         realm.write(()=>{     
@@ -799,7 +799,7 @@ const Company = ({route, navigation, feathersStore }) => {
           onChangeText={onChangeText("companyEmail")}
           onFocus={onFocus("companyEmailFocused")}
           inputFocused={companyEmailFocused}
-          onSubmitEditing={focusOn(tokenElement)}
+          onSubmitEditing={focusOn(vendorElement)}
           returnKeyType="next"
           blurOnSubmit={false}
           placeholder={common.companyEmail}
@@ -816,15 +816,15 @@ const Company = ({route, navigation, feathersStore }) => {
         </View>
 
         <UnderlineTextInput
-          ref={tokenElement}
-          value={token}  
-          onChangeText={onChangeText("token")}
-          onFocus={onFocus("tokenFocused")}
-          inputFocused={tokenFocused}
-          onSubmitEditing={focusOn(ypahesElement)}
+          ref={vendorElement}
+          value={vendor}  
+          onChangeText={onChangeText("vendor")}
+          onFocus={onFocus("vendorFocused")}
+          inputFocused={vendorFocused}
+          onSubmitEditing={focusOn(printerIpElement)}
           returnKeyType="next"
           blurOnSubmit={false}
-          placeholder={common.token}
+          placeholder={common.vendor}
           placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
           inputTextColor={INPUT_TEXT_COLOR}
           borderColor={INPUT_BORDER_COLOR}
@@ -834,18 +834,18 @@ const Company = ({route, navigation, feathersStore }) => {
           editable={true}
         />
         <View style={styles.errorContainer}>
-          {tokenError && <Text style={styles.errorText}>{common.tokenError}</Text>}
+          {vendorError && <Text style={styles.errorText}>{common.vendorError}</Text>}
         </View>
 
         <UnderlineTextInput
-          ref={ypahesElement}
-          value={ypahes}  
-          onChangeText={onChangeText("ypahes")}
-          onFocus={onFocus("tokenFocused")}
-          inputFocused={ypahesFocused}
+          ref={printerIpElement}
+          value={printerIp}  
+          onChangeText={onChangeText("printerIp")}
+          onFocus={onFocus("vendorFocused")}
+          inputFocused={printerIpFocused}
           returnKeyType="next"
           blurOnSubmit={false}
-          placeholder={common.ypahes}
+          placeholder={common.printerIp}
           placeholderTextColor={PLACEHOLDER_TEXT_COLOR}
           inputTextColor={INPUT_TEXT_COLOR}
           borderColor={INPUT_BORDER_COLOR}
@@ -855,7 +855,7 @@ const Company = ({route, navigation, feathersStore }) => {
           editable={true}
         />
         <View style={styles.errorContainer}>
-          {ypahesError && <Text style={styles.errorText}>{common.ypahesError}</Text>}
+          {printerIpError && <Text style={styles.errorText}>{common.printerIpError}</Text>}
         </View>
 
         <View style={styles.vSpacer}></View> 

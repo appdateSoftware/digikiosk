@@ -227,7 +227,7 @@ class FeathersStore{
 
   createLogEntry = async (payload) => {      
     return await this.app
-      .service('emaillog')
+      .service('errorLogs')
       .create(payload); 
   }
 

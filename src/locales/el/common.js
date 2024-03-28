@@ -55,6 +55,8 @@ export const commonEL = {
     role: "Ρόλος",
     username: "'Ονομα",
     usernameEnglish: "Όνομα στα αγγλικά",
+    vendor: "Vendor",
+    printerIp: "Printer ip",
 
     firstName : "Όνομα",
     lastName : "Επώνυμο",

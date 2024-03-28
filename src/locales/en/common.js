@@ -28,6 +28,8 @@ export const commonEN = {
   name: "Όνομα",
 
 
+    vendor: "Vendor",
+    printerIp: "Printer ip",
 
     firstName : "First Name",
     lastName : "Last Name",

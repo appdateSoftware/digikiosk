@@ -24,25 +24,23 @@ export class AppSchema extends Realm.Object {
 
   static ReceiptSchema = {
     name: 'Receipt',
-    primaryKey: 'id',
+    primaryKey: 'numericId',
     properties: {
-      id: {type: 'int', indexed: true},
-      company: {type:'object', objectType: 'Company'},
-      issuer: {type:'object', objectType:  'User'},
-      products: {type:'list', objectType:  'Product'},
+      numericId: {type: 'int', indexed: true},
       receiptKind: {type: 'string'},
+      issuer:  {type: 'string'},
+      receiptTotal: {type: 'double'},  
       receiptDate:  {type: 'string'},
       receiptTime:  {type: 'string'},
+      receiptItems: {type:'list', objectType:  'Product'},
       createdAt: {type: 'int'},
       paymentMethod:  {type: 'string'},
-      paymentAmount: {type: 'double'},  
-      receiptTotal: {type: 'double'},  
-      netTotal: {type: 'double'},  
-      vatTotal: {type: 'double'},  
+      cash: {type: 'double', default: 0},  
+      change: {type: 'double', default: 0},
+      totalNetPrice: {type: 'double'},  
       vatAnalysis: {type:'list', objectType: 'Vat' },
-      mark:  {type: 'string'},
-      uid:  {type: 'string'},
-      auth:  {type: 'string'},
+      req: {type: 'string'},
+      footer:  {type: 'string'}      
     }
   };
 
@@ -70,10 +68,9 @@ export class AppSchema extends Realm.Object {
 
   static VatSchema = {
     name: 'Vat',
-    primaryKey: 'id',      
+    primaryKey: 'vatId',      
     properties: {
-      id: {type: 'int'},  
-      label: {type: 'int'},  
+      vatId: {type: 'int'},  
       vatAmount: {type: 'double'},
       underlyingValue: {type: 'double'},      
     }
@@ -96,6 +93,7 @@ export class AppSchema extends Realm.Object {
       'afm': {type: 'string'},  
       'name': {type: 'string'},  
       'nameEnglish': {type: 'string'}, 
+      'legalName': {type: 'string'}, 
       'doyDescription': {type: 'string'},
       'legalDescription': {type: 'string'}, 
       'firmActDescription': {type: 'string'},      
@@ -106,8 +104,7 @@ export class AppSchema extends Realm.Object {
       'postalZipCode': {type: 'string'}, 
       'companyPhone': {type: 'string'}, 
       'companyEmail': {type: 'string'}, 
-      'token': {type: 'string'},     
-      'ypahes': {type: 'string', default: 'https://simply.gr'},  
+      'vendor': {type: 'string'},     
       'printerIp':  {type: 'string'}
     }
   };
@@ -125,13 +122,13 @@ export class AppSchema extends Realm.Object {
 
   static ProductSchema = {   
     name: 'Product',      
-    properties: {
-    //  'section': {type:'object', objectType:  'Section'},  
-      'name': {type: 'string', default: 'ΔΙΑΦΟΡΑ 24%'},  
+    properties: {   
+      'name': {type: 'string', default: 'ΔΙΑΦΟΡΑ 24%'}, 
+      'product_totalPrice': {type: 'double'},
       'nameEnglish': {type: 'string', default: 'VARIOUS 24%'},  
       'color': {type: 'string', default: 'blue'},  
-      'vat': {type: 'int', default: '1'},   
-      'product_totalPrice': {type: 'double'},  
+      'vatId': {type: 'int', default: '1'},  
+      'vatLabel': {type: 'string'}, 
       'vatAmount': {type: 'double'},
       'underlyingValue': {type: 'double'}, 
     }
