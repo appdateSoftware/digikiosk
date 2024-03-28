@@ -54,7 +54,30 @@ const colorsArray = [{
 }, {
   "id" : "dark blue",
   "value" : Colors.primaryColorDark
-}]
+}];
+
+const vatsArray = [{
+  "id" : 1,
+  "label" : 24
+}, {
+  "id" : 2,
+  "label" : 13
+}, {
+  "id" : 3,
+  "label" : 6
+}, {
+  "id" : 4,
+  "label" : 17
+}, {
+  "id" : 5,
+  "label" : 9
+}, {
+  "id" : 6,
+  "label" : 4
+}, {
+  "id" : 7,
+  "label" : 0
+}];
 
 const checkIcon = "checkmark";
 
@@ -175,14 +198,16 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   }  
   
   const sectionBtnPressed = (item) => () => {
-    setPrice("0")
+    setPrice("0");
+    const {underlyingValue, vatAmount} = calculateNetPrice(item;)
     const product = {
-    //  section: item,
       name: item.name,
       product_totalPrice: parseFloat(price),
       color: item.color,
-      vatAmount: 0,
-      underlyingValue: 0
+      vatId: item.vat,
+      vatLabel: getVat(item.vat),
+      vatAmount,
+      underlyingValue
     }
     
     setOrderItems(prevVal => {
@@ -265,6 +290,17 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     return colorsArray.find(color => color.id === id)?.value || ""
   }
 
+  const getVat = id => {
+    return vatsArray.find(v => +v.id === +id)?.label.toString().padStart(2, '0') + "%"
+  }
+
+  const calculateNetPrice = (item) => {
+    const label = vatsArray.find(v => +v.id === +item.id)?.label;
+    const underlyingValue =  Math.round((item.product_totalPrice / (1 + label / 100 ) + Number.EPSILON) * 1000) / 1000 ;
+    const vatAmount = item.product_totalPrice - underlyingValue;
+    return {underlyingValue: +underlyingValue.toFixed(2), vatAmount}; 
+  }
+
   const renderProductListItem = useCallback(
     (item, index) => (      
       <ProductOrderedListItem 
@@ -279,9 +315,59 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   ), []);
 
   const issueReceipt = (paymentMethod) => async() => { 
+    setIssuingReceipt(true);
+    const date = new Date(); 
+    const day = date.getDate().toString().padStart(2, "0"); 
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const year = date.getFullYear().toString().padStart(2, "0");
+    const localDate = day + '/' + month + '/' + year;
+    let itemsList =""; 
+    let unReceiptedItems =  orderItems.filter(i => i?.toBePaid); 
+
+    
+    for (let item of unReceiptedItems){
+      itemsList = itemsList + 
+        '<align mode="left">' +
+          `<text-line>${item.name}` + 
+          `<x-position>350</x-position><text>${item.vatLabel}</text>` +
+          `<x-position>455</x-position><text>${parse_fix(item.product_totalPrice)}<set-symbol-cp>€</set-symbol-cp></text-line>` +
+        '</align>';
+    }
+    const receiptTotal = parseFloat(cashToPay).toFixed(2);
+
+    let receipt ={
+      receiptKind: "2.1",
+      numericId: setNumericId(),
+      issuer: feathersStore.user._id,
+      issuerUsername: feathersStore.user.username,
+      receiptTotal: parse_fix(receiptTotal),
+      receiptDate: localDate,
+      receiptTime: date.toLocaleTimeString(),     
+      receiptItems: unReceiptedItems     
+    };
+
+    Object.assign(receipt,  calculateVats([...unReceiptedItems]))
+    const persistedReceipt = await persistReceipt(receipt);  
+    const response = await constructMyData(persistedReceipt);
+
+    //---> Rollback
+    if(!response?.qrcode){
+      await feathersStore.removeReceipt(persistedReceipt._id);
+      await feathersStore.patchCounters("receipts", {sequence_value: persistedReceipt.numericId - 1});
+      openMyDataErrorAlert();
+      return;
+    }
+    //------->
     
     await AppSchema.printLocally(paymentMethod);
   }
+
+  const setNumericId = () => {
+    let numericId = 0;
+    const realm_counter = useQuery("Counter");
+    if(realm_counter?.length > 0)numericId = +realm_counter[0].sequence_value + 1;
+    realm.
+  } 
 
  const renderFooter = () => {
     if (!loading) {
