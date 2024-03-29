@@ -57,6 +57,7 @@ export const commonEL = {
     usernameEnglish: "Όνομα στα αγγλικά",
     vendor: "Vendor",
     printerIp: "Printer ip",
+    invoiceTypeSelection: "Επιλέξτε είδος παραστατικού",
 
     firstName : "Όνομα",
     lastName : "Επώνυμο",

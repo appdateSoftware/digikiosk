@@ -30,6 +30,8 @@ export const commonEN = {
 
     vendor: "Vendor",
     printerIp: "Printer ip",
+    invoiceTypeSelection: "Select Invoice Type",
+
 
     firstName : "First Name",
     lastName : "Last Name",

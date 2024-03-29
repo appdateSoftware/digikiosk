@@ -30,6 +30,7 @@ class FeathersStore{
   cartLength = 0; 
   orderItem = {};
   language = "el";
+  invoiceType ="alp"
  
   currentVersion = "1.0.1";
 
@@ -41,7 +42,8 @@ class FeathersStore{
       settings: observable,
       cartLength: observable,
       orderItem: observable,
-      language: observable,      
+      language: observable,    
+      invoiceType: observable,      
       newVersion: observable, 
       currentVersion: observable,
       setIsAuthenticated: action,
@@ -51,7 +53,8 @@ class FeathersStore{
       setObservables: action,
       setCartLength: action,
       setOrderItem: action,
-      setLanguage: action,     
+      setLanguage: action,   
+      setInvoiceType: action, 
       setNewVersion: action
     })
   } 
@@ -84,6 +87,10 @@ class FeathersStore{
 
   setLanguage = value => {
     this.language = value;
+  }
+
+  setInvoiceType = value => {
+    this.invoiceType = value;
   }
 
   setNewVersion = val => {      

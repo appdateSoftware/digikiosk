@@ -1,13 +1,56 @@
 import React from 'react';
 import { Realm } from '@realm/react';
 import TcpSocket from 'react-native-tcp-socket';
-import {useRealm, useQuery} from '@realm/react';
-
 export class AppSchema extends Realm.Object {
 
   _id;
   receipt;
   createdAt;
+
+  static invoiceTypes = [
+    {
+      id: "2.1",
+      name: "tpy",
+      invoiceTypeName: "ΤΙΜΟΛΟΓΙΟ ΠΑΡΟΧΗΣ ΥΠΗΡΕΣΙΩΝ",
+      invoiceTypeNumber: "ΤΠΥ",
+      invoiceTypeNumberName: "ΤΠΥ-Α"
+    },
+    {
+      id: "1.1",
+      name: "tda",
+      invoiceTypeName: "ΤΙΜΟΛΟΓΙΟ ΔΕΛΤΙΟ ΑΠΟΣΤΟΛΗΣ",
+      invoiceTypeNumber: "ΤΔΑ",
+      invoiceTypeNumberName: "ΤΔΑ-Α"
+    },
+    {
+      id: "11.1",
+      name: "alp",
+      invoiceTypeName: "ΑΠΟΔΕΙΞΗ ΛΙΑΝΙΚΗΣ ΠΩΛΗΣΗΣ",
+      invoiceTypeNumber: "ΑΛΠ",
+      invoiceTypeNumberName: "ΑΛΠ-Α"
+    },
+    {
+      id: "11.2",
+      name: "apy",
+      invoiceTypeName: "ΑΠΟΔΕΙΞΗ ΠΑΡΟΧΗΣ ΥΠΗΡΕΣΙΩΝ",
+      invoiceTypeNumber: "ΑΠΥ",
+      invoiceTypeNumberName: "ΑΠΥ-Α"
+    },
+    {
+      id: "11.4",
+      name: "psl",
+      invoiceTypeName: "ΠΙΣΤΩΤΙΚΟ ΣΤΟΙΧΕΙΟ ΛΙΑΝΙΚΗΣ",
+      invoiceTypeNumber: "ΠΣΛ",
+      invoiceTypeNumberName: "ΠΣΛ-Α"
+    },
+    {
+      id: "5.2",
+      name: "pt",
+      invoiceTypeName: "ΠΙΣΤΩΤΙΚΟ ΤΙΜΟΛΟΓΙΟ / ΜΗ ΣΥΣΧΕΤΙΖΟΜΕΝΟ",
+      invoiceTypeNumber: "ΠΤ",
+      invoiceTypeNumberName: "ΠΤ-Α"
+    }
+  ];
 
   static generateReceipt(receipt) {
     return {
@@ -40,12 +83,20 @@ export class AppSchema extends Realm.Object {
       totalNetPrice: {type: 'double'},  
       vatAnalysis: {type:'list', objectType: 'Vat' },
       req: {type: 'string'},
-      footer:  {type: 'string'}      
+      footer:  {type: 'string'},
+      invoiceData: {type: "mixed"}     
     }
   };
 
   static LanguageSchema = {
     name: 'Language',      
+    properties: {
+      name: {type: 'string', default: 'el'},       
+    }
+  };
+
+  static InvoiceTypeSchema = {
+    name: 'InvoiceType',      
     properties: {
       name: {type: 'string', default: 'el'},       
     }
@@ -60,11 +111,16 @@ export class AppSchema extends Realm.Object {
 
   static CounterSchema = {
     name: 'Counter',
-    primaryKey: 'sequence_value',      
-    properties: {
-      sequence_value: {type: 'int', default: 0},       
+    properties: {  
+      tpy: {type: 'int', default: 0},     
+      tda: {type: 'int', default: 0},  
+      alp: {type: 'int', default: 0},  
+      apy: {type: 'int', default: 0},    
+      psl: {type: 'int', default: 0},  
+      pt: {type: 'int', default: 0},  
     }
   };
+ 
 
   static VatSchema = {
     name: 'Vat',
@@ -139,64 +195,5 @@ export class AppSchema extends Realm.Object {
     properties: {
       req: {type: 'string'},       
     }
-  };
-
-  static printLocally = (req) => {
-
-    const realm = useRealm();
-    const realm_unprinted = useQuery('Unprinted');
-    const realm_company = useQuery('Company');
-    const ip = realm_company[0].printerIp;   
-   
-    const options = {
-      port: 9100,
-      host: ip,
-      localAddress: ip,
-      reuseAddress: true,
-      // localPort: 20000,
-      // interface: "wifi",
-    }
-    const make = "zywell";
- 
-    return new Promise((resolve, reject) => {
-
-      const buffer = EscPos.getBufferFromXML(req, make);
-
-      const device = TcpSocket.createConnection(options, () => {  
-        if(realm_unprinted?.length > 0){
-          realm_unprinted.forEach(async item =>  await this.printLocally(item?.req));
-          realm.write(()=>{ 
-            realm.delete(item)                        
-          }); 
-        };  
-        device.write(buffer);
-        device.emit("close");
-      });
-
-      device.on("close", () => {
-        if(device) {
-          device.destroy();
-          device = null;
-        }
-        resolve(true);
-        return;
-      });
-
-      device.on("error", async(ex) => {
-        logger.info(`Network error occured. ${devid}`, ex.errno);
-        if(ex.code === "ECONNREFUSED"){ //After restart printer gets stuck and needs retries   
-          logger.info('Restart'); 
-          device.destroy();
-          device = null;
-          await this.printLocally(req);   //TODO: Retry up to 10 times   
-        }else if(ex.code === "ETIMEDOUT"){ //if printer is offline
-          realm.write(()=>{     
-            realm.create('Unprinted', req); 
-          }) 
-        }
-        reject(true);
-        return;
-      });   
-    });    
-  };  
+  }; 
 };

@@ -40,6 +40,18 @@ const SplashScreen = ({navigation, feathersStore}) => {
     lang = realm.objects('Language')[0]?.name; 
     feathersStore.setLanguage(lang); 
     }  
+    let invoiceType = "alp"
+    if(realm){      
+      realm.objects('InvoiceType')?.length == 0 ?
+      realm.write(()=>{
+        realm.create('InvoiceType',{
+          name: 'alp'
+        })
+      })
+    :
+    invoiceType = realm.objects('InvoiceType')[0]?.name; 
+    feathersStore.setInvoiceType(invoiceType); 
+    } 
   }, [realm]); 
 
   useEffect(() => {   

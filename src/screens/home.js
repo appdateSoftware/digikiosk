@@ -27,9 +27,11 @@ import ButtonWithField from "../components/buttons/ButtonWithField";
 import Icon from "../components/Icon";
 import cloneDeep from 'lodash/cloneDeep';
 import CancelItemModal from "../components/modals/CancelItemModal";
-import { AppSchema } from "../services/receipt-service";
+import InvoiceTypeModal from "../components/modals/InvoiceTypeModal";
+import TcpSocket from 'react-native-tcp-socket';
+import {EscPos} from '@tillpos/xml-escpos-helper';
 import {pickLanguageWord} from '../utils/pickLanguageWord.js';
-
+import { AppSchema } from "../services/receipt-service";
 
 import { inject, observer } from "mobx-react";
 
@@ -89,6 +91,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   const realm_counter = useQuery("Counter");
   const realm_sections = useQuery('Section');
   const realm_company = useQuery("Company");
+  const realm_unprinted = useQuery('Unprinted');
 
   let common = useTranslate(feathersStore.language);
  
@@ -104,6 +107,8 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   const [indexToCancel, setIndexToCancel] = useState(null);
   const [enterPrice, setEnterPrice] = useState(true); 
   const [loading, setLoading] = useState(true);
+  const [invoiceTypeModal, setInvoiceTypeModal] = useState(false);
+
 
   useEffect( () => { //Check for updates  
     checkForUpdates();
@@ -294,6 +299,10 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     return colorsArray.find(color => color.id === id)?.value || ""
   }
 
+  const findInvoiceType = () => {
+    return AppSchema.invoiceTypes.find(it => it.name === feathersStore.invoiceType)
+  }
+
   const getVat = id => {
     return vatsArray.find(v => +v.id === +id)?.label.toString().padStart(2, '0') + "%"
   }
@@ -306,17 +315,19 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   }
   
   const setNumericId = () => {
-    let numericId = 0;
+    let numericId = 1;   
     if(realm_counter?.length > 0){
-      numericId = +realm_counter[0].sequence_value + 1;
+      numericId = +realm_counter[0][`${feathersStore.invoiceType}`] + 1;
       realm.write(()=>{     
-        realm_counter[0].sequence_value = numericId;      
+        realm_counter[0][`${feathersStore.invoiceType}`] = numericId;      
       })
     }else{    //init
       realm.write(()=>{     
-        realm.create('Section', {sequence_value: 0});
+        realm.create('Counter', {[`${feathersStore.invoiceType}`]: 1});
       })
     }
+    
+    return numericId;
   } 
 
   const calculateVats = items => {    
@@ -392,7 +403,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     const receiptTotal = parseFloat(cashToPay).toFixed(2);
 
     let receipt ={
-      receiptKind: "2.1",
+      receiptKind: feathersStore.invoiceType.name,
       numericId: setNumericId(),
       issuer: feathersStore.user.name,
       receiptTotal: parse_fix(receiptTotal),
@@ -404,6 +415,8 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       change     
     };
 
+    if( invoiceData?.afm )Object.assign(receipt, {companyData: invoiceData})
+
     const calcVats  = calculateVats([...unReceiptedItems]);
     Object.assign(receipt,  {...calcVats}, {vatAnalysis: calcVats});
     const response = await constructMyData(receipt);
@@ -411,7 +424,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     //---> Rollback
     if(!response?.qrcode){
       realm.write(()=>{     
-        realm_counter[0].sequence_value = receipt.numericId - 1;      
+        realm_counter[0][`${feathersStore.invoiceType}`] = receipt.numericId - 1;      
       });     
       openMyDataErrorAlert();
       return;
@@ -441,7 +454,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
         constructCompanyTitleNonEpos() +             
       '<line-feed />' +
       '<bold>' +                             
-        (invoiceData?.afm ? `<text-line>ΑΠΟΔΕΙΞΗ ΛΙΑΝΙΚΗΣ ΠΩΛΗΣΗΣ</text-line>` : `<text-line>ΤΙΜΟΛΟΓΙΟ ΠΩΛΗΣΗΣ</text-line>`) +              
+        `<text-line>${findInvoiceType().invoiceTypeName}</text-line>` +              
         `<text-line>ΧΕΙΡΙΣΤΗΣ: ${feathersStore.user.name}</text-line>` +
       '</bold>' +
       '</align>' +
@@ -504,7 +517,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       '<paper-cut />' +
     '</document>' ;
     
-    await AppSchema.printLocally(paymentMethod);
+    await printLocally(req);
     Object.assign(receipt, {footer: response.footer, req});
     realm.write(()=>{     
       realm.create('Receipt', receipt);
@@ -600,12 +613,12 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     {
       "ActionTypeId": 1,
       "InvoiceDate": isoDate,
-      "InvoiceTypeCode": "11.1",
-      "InvoiceTypeName": "ΑΠΟΔΕΙΞΗ ΛΙΑΝΙΚΗΣ ΠΩΛΗΣΗΣ",
+      "InvoiceTypeCode": findInvoiceType().id,
+      "InvoiceTypeName": findInvoiceType().invoiceTypeName,
       "InvoiceTypeSeries": `${persistedReceipt.numericId}`,
       "InvoiceTypeSeriesName": "",
-      "InvoiceTypeNumber": "ΑΛΠ",
-      "InvoiceTypeNumberName": "ΑΛΠ-Α",
+      "InvoiceTypeNumber": findInvoiceType().invoiceTypeNumber,
+      "InvoiceTypeNumberName": findInvoiceType().invoiceTypeNumberName,
       "Currency": "EURO",
       "CurrencyCode": "EUR",
       "IsRetailInvoice": true,
@@ -696,6 +709,41 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
           "support@simplypos.com"
       ]
     } 
+
+    if(persistedReceipt.companyData?.afm)Object.assign(body, {
+      "Customer": {
+        "CustomerName": `${persistedReceipt.companyData.legalName}`,
+        "CustomerActivity": `${persistedReceipt.companyData.firmActDescription}`,
+        "CustomerAddress": {
+            "Country": "ΕΛΛΑΔΑ",
+            "CountryCode": "GR",
+            "City": `${persistedReceipt.companyData.postalAreaDescription}`,
+            "Street": `${persistedReceipt.companyData.postalAddress}`,
+            "Number": `${persistedReceipt.companyData.postalAddressNo}`,
+            "Postal": `${persistedReceipt.companyData.postalZipCode}`
+        },
+        "DeliveryAddress": {
+            "Country": "ΕΛΛΑΔΑ",
+            "CountryCode": "GR",
+            "City": `${persistedReceipt.companyData.postalAreaDescription}`,
+            "Street":`${persistedReceipt.companyData.postalAddress}`,
+            "Number": `${persistedReceipt.companyData.postalAddressNo}`,
+            "Postal": `${persistedReceipt.companyData.postalZipCode}`
+        },
+        "CustomerPhones": [
+          `${persistedReceipt.companyData?.phone | ""}`
+        ],
+        "CustomerEmails": [
+          `${persistedReceipt.companyData?.email || ""}`
+        ],
+        "CustomerCurrency": "EURO",
+        "CustomerVatNumber": `${persistedReceipt.companyData.companyAfm}`,
+        "CustomerTaxAuthority": `${persistedReceipt.companyData.doyDescription}`,
+        "CustomerManualNumber": `${persistedReceipt.companyData?.phoneNumber || ""}`,
+        "CustomerMobile": `${persistedReceipt.companyData?.phoneNumber || ""}`,
+          "CustomerBranch": "0",      
+      }
+    })
     
     try{
       const payload = {
@@ -722,6 +770,62 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     }   
   } 
 
+  const printLocally = (req) => {
+
+    const ip = realm_company[0].printerIp;   
+   
+    const options = {
+      port: 9100,
+      host: ip,
+      localAddress: ip,
+      reuseAddress: true,
+      // localPort: 20000,
+      // interface: "wifi",
+    }
+    const make = "zywell";
+ 
+    return new Promise((resolve, reject) => {
+
+      const buffer = EscPos.getBufferFromXML(req, make);
+
+      const device = TcpSocket.createConnection(options, () => {  
+        if(realm_unprinted?.length > 0){
+          realm_unprinted.forEach(async item =>  await this.printLocally(item?.req));
+          realm.write(()=>{ 
+            realm.delete(item)                        
+          }); 
+        };  
+        device.write(buffer);
+        device.emit("close");
+      });
+
+      device.on("close", () => {
+        if(device) {
+          device.destroy();
+          device = null;
+        }
+        resolve(true);
+        return;
+      });
+
+      device.on("error", async(ex) => {
+        console.log(`Network error occured. ${devid}`, ex.errno);
+        if(ex.code === "ECONNREFUSED"){ //After restart printer gets stuck and needs retries   
+          console.log('Restart'); 
+          device.destroy();
+          device = null;
+          await this.printLocally(req);   //TODO: Retry up to 10 times   
+        }else if(ex.code === "ETIMEDOUT"){ //if printer is offline
+          realm.write(()=>{     
+            realm.create('Unprinted', req); 
+          }) 
+        }
+        reject(true);
+        return;
+      });   
+    });    
+  };  
+
  const renderFooter = () => {
     if (!loading) {
       return null;
@@ -745,6 +849,14 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   const parse_fix = price => {
     return price ? parseFloat(price).toFixed(2) : 0;
   } 
+
+  const openInvoiceTypeModal = () => {
+    setInvoiceTypeModal(true);
+  }
+
+  const closeInvoiceTypeModal = () => {
+    setInvoiceTypeModal(false);
+  }
    
   const headerComponent = () => (
     <View style={styles.header}>     
@@ -855,6 +967,14 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
                 disabled={!(cashToPay > 0)}
                 showActivityIndicator={issuingReceipt}
               /> 
+              <Button
+                onPress={openInvoiceTypeModal}           
+                title={findInvoiceType().invoiceTypeNumber}
+                titleColor={Colors.onTertiaryColor}
+                color={Colors.tertiaryColor}
+                borderColor={Colors.onSurface}
+                buttonStyle={styles.sideButton}  
+              /> 
             </ScrollView>
           </View>
        
@@ -879,6 +999,11 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
         deleteButton={cancelItem}
         cancelButton={() => setCancelModalVisible(false)}
       /> 
+      <InvoiceTypeModal
+        title={common.invoiceTypeSelection}
+        cancelButton={closeInvoiceTypeModal}        
+        visible={invoiceTypeModal}
+      />
     </>
   );
           
