@@ -14,7 +14,6 @@ import {
   Text,  
   View,
   Image,
-  Platform,  
   Pressable
 } from "react-native";
 

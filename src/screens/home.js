@@ -12,7 +12,7 @@ import {
 import Text from '../components/Text';
 import NumericKeyboard from '../components/NumericKeyboard';
 
-import Card from '../components/buttons/Card';
+import InvoiceDataModal from "../components/modals/InvoiceDataModal";
 import TouchableItem from "../components/TouchableItem";
 import ProductOrderedListItem from "../components/ProductOrderedListItem";
 import {getStatusBarHeight} from 'react-native-status-bar-height';
@@ -108,7 +108,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   const [enterPrice, setEnterPrice] = useState(true); 
   const [loading, setLoading] = useState(true);
   const [invoiceTypeModal, setInvoiceTypeModal] = useState(false);
-
+  const [invoiceDataModal, setInvoiceDataModal] = useState(false);
 
   useEffect( () => { //Check for updates  
     checkForUpdates();
@@ -369,7 +369,18 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       />
   ), []);
 
-  const issueReceipt = (paymentMethod, invoiceData) => async() => { 
+  const issueReceipt = (paymentMethod) => async() => { 
+    feathersStore.setPaymentMethod(paymentMethod);
+    if(["tpy", "tda", "pt"].includes(feathersStore.invoiceType)){
+      setInvoiceDataModal(true);
+    }else{
+      await _issueReceipt(paymentMethod);
+    }
+  }
+
+  const _issueReceipt = async() => { 
+    const paymentMethod = feathersStore.paymentMethod;
+    const companyData = feathersStore.companyData;
     setIssuingReceipt(true);
     const date = new Date(); 
     const day = date.getDate().toString().padStart(2, "0"); 
@@ -415,7 +426,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       change     
     };
 
-    if( invoiceData?.afm )Object.assign(receipt, {companyData: invoiceData})
+    if( companyData?.afm )Object.assign(receipt, {companyData})
 
     const calcVats  = calculateVats([...unReceiptedItems]);
     Object.assign(receipt,  {...calcVats}, {vatAnalysis: calcVats});
@@ -463,13 +474,13 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       `<text-line>${localDate} ${date.toLocaleTimeString()}</text-line>` +
       `<text-line>ΑΡ. ΑΠΟΔΕΙΞΗΣ: ${receipt.numericId}</text-line>` +     
       '</align>' +
-       (invoiceData?.afm ? 
+       (companyData?.afm ? 
         '<align mode="center">' +
         `<text-line>------------------------------------------</text-line>` +                
         '</align>' +
         '<align mode="left">' +
-        `<text-line>Στοιχεία πελάτη: ${invoiceData.name}</text-line>` +
-        `<text-line>ΑΦΜ: ${invoiceData.afm} ΔΟΥ: ${invoiceData.doy}</text-line>` +
+        `<text-line>Στοιχεία πελάτη: ${companyData.name}</text-line>` +
+        `<text-line>ΑΦΜ: ${companyData.afm} ΔΟΥ: ${companyData.doy}</text-line>` +
         '</align>'
       : "")  +
       '<align mode="center">' +
@@ -857,6 +868,14 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   const closeInvoiceTypeModal = () => {
     setInvoiceTypeModal(false);
   }
+
+  const openInvoiceDataModal = () => {
+    setInvoiceDataModal(true);
+  }
+
+  const closeInvoiceDataModal = () => {
+    setInvoiceDataModal(false);
+  }
    
   const headerComponent = () => (
     <View style={styles.header}>     
@@ -883,7 +902,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
               contentContainerStyle={styles.productsList}
             >
               <Button
-                title={price}
+                title={`${price}€`}
               //  disabled={issuingReceipt || total <= 0}
                 onPress={pricePressed}
                 titleColor={Colors.onTertiaryColor}
@@ -1003,6 +1022,11 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
         title={common.invoiceTypeSelection}
         cancelButton={closeInvoiceTypeModal}        
         visible={invoiceTypeModal}
+      />
+      <InvoiceDataModal
+        cancelButton={closeInvoiceDataModal}        
+        visible={invoiceDataModal}
+        issueReceipt={_issueReceipt}
       />
     </>
   );

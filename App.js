@@ -126,7 +126,7 @@ const MainTab = () => {
               }
               }}
             />
-              <Stack.Screen
+            <Stack.Screen
               name='Company'
               component={Company}
               options= {{   
@@ -136,7 +136,7 @@ const MainTab = () => {
                   shadowOpacity: 0
               }
               }}
-            />
+            />       
           </Stack.Navigator>
         </NavigationContainer>
       </RealmProvider>

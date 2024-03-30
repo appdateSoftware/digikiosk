@@ -25,44 +25,38 @@ class FeathersStore{
   isAuthenticated= false;
   newVersion = false;
   user = null;
-  categories = null;
-  settings = {};
-  cartLength = 0; 
-  orderItem = {};
+  companyData = {};
   language = "el";
-  invoiceType ="alp"
+  invoiceType ="alp";
+  paymentMethod = "CASH";
+  masterLanguage = "el";
  
   currentVersion = "1.0.1";
 
   constructor(){
     makeObservable(this,  {     
       isAuthenticated: observable,
-      user: observable,
-      categories: observable,
-      settings: observable,
-      cartLength: observable,
-      orderItem: observable,
+      user: observable, 
+      newVersion: observable, 
+      companyData: observable,
       language: observable,    
       invoiceType: observable,      
-      newVersion: observable, 
+      paymentMethod: observable,    
+
       currentVersion: observable,
       setIsAuthenticated: action,
       setUser: action,
-      setCategories: action,
-      setSettings: action,
       setObservables: action,
-      setCartLength: action,
-      setOrderItem: action,
-      setLanguage: action,   
+      setCompanyData: action,
+      setLanguage: action, 
+      setPaymentMethod: action,  
       setInvoiceType: action, 
       setNewVersion: action
     })
   } 
   
-  setOrderItem = data => {
-    const clonedOrderItem = cloneDeep(this.orderItem);
-    const mergedObject = {...clonedOrderItem, ...data};
-    this.orderItem = mergedObject;
+  setCompanyData = data => {   
+    this.companyData = data;
   }
  
   setIsAuthenticated = value => {
@@ -71,22 +65,14 @@ class FeathersStore{
 
   setUser = value => {
     this.user = value;
-  }
-  
-  setCategories = value => {
-    this.categories = value;
-  }
-
-  setSettings = value => {
-    this.settings = value;
-  }
-
-  setCartLength = value => {
-    this.cartLength = value;
-  } 
+  }  
 
   setLanguage = value => {
     this.language = value;
+  }
+
+  setPaymentMethod = value => {
+    this.paymentMethod = value;
   }
 
   setInvoiceType = value => {
@@ -146,19 +132,14 @@ class FeathersStore{
         const { user } = await this.app.get('authentication');
         this.setUser(user)          
         this.user && (this.setIsAuthenticated(true));    
-   //    this.setCategories(tree.youTree);    
-  //      await this.fetchSettings();               
+                  
       }catch(error){       
-              console.log("VOOO")
-
+        console.log(error)
       }
   }
 
   
- // fetchSettings = async() => {
- //   const settingsArray = await this.app.service('settings').find(); 
- //   this.setSettings(settingsArray[0]); 
- // }
+ 
  
   login = async (email, password) => {        
       return this.app.authenticate({
@@ -185,8 +166,6 @@ class FeathersStore{
     await this.app.logout();      
     this.setUser(null);
     this.setIsAuthenticated(false);
-    this.setCategories(null);
-    this.setSettings({});
   }
 
   
@@ -231,6 +210,11 @@ class FeathersStore{
         .patch(id, payload);
     }
 
+  createSoap = async(afm) => {
+    return await this.app      
+    .service('soap')    
+    .create({afm});
+  }
 
   createLogEntry = async (payload) => {      
     return await this.app
@@ -243,50 +227,20 @@ class FeathersStore{
     }
 
     _translate = (textEL, textTR) => {
-      if(this.language === this.settings.masterLanguage)return textEL;
+      if(this.language === this.masterLanguage)return textEL;
       else return textTR ? textTR : textEL;
     }
   
     _translateName = (item) => {
-      if(this.language === this.settings.masterLanguage)return item?.name || "";
+      if(this.language === this.masterLanguage)return item?.name || "";
       else return item?.nameTranslations?.find(tr => tr?.code === this.language)?.text || item?.name;
     }
   
     _translateTitle = (item) => {
-      if(this.language === this.settings.masterLanguage)return item?.title || "";
+      if(this.language === this.masterLanguage)return item?.title || "";
       else return item?.titleTranslations?.find(tr => tr?.code === this.language)?.text || item?.title;
-    }
+    }  
   
-    _translateNameAttr = (item) => {
-      if(this.language === this.settings.masterLanguage)return item?.name || "";
-      else return item?.translations?.find(tr => tr?.code === this.language)?.text || item?.name;
-    }
-  
-    _translateAddress = () => {
-      if(this.language === this.settings.masterLanguage)return this.settings?.address || "";
-      else return this.settings?.addressTranslations?.find(tr => tr?.code === this.language)?.text || this.settings?.address;
-    }
-  
-    _translateClosedShopText = () => {
-      if(this.language === this.settings.masterLanguage)return this.settings?.closedShopText || "";
-      else return this.settings?.closedShopTextTranslations?.find(tr => tr?.code === this.language)?.text || this.settings?.closedShopText;
-    }
-  
-    _translateShortDescription = () => {
-      if(this.language === this.settings.masterLanguage)return this.settings?.shortDescription || "";
-      else return this.settings?.shortDescriptionTranslations?.find(tr => tr?.code === this.language)?.text || this.settings?.shortDescription;
-    }
-  
-    _translateProductShortDescription = (item) => {
-      if(this.language === this.settings.masterLanguage)return item?.shortDescription || "";
-      else return item?.shortDescriptionTranslations?.find(tr => tr?.code === this.language)?.text || item?.shortDescription;
-    }
-  
-    _translateCategoryName = (element) => {
-      if(this.language === this.settings.masterLanguage)return element?.name || "";
-      else return element.options.categoryNameTranslations?.find(tr => tr?.code === this.language)?.text || element.name;
-    }
-
 
 }
 

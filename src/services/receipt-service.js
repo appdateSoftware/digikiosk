@@ -52,6 +52,52 @@ export class AppSchema extends Realm.Object {
     }
   ];
 
+  static origins = [{
+    "id" : 1,
+    "label" : "Αττική",
+    "labelEnglish" : "Attica"
+  }, {
+    "id" : 2,
+    "label" : "Ανατολική Μακεδονία και Θράκη",
+    "labelEnglish" : "East Macedonia"
+  }, {
+    "id" : 3,
+    "label" : "Κεντρική Μακεδονία",
+    "labelEnglish" : "Central Macedonia"
+  }, {
+    "id" : 4,
+    "label" : "Δυτική Μακεδονία",
+    "labelEnglish" : "West Macedonia"
+  }, {
+    "id" : 5,
+    "label" : "Ήπειρος",
+    "labelEnglish" : "Epirus"
+  }, {
+    "id" : 6,
+    "label" : "Θεσσαλία",
+    "labelEnglish" : "Thessaly"
+  }, {
+    "id" : 7,
+    "label" : "Ιόνια νησιά",
+    "labelEnglish" : "Ionian Islands"
+  }, {
+    "id" : 8,
+    "label" : "Δυτική Ελλάδα",
+    "labelEnglish" : "West Greece"
+  }, {
+    "id" : 9,
+    "label" : "Κεντρική Ελλάδα",
+    "labelEnglish" : "Central Greece"
+  }, {
+    "id" : 10,
+    "label" : "Πελοπόνησος",
+    "labelEnglish" : "Peloponese"
+  }, {
+    "id" : 11,
+    "label" : "Βόρειο Αιγαίο",
+    "labelEnglish" : "North Aegean"
+  }]
+
   static generateReceipt(receipt) {
     return {
     //  _id: new Realm.BSON.ObjectId(),
