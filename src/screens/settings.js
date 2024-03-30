@@ -40,6 +40,7 @@ import LanguageModal from "../components/modals/LanguageModal";
 import _useTranslate from '../hooks/_useTranslate';
 import DeleteModal from "../components/modals/DeleteModal";
 import ChangeUserModal from "../components/modals/ChangeUserModal";
+import { AppSchema } from "../services/receipt-service";
 
 // SettingsA Config
 const DIVIDER_MARGIN_LEFT = 60;
@@ -96,19 +97,7 @@ const SettingsA = ({navigation, feathersStore}) => {
   const [restoreDBModal, setRestoreDBModal] = useState(false);
   const [restoreDBIndicator, setRestoreDBIndicator] = useState(false);
   const [changeUserModal, setChangeUserModal] = useState(false);
-
-  const isMountedRef = useRef(null);
-
-  useEffect(() => {
-    isMountedRef.current = true;    
-    return () => isMountedRef.current = false;
-  }, [])
-  
-  useEffect(() => {   
-    feathersStore.user?.facebookId && 
-    setAvatarUrl(feathersStore.user.picture);    
-  }, []);    
-   
+     
   const navigateTo = screen => () => {    
     navigation.navigate(screen);
   }; 
@@ -142,35 +131,12 @@ const SettingsA = ({navigation, feathersStore}) => {
     }
   }
 
-  const logout =  async () => {   
-  
-    Alert.alert(
-      common.logout,
-      common.logoutWarning,
-      [
-        { text: common.cancel, onPress: () => {}, style: "cancel" },
-        { text: "OK", onPress: async () => {                  
-          try{
-              isMountedRef.current && setLoading(true);
-              await feathersStore.logout(); 
-             // await feathersStore.login(config.DEFAULT_EMAIL, config.DEFAULT_PSW)
-            //  navigation.
-              navigation.push('SignIn');
-              isMountedRef.current && setLoading(false);
-          }catch{
-              console.log('ERROR LOGGING OUT');
-              isMountedRef.current && setLoading(false);
-          }
-        }}
-      ],
-      { cancelable: true }
-    );
-  };
-
-  const goToLogin = () => {
-    navigation.push("SignIn");      
+  const findRole = id => {
+    return AppSchema.rolesArray.find(role => +role.id === + id)?.label;
   }
 
+ 
+ 
   const openRestoreDBModal = () => {
     setRestoreDBModal(true)
   }
@@ -213,14 +179,13 @@ const SettingsA = ({navigation, feathersStore}) => {
             <View style={[styles.row, styles.profileContainer]}>
               <View style={styles.leftSide}>
                 <Avatar
-                  imageUri={feathersStore.user?.avatar ?
-                    `${feathersStore.apiUrl}/images/${feathersStore.user?.avatar}` : avatarUrl}
+                  imageUri={avatarUrl}
                   rounded
                   size={60}
                 />
                 <View style={styles.profileInfo}>
                   <Subtitle1 style={styles.mediumText}>
-                    {`${feathersStore.user?.firstname } ${feathersStore.user?.lastname }`}
+                    {`${feathersStore.user?.name } ${findRole(feathersStore.user?.role) }`}
                   </Subtitle1>
                   <Subtitle2 style={styles.email}>
                   {feathersStore.user?.email }
@@ -232,10 +197,6 @@ const SettingsA = ({navigation, feathersStore}) => {
           <Divider type="inset" marginLeft={DIVIDER_MARGIN_LEFT} />
           </>
           }
-
-           
-       
-         
           
           {feathersStore.isAuthenticated && 
             <>
@@ -336,7 +297,9 @@ const SettingsA = ({navigation, feathersStore}) => {
           titleText = {common.changeUser}
           cancelButton = {closeChangeUserModal}
           cancelText = {common.cancelSmall}
-          visible = {changeUserModal}
+          saveText={common.chamge}
+          visible = {changeUserModal}          
+          passwordErrorMatch={common.passwordErrorMatch}
         />
       </SafeAreaView>
       

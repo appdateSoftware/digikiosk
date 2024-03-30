@@ -34,6 +34,8 @@ export const commonEN = {
     restoreDB: "Restore Database",
     restoreDBQuestion: "Proceed to restore the database?",
     changeUser: "Change user",
+    passwordErrorMatch : "Wrong password. Please try again!",
+
 
 
 

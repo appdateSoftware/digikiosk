@@ -201,7 +201,7 @@ const AddUser = ({route, navigation, feathersStore }) => {
   const saveUser = async() => {
     Keyboard.dismiss();      
     setModalVisible(true);  
-    const data = {role: +role, nameEnglish,  name, password};   
+    const data = {role: +role, nameEnglish,  name, password, active: false};   
     try{
       if(paramIndex?.current && (+paramIndex?.current >= 0)){      //---------> Edit
         let updt = realm.objects('User');

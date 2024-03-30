@@ -61,6 +61,8 @@ export const commonEL = {
     restoreDB: "Επαναφορά βάσης δεδομένων",
     restoreDBQuestion: "Είστε σίγουροι για την επαναφορά της βάσης δεδομένων?",
     changeUser: "Αλλαγή χρήστη",
+    passwordErrorMatch : "Λανθασμένος Κωδικός password. Παρακαλώ προσπαθείστε ξανά",
+
 
     firstName : "Όνομα",
     lastName : "Επώνυμο",

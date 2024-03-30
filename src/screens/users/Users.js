@@ -165,7 +165,7 @@ const Users =({navigation, feathersStore}) => {
       deleteUser={openDeleteModal(item)}     
       name={item?.name || ""}
       role={findRole(item?.role)}    
-      password={item?.role || ""}     
+      password={item?.password || ""}     
       itemIndex={index}
     />
   );

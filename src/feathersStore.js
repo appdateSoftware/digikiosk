@@ -130,8 +130,7 @@ class FeathersStore{
       try{       
         const auth = await this.app.reAuthenticate(); 
         const { user } = await this.app.get('authentication');
-        this.setUser(user)          
-        this.user && (this.setIsAuthenticated(true));    
+        user && (this.setIsAuthenticated(true));    
                   
       }catch(error){       
         console.log(error)
