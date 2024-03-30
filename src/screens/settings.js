@@ -38,9 +38,8 @@ import Colors from "../theme/colors";
 import ActivityIndicatorModal from "../components/modals/ActivityIndicatorModal";
 import LanguageModal from "../components/modals/LanguageModal";
 import _useTranslate from '../hooks/_useTranslate';
-import InfoModal from "../components/modals/InfoModal";
-import InputModal from "../components/modals/InputModal";
-
+import DeleteModal from "../components/modals/DeleteModal";
+import ChangeUserModal from "../components/modals/ChangeUserModal";
 
 // SettingsA Config
 const DIVIDER_MARGIN_LEFT = 60;
@@ -57,8 +56,6 @@ const germany = require("../assets/img/languages/germany.png");
 const france = require("../assets/img/languages/france.png");
 const spain = require("../assets/img/languages/spain.png");
 const italy = require("../assets/img/languages/italy.png");
-
-
 
 const {MyPosModule} = NativeModules;
 
@@ -96,11 +93,9 @@ const SettingsA = ({navigation, feathersStore}) => {
   const[avatarUrl, setAvatarUrl] = useState(require("../assets/img/face.png"));
   const [loading, setLoading] = useState(false);
   const [languageModal, setLanguageModal] = useState(false);
-  const [refund, setRefund] = useState("0");
-  const [myPosError, setMyPosError] = useState(false);
-  const [myPosErrorMessage, setMyPosErrorMessage] = useState("");
-  const [refundModal, setRefundModal] = useState(false);
-
+  const [restoreDBModal, setRestoreDBModal] = useState(false);
+  const [restoreDBIndicator, setRestoreDBIndicator] = useState(false);
+  const [changeUserModal, setChangeUserModal] = useState(false);
 
   const isMountedRef = useRef(null);
 
@@ -176,47 +171,30 @@ const SettingsA = ({navigation, feathersStore}) => {
     navigation.push("SignIn");      
   }
 
-  const openRefundModal = () => {
-    setRefundModal(true)
+  const openRestoreDBModal = () => {
+    setRestoreDBModal(true)
   }
 
-  const myPosRefund = async() => {
-    try{  
-      if(refund > 0){
-        setRefundModal(false);
-        const transactionResult = await MyPosModule.makeMyPosRefund(+refund);
-        setRefund("0");
-        if (transactionResult.slice(-1) === "0" ) {      
-          console.log("SUCCESS: ", transactionResult);
-        }else{
-          console.log("ERROR: ", transactionResult);      
-          setMyPosError(true);
-          setMyPosErrorMessage(transactionResult);
-        }
-      }else{
-        return;
-      }
-    }catch(error){
-      setRefund("0");
-      setMyPosError(true);
-      setMyPosErrorMessage(error);
-    }
+  const closeRestoreDBModal = () => {
+    setRestoreDBModal(false)
   }
   
- 
-  const closeErrorModal = () => {
-    setMyPosError(false);
-    setMyPosErrorMessage("");
+  const openChangeUserModal = () => {
+    setChangeUserModal(true)
   }
 
-  const closeRefundModal = () => {
-    setRefund("0");
-    setRefundModal(false);
+  const closeChangeUserModal = () => {
+    setChangeUserModal(false)
+  }
+  
+
+  const restoreDB = async() => {
+    setRestoreDBIndicator(true);
+
+  //  setRestoreDBIndicator(false);
+  //  closeRestoreDBModal()
   }
 
-  const onChangeRefund = text => {
-    setRefund(text);
-  }
 
   const addresses = feathersStore.user?.addresses;
   return (
@@ -232,7 +210,6 @@ const SettingsA = ({navigation, feathersStore}) => {
           </View>
           {feathersStore.isAuthenticated &&
           <>
-          <TouchableItem useForeground onPress={navigateTo("EditProfile")}>
             <View style={[styles.row, styles.profileContainer]}>
               <View style={styles.leftSide}>
                 <Avatar
@@ -250,9 +227,7 @@ const SettingsA = ({navigation, feathersStore}) => {
                   </Subtitle2>
                 </View>
               </View>
-            </View>
-          </TouchableItem>
-     
+            </View>    
         
           <Divider type="inset" marginLeft={DIVIDER_MARGIN_LEFT} />
           </>
@@ -311,39 +286,27 @@ const SettingsA = ({navigation, feathersStore}) => {
               </View>
             </View>
           </TouchableItem>
-          <Divider type="inset" marginLeft={DIVIDER_MARGIN_LEFT} />
+          <Divider type="inset" marginLeft={DIVIDER_MARGIN_LEFT} />  
 
-          { feathersStore.settings?.myPos &&   
-            <>
-              <Setting
-                onPress={openRefundModal}
-                icon={"md-card"}
-                title={common.myPosRefund}
-              />
-              <Divider type="inset" marginLeft={DIVIDER_MARGIN_LEFT} />
-            {/*
-              <Setting
-                onPress={myPosVoid}
-                icon={"md-card-outline"}
-                title={common.myPosVoid}
-              />
-              <Divider type="inset" marginLeft={DIVIDER_MARGIN_LEFT} />
-          */}
-            </>
-          }
+          <Setting
+            onPress={openRestoreDBModal}
+            icon={"folder"}
+            title={common.restoreDB}
+          />
+          <Divider type="inset" marginLeft={DIVIDER_MARGIN_LEFT} />     
 
-          <TouchableItem onPress={feathersStore.user?.firstname !== "default" ? logout : goToLogin}>
+          <TouchableItem onPress={openChangeUserModal}>
             <View style={[styles.row, styles.setting]}>
               <View style={styles.leftSide}>
                 <View style={styles.iconContainer}>
                   <Icon
-                    name={feathersStore.user?.firstname !== "default" ? logoutIcon : loginIcon}
+                    name={logoutIcon}
                     size={24}
                     color={Colors.secondaryColor}
                   />
                 </View>
                 <Subtitle1 style={[styles.logout, styles.mediumText]}>
-                  {feathersStore.user?.firstname !== "default" ?  common.logout : common.loginRegistration}
+                  {common.changeUser}
                 </Subtitle1>
               </View>
             </View>
@@ -359,28 +322,21 @@ const SettingsA = ({navigation, feathersStore}) => {
           title={common.languageSelection}
           cancelButton={closeLanguageModal}        
           visible={languageModal}
+        />      
+        <DeleteModal
+          visible={restoreDBModal}
+          cancelText={common.cancelSmall}
+          titleText={common.restoreDBQuestion}
+          deleteText={common.yes}
+          deleteButton={restoreDB}
+          cancelButton={closeRestoreDBModal}
+          showActivityIndicator={restoreDBIndicator}
         />
-        <InfoModal
-          message={myPosErrorMessage}
-          iconName={"alert"}
-          iconColor={Colors.primaryColorLight}
-          title={common.failedTransaction}
-          buttonTitle={common.exit}
-          onButtonPress= {closeErrorModal}
-          visible = {myPosError}          
-        />
-        <InputModal
-          input={refund}   
-          inputMethod={onChangeRefund}   
-          message={common.refundMessage}
-          title={common.myPosRefund}
-          inputPlaceholder={common.refundPlaceholder}
-          inputKeyboardType={"numeric"}
-          buttonTitle={common.refundButtonTitle}
-          onButtonPress={myPosRefund}
-          onClosePress={closeRefundModal}
-          closeButtonText={common.cancel}
-          visible={refundModal}
+        <ChangeUserModal
+          titleText = {common.changeUser}
+          cancelButton = {closeChangeUserModal}
+          cancelText = {common.cancelSmall}
+          visible = {changeUserModal}
         />
       </SafeAreaView>
       

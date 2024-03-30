@@ -44,22 +44,28 @@ const trashIcon = "trash-outline";
 
 const rolesArray = [{
   "id" : 1,
-  "label" : "Ταμείας 1"
+  "label" : "Ταμείας 1",
+  "role": "cashier"
 }, {
   "id" : 2,
-  "label" : "Ταμείας 2"
+  "label" : "Ταμείας 2",
+  "role": "cashier"
 }, {
   "id" : 3,
-  "label" : "Ταμείας 3"
+  "label" : "Ταμείας 3",
+  "role": "cashier"
 }, {
   "id" : 4,
-  "label" : "Ταμείας 4"
+  "label" : "Ταμείας 4",
+  "role": "cashier"
 }, {
   "id" : 5,
-  "label" : "Ταμείας 5"
+  "label" : "Ταμείας 5",
+  "role": "cashier"
 }, {
   "id" : 6,
-  "label" : "Διαχειριστής"
+  "label" : "Διαχειριστής",
+  "role": "admin"
 }];
 
 // DeliveryUserA Component

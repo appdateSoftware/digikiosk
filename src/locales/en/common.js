@@ -31,6 +31,10 @@ export const commonEN = {
     vendor: "Vendor",
     printerIp: "Printer ip",
     invoiceTypeSelection: "Select Invoice Type",
+    restoreDB: "Restore Database",
+    restoreDBQuestion: "Proceed to restore the database?",
+    changeUser: "Change user",
+
 
 
     firstName : "First Name",

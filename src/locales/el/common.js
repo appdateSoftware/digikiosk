@@ -58,6 +58,9 @@ export const commonEL = {
     vendor: "Vendor",
     printerIp: "Printer ip",
     invoiceTypeSelection: "Επιλέξτε είδος παραστατικού",
+    restoreDB: "Επαναφορά βάσης δεδομένων",
+    restoreDBQuestion: "Είστε σίγουροι για την επαναφορά της βάσης δεδομένων?",
+    changeUser: "Αλλαγή χρήστη",
 
     firstName : "Όνομα",
     lastName : "Επώνυμο",

@@ -12,7 +12,8 @@ import {
   TouchableHighlight,  
   StyleSheet,
   Text,  
-  View
+  View,
+  ActivityIndicator
 } from "react-native";
 
 import Colors from "../../theme/colors";
@@ -60,9 +61,12 @@ const styles = StyleSheet.create({
 
 const DeleteModal = ({
   deleteButton,
+  titleText = "Είστε σίγουροι για τη διαγραφή?",
   cancelButton,
-  cancelText = "Ακύρωση",
-  visible = false
+  cancelText = "Ακύρωση",  
+  deleteText = "Διαγραφή",
+  visible = false,
+  showActivityIndicator = false
 }) => (
   <Modal
     animationType="slide"
@@ -71,13 +75,14 @@ const DeleteModal = ({
   >
     <View style={styles.centeredView}>
       <View style={styles.modalView}>
-        <Text style={styles.modalText}>Είστε σίγουροι για τη διαγραφή?</Text>
+        <Text style={styles.modalText}>{titleText}</Text>
         <TouchableHighlight
           style={{ ...styles.openButton, backgroundColor: Colors.tertiaryColorDark }}
           onPress={deleteButton}
         >
-        <Text style={styles.textStyle}>Διαγραφή</Text>
+        <Text style={styles.textStyle}>{deleteText}</Text>
         </TouchableHighlight>
+        {showActivityIndicator && <ActivityIndicator size="small" color="#fff" />}
         <TouchableHighlight
           style={{ ...styles.openButton }}
           onPress={cancelButton}

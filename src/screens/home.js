@@ -479,8 +479,8 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
         `<text-line>------------------------------------------</text-line>` +                
         '</align>' +
         '<align mode="left">' +
-        `<text-line>Στοιχεία πελάτη: ${companyData.name}</text-line>` +
-        `<text-line>ΑΦΜ: ${companyData.afm} ΔΟΥ: ${companyData.doy}</text-line>` +
+        `<text-line>Στοιχεία πελάτη: ${companyData.legalName}</text-line>` +
+        `<text-line>ΑΦΜ: ${companyData.afm} ΔΟΥ: ${companyData.doyDescription}</text-line>` +
         '</align>'
       : "")  +
       '<align mode="center">' +
@@ -742,16 +742,16 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
             "Postal": `${persistedReceipt.companyData.postalZipCode}`
         },
         "CustomerPhones": [
-          `${persistedReceipt.companyData?.phone | ""}`
+          `${persistedReceipt.companyData?.companyPhone | ""}`
         ],
         "CustomerEmails": [
-          `${persistedReceipt.companyData?.email || ""}`
+          `${persistedReceipt.companyData?.companyEmail || ""}`
         ],
         "CustomerCurrency": "EURO",
-        "CustomerVatNumber": `${persistedReceipt.companyData.companyAfm}`,
+        "CustomerVatNumber": `${persistedReceipt.companyData.afm}`,
         "CustomerTaxAuthority": `${persistedReceipt.companyData.doyDescription}`,
-        "CustomerManualNumber": `${persistedReceipt.companyData?.phoneNumber || ""}`,
-        "CustomerMobile": `${persistedReceipt.companyData?.phoneNumber || ""}`,
+        "CustomerManualNumber": `${persistedReceipt.companyData?.companyPhone || ""}`,
+        "CustomerMobile": `${persistedReceipt.companyData?.companyPhone || ""}`,
           "CustomerBranch": "0",      
       }
     })

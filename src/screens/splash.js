@@ -5,7 +5,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import Colors from "../theme/colors";
 import ErrorModal from "../components/modals/ErrorModal";
 import { getUniqueId } from 'react-native-device-info';
-import {useRealm} from '@realm/react';
+import {useRealm, useQuery} from '@realm/react';
 
 const DEFAULT_EMAIL = "defaultUser@gmail.com";
 
@@ -14,6 +14,7 @@ const DEFAULT_PSW = ")j~nKj/,N}N6,8&cVVV#G!=F*y";
 const SplashScreen = ({navigation, feathersStore}) => { 
 
   const realm = useRealm();
+  const realm_users = useQuery('User');
   
   const [errorModal, setErrorModal] = useState(false) ;
 
@@ -51,6 +52,25 @@ const SplashScreen = ({navigation, feathersStore}) => {
     :
     invoiceType = realm.objects('InvoiceType')[0]?.name; 
     feathersStore.setInvoiceType(invoiceType); 
+    } 
+    
+    if(realm){      
+      if(realm_users?.length == 0){
+        const user = {
+          name : "Διαχειριστής",
+          nameEnglish: "Administrator",
+          role: 6,
+          password: "1234",
+          active: true
+        }
+        realm.write(()=>{
+          realm.create('User', user)
+        })
+        feathersStore.setUser(user); 
+      }else{
+        const user = realm_users.find(u => u?.active)
+        feathersStore.setUser(user); 
+      }  
     } 
   }, [realm]); 
 

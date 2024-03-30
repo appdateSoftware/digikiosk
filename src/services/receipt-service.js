@@ -185,7 +185,8 @@ export class AppSchema extends Realm.Object {
       'name': {type: 'string', default: 'ΤΑΜΕΙΑΣ 1'},  
       'nameEnglish': {type: 'string', default: 'CASHIER 1'},  
       'password': {type: 'string', default: '123'},  
-      'role': {type: 'int'},   
+      'role': {type: 'int'},
+      'active': {type: 'bool', default: 'false'}
     }
   };
 
