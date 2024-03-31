@@ -7,6 +7,8 @@ export class AppSchema extends Realm.Object {
   receipt;
   createdAt;
 
+  static persistedCollections = ["Receipt", "Language", "User", "Counter", "Section", "Company"];
+
   static rolesArray = [{
     "id" : 1,
     "label" : "Ταμείας 1",
@@ -171,13 +173,6 @@ export class AppSchema extends Realm.Object {
     name: 'InvoiceType',      
     properties: {
       name: {type: 'string', default: 'el'},       
-    }
-  };
-
-  static ActiveUserSchema = {
-    name: 'ActiveUser',      
-    properties: {
-      user: {type:'object', objectType:  'User'},     
     }
   };
 

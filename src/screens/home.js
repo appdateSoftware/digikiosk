@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   StyleSheet,
   View,
@@ -113,6 +113,25 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   useEffect( () => { //Check for updates  
     checkForUpdates();
   }, []);
+
+  useEffect( () => { 
+    sendBackup();
+  }, [realm_sections, feathersStore?.isAuthenticated]);
+
+  const sendBackup = async() => {
+    if(realm_sections?.length > 0){ // Check if there is a backup
+      const backup = {
+        date: new Date(),
+        receipt: realm.objects("Receipt"),
+        language: realm.objects("Language"),
+        counter: realm_counter,
+        user: realm.objects("User"),
+        company: realm_company,
+        section:  realm_sections,      
+      }
+      await feathersStore.patchUser({backup})  
+    }
+  }
 
   useEffect(
     () =>

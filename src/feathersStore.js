@@ -30,6 +30,7 @@ class FeathersStore{
   invoiceType ="alp";
   paymentMethod = "CASH";
   masterLanguage = "el";
+  loggedInUser = {};
  
   currentVersion = "1.0.1";
 
@@ -42,12 +43,13 @@ class FeathersStore{
       language: observable,    
       invoiceType: observable,      
       paymentMethod: observable,    
-
+      loggedInUser: observable,
       currentVersion: observable,
       setIsAuthenticated: action,
       setUser: action,
       setObservables: action,
       setCompanyData: action,
+      setLoggedInUser: action,
       setLanguage: action, 
       setPaymentMethod: action,  
       setInvoiceType: action, 
@@ -58,7 +60,11 @@ class FeathersStore{
   setCompanyData = data => {   
     this.companyData = data;
   }
- 
+
+  setLoggedInUser = data => {   
+    this.loggedInUser = data;
+  }
+  
   setIsAuthenticated = value => {
     this.isAuthenticated = value;
   }
@@ -130,15 +136,12 @@ class FeathersStore{
       try{       
         const auth = await this.app.reAuthenticate(); 
         const { user } = await this.app.get('authentication');
+        this.setLoggedInUser(user);
         user && (this.setIsAuthenticated(true));    
-                  
       }catch(error){       
         console.log(error)
       }
-  }
-
-  
- 
+  } 
  
   login = async (email, password) => {        
       return this.app.authenticate({
@@ -172,54 +175,35 @@ class FeathersStore{
       return await this.app.get('authentication');
     }   
 
- 
-    createLocalPrint = async(payload) => {      
-      return await this.app
-        .service('localprint')
-        .create(payload); 
-    }
-
     postToMyData = async(payload) => {      
       return await this.app
         .service('mydata')
         .create(payload); 
+    }    
+
+    patchUser = async(payload) => {      
+      return await this.app
+        .service('users')
+        .patch(this.loggedInUser._id, payload);
     }
 
-    createReceipt = async(payload) => {      
+    getUser = async() => {      
       return await this.app
-        .service('receipts')
+        .service('users')
+        .get(this.loggedInUser._id);
+    }
+
+    createSoap = async(afm) => {
+      return await this.app      
+      .service('soap')    
+      .create({afm});
+    }
+
+    createLogEntry = async (payload) => {      
+      return await this.app
+        .service('errorLogs')
         .create(payload); 
     }
-
-    patchReceipt = async(id, payload) => {      
-      return await this.app
-        .service('receipts')
-        .patch(id, payload);
-    }
-
-    removeReceipt = async(id) => {      
-      return await this.app
-        .service('receipts')
-        .remove(id); 
-    }
-
-    patchCounters = async(id, payload) => {      
-      return await this.app
-        .service('counters')
-        .patch(id, payload);
-    }
-
-  createSoap = async(afm) => {
-    return await this.app      
-    .service('soap')    
-    .create({afm});
-  }
-
-  createLogEntry = async (payload) => {      
-    return await this.app
-      .service('errorLogs')
-      .create(payload); 
-  }
 
     translate = (lang, textEL, textEN) => {
       return (this.language === lang) && textEL ?  textEL : (textEN ? textEN : textEL)

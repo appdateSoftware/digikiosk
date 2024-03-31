@@ -41,6 +41,7 @@ import _useTranslate from '../hooks/_useTranslate';
 import DeleteModal from "../components/modals/DeleteModal";
 import ChangeUserModal from "../components/modals/ChangeUserModal";
 import { AppSchema } from "../services/receipt-service";
+import {useRealm} from '@realm/react';
 
 // SettingsA Config
 const DIVIDER_MARGIN_LEFT = 60;
@@ -90,6 +91,8 @@ const Setting = ({ icon, title, onPress, extraData, disabled }) => (
 const SettingsA = ({navigation, feathersStore}) => { 
   
   let common = _useTranslate(feathersStore.language);
+
+  const realm = useRealm();
  
   const[avatarUrl, setAvatarUrl] = useState(require("../assets/img/face.png"));
   const [loading, setLoading] = useState(false);
@@ -156,11 +159,22 @@ const SettingsA = ({navigation, feathersStore}) => {
 
   const restoreDB = async() => {
     setRestoreDBIndicator(true);
-
-  //  setRestoreDBIndicator(false);
-  //  closeRestoreDBModal()
+    const user = await feathersStore.getUser();
+    const backup = user.backup;
+    for(let collection of AppSchema.persistedCollections){
+      restoreCollection(collection, backup[`${collection}`])
+    }
+    setRestoreDBIndicator(false);
+    closeRestoreDBModal()
   }
 
+  const restoreCollection = (collection, objects) => {
+    for (let obj of objects){
+      realm.write(()=>{     
+        realm.create(`${collection}`, obj); 
+      })
+    }
+  }
 
   const addresses = feathersStore.user?.addresses;
   return (
