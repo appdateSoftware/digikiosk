@@ -142,15 +142,15 @@ export class AppSchema extends Realm.Object {
   static ReceiptSchema = {
     name: 'Receipt',
     primaryKey: 'numericId',
-    properties: {
-      numericId: {type: 'int', indexed: true},
+    properties: {  
       receiptKind: {type: 'string'},
+      numericId: {type: 'int', indexed: true},    
       issuer:  {type: 'string'},
       receiptTotal: {type: 'double'},  
       receiptDate:  {type: 'string'},
-      receiptTime:  {type: 'string'},
-      receiptItems: {type:'list', objectType:  'Product'},
+      receiptTime:  {type: 'string'},  
       createdAt: {type: 'int'},
+      receiptItems: {type:'list', objectType:  'Product'},    
       paymentMethod:  {type: 'string'},
       cash: {type: 'double', default: 0},  
       change: {type: 'double', default: 0},
@@ -158,7 +158,21 @@ export class AppSchema extends Realm.Object {
       vatAnalysis: {type:'list', objectType: 'Vat' },
       req: {type: 'string'},
       footer:  {type: 'string'},
-      invoiceData: {type: "mixed"}     
+      companyData: {type: "mixed"}     
+    }
+  }; 
+  
+  static ProductSchema = {   
+    name: 'Product',      
+    properties: {   
+      'name': {type: 'string', default: 'ΔΙΑΦΟΡΑ 24%'},    
+      'nameEnglish': {type: 'string', default: 'VARIOUS 24%'}, 
+      'product_totalPrice': {type: 'double'},    
+      'color': {type: 'string', default: 'blue'},  
+      'vatId': {type: 'int', default: '1'},  
+      'vatLabel': {type: 'string'}, 
+      'vatAmount': {type: 'double'},
+      'underlyingValue': {type: 'double'}, 
     }
   };
 
@@ -244,19 +258,7 @@ export class AppSchema extends Realm.Object {
     }
   };
 
-  static ProductSchema = {   
-    name: 'Product',      
-    properties: {   
-      'name': {type: 'string', default: 'ΔΙΑΦΟΡΑ 24%'}, 
-      'product_totalPrice': {type: 'double'},
-      'nameEnglish': {type: 'string', default: 'VARIOUS 24%'},  
-      'color': {type: 'string', default: 'blue'},  
-      'vatId': {type: 'int', default: '1'},  
-      'vatLabel': {type: 'string'}, 
-      'vatAmount': {type: 'double'},
-      'underlyingValue': {type: 'double'}, 
-    }
-  };
+ 
 
   static UnprintedSchema = {
     name: 'Unprinted',      

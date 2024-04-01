@@ -14,7 +14,7 @@ import ErrorModal from "../components/modals/ErrorModal";
 import ContainedButton from "../components/buttons/ContainedButton";
 import { Caption, Paragraph, Subtitle1, Subtitle2 } from "../components/text/CustomText";
 import UnderlineTextInput from "../components/text/UnderlineTextInput";
-import cloneDeep from 'lodash/cloneDeep';
+import {AppSchema} from '../services/receipt-service';
 
 import Colors from "../theme/colors";
 import Validators from '../utils/validators';
@@ -23,7 +23,7 @@ import { inject, observer } from "mobx-react";
 
 import _useTranslate from '../hooks/_useTranslate';
 
-import {useRealm} from '@realm/react';
+import {useRealm, useQuery} from '@realm/react';
 
 const PLACEHOLDER_TEXT_COLOR = "rgba(0, 0, 0, 0.4)";
 const INPUT_TEXT_COLOR = "rgba(0, 0, 0, 0.87)";
@@ -33,55 +33,10 @@ const BUTTON_BORDER_RADIUS = 4;
 
 const Company = ({route, navigation, feathersStore }) => {
 
-  const originsArray = [{
-    "id" : 1,
-    "label" : "Αττική1",
-    "labelEnglish" : "Attica1"
-  }, {
-    "id" : 2,
-    "label" : "Ανατολική Μακεδονία και Θράκη",
-    "labelEnglish" : "East Macedonia"
-  }, {
-    "id" : 3,
-    "label" : "Κεντρική Μακεδονία",
-    "labelEnglish" : "Central Macedonia"
-  }, {
-    "id" : 4,
-    "label" : "Δυτική Μακεδονία",
-    "labelEnglish" : "West Macedonia"
-  }, {
-    "id" : 5,
-    "label" : "Ήπειρος",
-    "labelEnglish" : "Epirus"
-  }, {
-    "id" : 6,
-    "label" : "Θεσσαλία",
-    "labelEnglish" : "Thessaly"
-  }, {
-    "id" : 7,
-    "label" : "Ιόνια νησιά",
-    "labelEnglish" : "Ionian Islands"
-  }, {
-    "id" : 8,
-    "label" : "Δυτική Ελλάδα",
-    "labelEnglish" : "West Greece"
-  }, {
-    "id" : 9,
-    "label" : "Κεντρική Ελλάδα",
-    "labelEnglish" : "Central Greece"
-  }, {
-    "id" : 10,
-    "label" : "Πελοπόνησος",
-    "labelEnglish" : "Peloponese"
-  }, {
-    "id" : 11,
-    "label" : "Βόρειο Αιγαίο",
-    "labelEnglish" : "North Aegean"
-  }]; 
-
   let common = _useTranslate(feathersStore.language);
 
   const realm = useRealm();
+  const realm_company = useQuery("Company");
 
   const afmElement = useRef(null);
   const nameElement = useRef(null);
@@ -156,16 +111,17 @@ const Company = ({route, navigation, feathersStore }) => {
   const [edit, setEdit] = useState(false);  
   const [errorModal, setErrorModal] = useState(false) ;   
 
-  useEffect(() => {    
-      const realmItems = realm.objects('Company');
-      if(realmItems?.length > 0){
-        loadCompany(realmItems[0]);
+  useEffect(() => {      
+    console.log(realm_company)
+      if(realm_company?.length > 0){
+      
+        loadCompany(realm_company[0]);
         setEdit(true);
       }
-  }, [realm]);
+  }, [realm_company]);
 
   useEffect(()=> {
-    setOrigins(originsArray);    
+    setOrigins(AppSchema.origins);    
   },[]);
 
   useEffect(() => {
@@ -221,6 +177,7 @@ const Company = ({route, navigation, feathersStore }) => {
   };
   
   const onChangeText = key => (text) => {
+   
     switch(key){
       case "nameEnglish" : 
         setNameEnglish(text);
@@ -454,9 +411,11 @@ const Company = ({route, navigation, feathersStore }) => {
   const saveCompany = async() => {
     Keyboard.dismiss();      
 
+    console.log("VOOOO")
+
     const data = {
-      afm: +afm, nameEnglish,  name, legalName, doyDescription, legalDescription, firmActDescription,
-      companyOrigin, postalAddress, postalAddressNo, postalAreaDescription, postalZipCode, companyPhone,
+      afm, nameEnglish,  name, legalName, doyDescription, legalDescription, firmActDescription,
+      companyOrigin: +companyOrigin, postalAddress, postalAddressNo, postalAreaDescription, postalZipCode, companyPhone,
       companyEmail, vendor, printerIp
     };        
     try{
@@ -482,7 +441,7 @@ const Company = ({route, navigation, feathersStore }) => {
         }) 
       } else{   //------------> Create
         realm.write(()=>{     
-          realm.create('Company', data, false); //do not use primarykey 
+          realm.create('Company', data); 
         }) 
       } 
       closeModal();
@@ -868,8 +827,18 @@ const Company = ({route, navigation, feathersStore }) => {
             title={common.save}
             titleColor={Colors.onPrimaryColor} 
             titleStyle={styles.buttonTitle} 
-            disabled={!companyPhone || companyPhoneError || 
-              !companyEmail || companyEmailError || !aadeResponseRef.current}
+            disabled={
+              !afm || afmError ||
+              !legalName || legalNameError ||
+              !doyDescription || doyDescriptionError ||
+              !legalDescription || legalDescriptionError ||
+              !firmActDescription || firmActDescriptionError ||
+              !postalAddress || postalAddressError ||
+              !postalAddressNo || postalAddressNoError ||
+              !postalAreaDescription || postalAreaDescriptionError ||
+              !postalZipCode || postalZipCodeError ||
+              !companyPhone || companyPhoneError || 
+              !companyEmail || companyEmailError}
           /> 
         </View>
 

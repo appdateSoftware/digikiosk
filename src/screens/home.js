@@ -415,16 +415,16 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       '<align mode="left">' +    
       '<text-line>Ανάλυση ΦΠΑ</text-line>' + 
       `<text-line>Συντελεστής` + 
-      `<x-position>245</x-position><text>ΦΠΑ%</text>`
-      `<x-position>350</x-position><text>Αξία ΦΠΑ</text>` +
-      `<x-position>455</x-position><text>Καθαρή Αξία</text-line>` +
+      '<x-position>245</x-position><text>ΦΠΑ%</text>' +
+      '<x-position>350</x-position><text>Αξία ΦΠΑ</text>' +
+      '<x-position>455</x-position><text>Καθαρή Αξία</text-line>' +
       '</align>';          
       
     for (let item of unReceiptedItems){
       itemsList = itemsList + 
         '<align mode="left">' +
           `<text-line>${item.name}` + 
-          `<x-position>245</x-position><text>${item.vatLabel}</text>`
+          `<x-position>245</x-position><text>${item.vatLabel}</text>` +
           `<x-position>350</x-position><text>${parse_fix(item.underlyingValue)}</text>` +
           `<x-position>455</x-position><text>${parse_fix(item.product_totalPrice)}<set-symbol-cp>€</set-symbol-cp></text-line>` +
         '</align>';          
@@ -438,7 +438,8 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       issuer: feathersStore.user.name,
       receiptTotal: parse_fix(receiptTotal),
       receiptDate: localDate,
-      receiptTime: date.toLocaleTimeString(),     
+      receiptTime: date.toLocaleTimeString(),    
+      createdAt: date, 
       receiptItems: unReceiptedItems,
       paymentMethod,
       cash,
@@ -466,7 +467,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
         vatAnalysis = vatAnalysis +
         '<align mode="left">' +
           `<text-line>Κατ. ΦΠΑ: ${vat.id}` + 
-          `<x-position>245</x-position><text>${getVat(vat.id)}</text>`
+          `<x-position>245</x-position><text>${getVat(vat.id)}</text>` +
           `<x-position>350</x-position><text>${parse_fix(receipt[`vat${vat.id}`].vatAmount)}</text>` +
           `<x-position>455</x-position><text>${parse_fix(receipt[`vat${vat.id}`].underlyingValue)}</text-line>` +
         '</align>'; 
@@ -637,7 +638,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       }      
     } 
 
-    const totalNetAmount = receipt.totalNetPrice;
+    const totalNetAmount = persistedReceipt.totalNetPrice;
 
     const body = 
     {
@@ -778,7 +779,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     try{
       const payload = {
         body,
-        vendor_name: realm_company[0].vendor
+        userId: feathersStore.loggedInUser._id
       }
       const response = await feathersStore.postToMyData(payload);     
       if(response?.data){
@@ -886,10 +887,6 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
 
   const closeInvoiceTypeModal = () => {
     setInvoiceTypeModal(false);
-  }
-
-  const openInvoiceDataModal = () => {
-    setInvoiceDataModal(true);
   }
 
   const closeInvoiceDataModal = () => {
