@@ -15,6 +15,7 @@ import ContainedButton from "../../components/buttons/ContainedButton";
 import { Caption, Paragraph,   Subtitle1, Subtitle2 } from "../../components/text/CustomText";
 import UnderlineTextInput from "../../components/text/UnderlineTextInput";
 import Validators from '../../utils/validators';
+import { AppSchema } from "../../services/receipt-service";
 
 import Colors from "../../theme/colors";
 
@@ -22,7 +23,7 @@ import { inject, observer } from "mobx-react";
 
 import _useTranslate from '../../hooks/_useTranslate';
 
-import {useRealm} from '@realm/react';
+import {useRealm, useQuery} from '@realm/react';
 
 const PLACEHOLDER_TEXT_COLOR = "rgba(0, 0, 0, 0.4)";
 const INPUT_TEXT_COLOR = "rgba(0, 0, 0, 0.87)";
@@ -31,63 +32,18 @@ const INPUT_FOCUSED_BORDER_COLOR = "#000";
 const BUTTON_BORDER_RADIUS = 4;
 
 
-const AddSection = ({route, navigation, feathersStore }) => {
-
-  const vatsArray = [{
-    "id" : 1,
-    "label" : 24
-  }, {
-    "id" : 2,
-    "label" : 13
-  }, {
-    "id" : 3,
-    "label" : 6
-  }, {
-    "id" : 4,
-    "label" : 17
-  }, {
-    "id" : 5,
-    "label" : 9
-  }, {
-    "id" : 6,
-    "label" : 4
-  }, {
-    "id" : 7,
-    "label" : 0
-  }]
-
-  const colorsArray = [{
-    "id" : "blue",
-    "value" : Colors.primaryColor
-  }, {
-    "id" : "turquize",
-    "value" : Colors.accentColor
-  }, {
-    "id" : "red",
-    "value" : Colors.tertiaryColor
-  }, {
-    "id" : "light yellow",
-    "value" : Colors.overlayColor
-  }, {
-    "id" : "orange",
-    "value" : Colors.selection
-  }, {
-    "id" : "black",
-    "value" : Colors.black
-  }, {
-    "id" : "dark blue",
-    "value" : Colors.primaryColorDark
-  }]
+const AddSection = ({route, navigation, feathersStore }) => {   
 
   let common = _useTranslate(feathersStore.language);
 
   const realm = useRealm();
+  const realm_sections = useQuery('Section');
    
   const [name, setName] = useState("");  
   const [nameFocused, setNameFocused] = useState(false);   
   const [nameEnglish, setNameEnglish] = useState("");   
   const [nameEnglishFocused, setNameEnglishFocused] = useState(false);   
-  const [color, setColor] = useState(1);    
+  const [color, setColor] = useState("");    
   const [colorFocused, setColorFocused] = useState(false);   
   const [vat, setVat] = useState(1);    
   const [vatFocused, setVatFocused] = useState(false);    
@@ -130,8 +86,8 @@ const AddSection = ({route, navigation, feathersStore }) => {
   },  []);
 
   useEffect(() => {
-    setPickerColorsArray(colorsArray);  
-    setPickerVatsArray(vatsArray);
+    setPickerColorsArray(AppSchema.colorsArray);  
+    setPickerVatsArray(AppSchema.vatsArray);
   },  [feathersStore?.isAuthenticated]);
 
  const loadSection = () => {   
@@ -209,17 +165,15 @@ const AddSection = ({route, navigation, feathersStore }) => {
 
   const saveSection = async() => {
     Keyboard.dismiss();      
+    console.log(paramIndex?.current)
     setModalVisible(true);  
-    const data = {vat: +vat, nameEnglish,  name, color};        
+    const data = {vat: vat, nameEnglish,  name, color};        
     try{
-      if(paramIndex?.current && (+paramIndex?.current >= 0)){      //---------> Edit
-        let updt = realm.objects('Section');
-
+      if(paramIndex?.current !== null && paramIndex?.current > -1){     //---------> Edit
         realm.write(()=>{     
-          updt[+paramIndex.current].vat = +vat;
-          updt[+paramIndex.current].nameEnglish = nameEnglish;
-        //  updt[+paramIndex.current].name = name;
-          updt[+paramIndex.current].color = color;
+          realm_sections[+paramIndex.current].vat = vat;
+          realm_sections[+paramIndex.current].nameEnglish = nameEnglish;
+          realm_sections[+paramIndex.current].color = color;
         }) 
       } else{   //------------> Create
         realm.write(()=>{     
@@ -313,7 +267,7 @@ const AddSection = ({route, navigation, feathersStore }) => {
                 ref={vatElement}
                 onFocus={onFocus("vatFocused")}
                 inputFocused={vatFocused}
-                selectedValue={+vat}
+                selectedValue={vat}
                 mode={'dropdown'}
                 onValueChange={(itemValue, itemIndex) =>
                 vatChange(itemValue)

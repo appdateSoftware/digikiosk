@@ -37,52 +37,6 @@ import { inject, observer } from "mobx-react";
 
 import useTranslate from '../hooks/useTranslate';
 
-const colorsArray = [{
-  "id" : "blue",
-  "value" : Colors.primaryColor
-}, {
-  "id" : "turquize",
-  "value" : Colors.accentColor
-}, {
-  "id" : "red",
-  "value" : Colors.tertiaryColor
-}, {
-  "id" : "light yellow",
-  "value" : Colors.overlayColor
-}, {
-  "id" : "orange",
-  "value" : Colors.selection
-}, {
-  "id" : "black",
-  "value" : Colors.black
-}, {
-  "id" : "dark blue",
-  "value" : Colors.primaryColorDark
-}];
-
-const vatsArray = [{
-  "id" : 1,
-  "label" : 24
-}, {
-  "id" : 2,
-  "label" : 13
-}, {
-  "id" : 3,
-  "label" : 6
-}, {
-  "id" : 4,
-  "label" : 17
-}, {
-  "id" : 5,
-  "label" : 9
-}, {
-  "id" : 6,
-  "label" : 4
-}, {
-  "id" : 7,
-  "label" : 0
-}];
-
 const checkIcon = "checkmark";
 
 const HomeScreen = ({navigation, route, feathersStore}) => { 
@@ -115,14 +69,14 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   }, []);
 
   useEffect( () => { 
-    sendBackup();
+  //  sendBackup();
   }, [realm_sections, feathersStore?.isAuthenticated]);
 
   const sendBackup = async() => {
     if(realm_sections?.length > 0){ // Check if there is a backup
       const backup = {
-        date: new Date(),
-        receipt: realm.objects("Receipt"),
+        date: new Date().getTime(),
+        receipt: realm?.objects("Receipt"),
         language: realm.objects("Language"),
         counter: realm_counter,
         user: realm.objects("User"),
@@ -315,7 +269,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   );
 
   const findColor = (id) => {
-    return colorsArray.find(color => color.id === id)?.value || ""
+    return AppSchema.colorsArray.find(color => color.id === id)?.value || ""
   }
 
   const findInvoiceType = () => {
@@ -323,13 +277,13 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   }
 
   const getVat = id => {
-    return vatsArray.find(v => +v.id === +id)?.label.toString().padStart(2, '0') + "%"
+    return AppSchema.vatsArray.find(v => +v.id === +id)?.label.toString().padStart(2, '0') + "%"
   }
 
   const calculateNetPrice = (item) => {
-    const label = vatsArray.find(v => +v.id === +item.id)?.label;
-    const underlyingValue =  Math.round((item.product_totalPrice / (1 + label / 100 ) + Number.EPSILON) * 1000) / 1000 ;
-    const vatAmount = item.product_totalPrice - underlyingValue;
+    const label =  AppSchema.vatsArray.find(v => +v.id === +item.vat)?.label;
+    const underlyingValue =  Math.round(((price / (1 + (label / 100) )) + Number.EPSILON) * 1000) / 1000 ;
+    const vatAmount = price - underlyingValue;
     return {underlyingValue: +underlyingValue.toFixed(2), vatAmount}; 
   }
   
@@ -351,11 +305,11 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
 
   const calculateVats = items => {    
     let vatsObj = {}
-    for(let vat of vatsArray){
+    for(let vat of AppSchema.vatsArray){
       let vatAmount = items.filter(item => +item.vatId === +vat.id)
         .map(i => i.vatAmount)        
         .reduce((a,b) => (+a + +b), 0).toFixed(2);
-      let underlyingValue = items.filter(item => +item.product_vat === +vat.id)
+      let underlyingValue = items.filter(item => +item.vatId === +vat.id)
         .map(i => i.underlyingValue)        
         .reduce((a,b) => (+a + +b), 0).toFixed(2);
     Object.assign(vatsObj, {[`vat${vat.id}`]: {vatId: +vat.id, vatAmount, underlyingValue}})
@@ -439,7 +393,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       receiptTotal: parse_fix(receiptTotal),
       receiptDate: localDate,
       receiptTime: date.toLocaleTimeString(),    
-      createdAt: date, 
+      createdAt: date.getTime(), 
       receiptItems: unReceiptedItems,
       paymentMethod,
       cash,
@@ -450,19 +404,8 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
 
     const calcVats  = calculateVats([...unReceiptedItems]);
     Object.assign(receipt,  {...calcVats}, {vatAnalysis: calcVats});
-    const response = await constructMyData(receipt);
 
-    //---> Rollback
-    if(!response?.qrcode){
-      realm.write(()=>{     
-        realm_counter[0][`${feathersStore.invoiceType}`] = receipt.numericId - 1;      
-      });     
-      openMyDataErrorAlert();
-      return;
-    }
-    //------->
-
-    for (let vat of vatsArray){
+    for (let vat of AppSchema.vatsArray){
       if(receipt[`vat${vat.id}`]?.vatAmount > 0){
         vatAnalysis = vatAnalysis +
         '<align mode="left">' +
@@ -474,8 +417,20 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
         totalNetPrice = +totalNetPrice + +receipt[`vat${vat.id}`].underlyingValue;
       }
     }
+    
+    Object.assign(receipt,  {totalNetPrice});
 
-    Object.assign(receipt,  {totalNetPrice})
+    const response = await constructMyData(receipt);
+
+    //---> Rollback
+    if(!response?.qrcode){
+      realm.write(()=>{     
+        realm_counter[0][`${feathersStore.invoiceType}`] = receipt.numericId - 1;      
+      });     
+      openMyDataErrorAlert();
+      return;
+    }
+    //------->  
 
     const req =  
     '<?xml version="1.0" encoding="UTF-8"?>' +
@@ -600,7 +555,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
         "AdditionalNotes": "", 
         "Total": +parse_fix(item.underlyingValue),       
         "VATAmount": +parse_fix(item.vatAmount),
-        "VATPerc": vatsArray.find(v => +v.id === +item.product_vat)?.label,
+        "VATPerc": AppSchema.vatsArray.find(v => +v.id === +item.vatId)?.label,
         "TotalWithVAT": +parse_fix(item.product_totalPrice),
         "UnitPrice": +parse_fix(item.underlyingValue),
         "UnitDesc": 0,
@@ -626,8 +581,8 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     })
 
   
-    for(let vat of vatsArray){
-      const label = vatsArray.find(v => +v.id === +vat.id)?.label
+    for(let vat of AppSchema.vatsArray){
+      const label = AppSchema.vatsArray.find(v => +v.id === +vat.id)?.label
       if(persistedReceipt[`vat${vat.id}`] != 0){
         vatAnalysis.push({
           "Name": label + "%",
@@ -804,6 +759,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   const printLocally = (req) => {
 
     const ip = realm_company[0].printerIp;   
+    console.log( realm_company[0].printerIp)
    
     const options = {
       port: 9100,
@@ -839,8 +795,8 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
         return;
       });
 
-      device.on("error", async(ex) => {
-        console.log(`Network error occured. ${devid}`, ex.errno);
+      device.on("error", async(error) => {
+        console.log(`Network error occured. `, error);
         if(ex.code === "ECONNREFUSED"){ //After restart printer gets stuck and needs retries   
           console.log('Restart'); 
           device.destroy();

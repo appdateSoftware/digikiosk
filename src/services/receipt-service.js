@@ -1,6 +1,6 @@
 import React from 'react';
 import { Realm } from '@realm/react';
-import TcpSocket from 'react-native-tcp-socket';
+import Colors from "../theme/colors";
 export class AppSchema extends Realm.Object {
 
   _id;
@@ -33,6 +33,52 @@ export class AppSchema extends Realm.Object {
     "id" : 6,
     "label" : "Διαχειριστής",
     "role": "admin"
+  }];
+
+  static vatsArray = [{
+    "id" : 1,
+    "label" : 24
+  }, {
+    "id" : 2,
+    "label" : 13
+  }, {
+    "id" : 3,
+    "label" : 6
+  }, {
+    "id" : 4,
+    "label" : 17
+  }, {
+    "id" : 5,
+    "label" : 9
+  }, {
+    "id" : 6,
+    "label" : 4
+  }, {
+    "id" : 7,
+    "label" : 0
+  }];
+
+  static colorsArray = [{
+    "id" : "blue",
+    "value" : Colors.primaryColor
+  }, {
+    "id" : "turquize",
+    "value" : Colors.accentColor
+  }, {
+    "id" : "red",
+    "value" : Colors.tertiaryColor
+  }, {
+    "id" : "light yellow",
+    "value" : Colors.overlayColor
+  }, {
+    "id" : "orange",
+    "value" : Colors.selection
+  }, {
+    "id" : "black",
+    "value" : Colors.black
+  }, {
+    "id" : "dark blue",
+    "value" : Colors.primaryColorDark
   }];
 
   static invoiceTypes = [
@@ -247,18 +293,16 @@ export class AppSchema extends Realm.Object {
     }
   };
 
-  static SectionsSchema = {
+  static SectionSchema = {
     primaryKey: 'name',
     name: 'Section',      
     properties: {
       'name': {type: 'string', default: 'ΔΙΑΦΟΡΑ 24%'},  
       'nameEnglish': {type: 'string', default: 'VARIOUS 24%'},  
       'color': {type: 'string', default: 'blue'},  
-      'vat': {type: 'int', default: '1'}
+      'vat': {type: 'int', default: 1}
     }
-  };
-
- 
+  }; 
 
   static UnprintedSchema = {
     name: 'Unprinted',      

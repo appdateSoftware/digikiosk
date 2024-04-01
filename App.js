@@ -67,9 +67,18 @@ const MainTab = () => {
 
   return (
     <Provider feathersStore={feathersStore} >
-      <RealmProvider schema={[AppSchema.ReceiptSchema, AppSchema.CompanySchema, AppSchema.CounterSchema,
-        AppSchema.LanguageSchema, AppSchema.ProductSchema, AppSchema.SectionsSchema, AppSchema.UserSchema, 
-        AppSchema.VatSchema, AppSchema.UnprintedSchema, AppSchema.InvoiceTypeSchema]} 
+      <RealmProvider schema={[
+        AppSchema.ReceiptSchema, 
+        AppSchema.ProductSchema,
+        AppSchema.LanguageSchema,      
+        AppSchema.InvoiceTypeSchema,
+        AppSchema.CounterSchema,
+        AppSchema.VatSchema,
+        AppSchema.UserSchema,
+        AppSchema.CompanySchema,
+        AppSchema.SectionSchema,  
+        AppSchema.UnprintedSchema 
+      ]} 
         deleteRealmIfMigrationNeeded={true}
       >
         <NavigationContainer>

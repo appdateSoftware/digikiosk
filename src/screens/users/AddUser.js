@@ -203,13 +203,12 @@ const AddUser = ({route, navigation, feathersStore }) => {
     setModalVisible(true);  
     const data = {role: +role, nameEnglish,  name, password, active: false};   
     try{
-      if(paramIndex?.current && (+paramIndex?.current >= 0)){      //---------> Edit
+      if(paramIndex?.current !== null && paramIndex?.current > -1){      //---------> Edit
         let updt = realm.objects('User');
          
         realm.write(()=>{     
           updt[+paramIndex.current].role = +role;
           updt[+paramIndex.current].nameEnglish = nameEnglish;
-     //     updt[0].name = name;
           updt[+paramIndex.current].password = password;
         }) 
       } else{   //------------> Create

@@ -28,6 +28,7 @@ import ActivityIndicatorModal from "../components/modals/ActivityIndicatorModal"
 import ContainedButton from "../components/buttons/ContainedButton";
 import DeleteModal from "../components/modals/DeleteModal";
 import {useRealm, useQuery } from '@realm/react';
+import { AppSchema } from "../services/receipt-service";
 
 import Colors from "../theme/colors";
 
@@ -42,51 +43,6 @@ const saveIcon = "checkmark-outline";
 const editIcon = "create-outline";
 const trashIcon = "trash-outline";
 
-const vatsArray = [{
-  "id" : 1,
-  "label" : 24
-}, {
-  "id" : 2,
-  "label" : 13
-}, {
-  "id" : 3,
-  "label" : 6
-}, {
-  "id" : 4,
-  "label" : 17
-}, {
-  "id" : 5,
-  "label" : 9
-}, {
-  "id" : 6,
-  "label" : 4
-}, {
-  "id" : 7,
-  "label" : 0
-}];
-
-const colorsArray = [{
-  "id" : "blue",
-  "value" : Colors.primaryColor
-}, {
-  "id" : "turquize",
-  "value" : Colors.accentColor
-}, {
-  "id" : "red",
-  "value" : Colors.tertiaryColor
-}, {
-  "id" : "light yellow",
-  "value" : Colors.overlayColor
-}, {
-  "id" : "orange",
-  "value" : Colors.selection
-}, {
-  "id" : "black",
-  "value" : Colors.black
-}, {
-  "id" : "dark blue",
-  "value" : Colors.primaryColorDark
-}]
 
 // DeliverySectionA Component
 const Section = ({  
@@ -199,11 +155,11 @@ const HistoryScreen =({navigation, feathersStore}) => {
   const renderSeparator = () => <Divider />;
 
   const findVat = (id) => {
-    return vatsArray.find(vat => +vat.id === +id)?.label || ""
+    return AppSchema.vatsArray.find(vat => +vat.id === +id)?.label || ""
   }
 
   const findColor = (id) => {
-    return colorsArray.find(color => color.id === id)?.value || ""
+    return AppSchema.colorsArray.find(color => color.id === id)?.value || ""
   }
  
   const closeIndicatorModal = () => {    

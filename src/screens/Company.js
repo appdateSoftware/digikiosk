@@ -112,7 +112,6 @@ const Company = ({route, navigation, feathersStore }) => {
   const [errorModal, setErrorModal] = useState(false) ;   
 
   useEffect(() => {      
-    console.log(realm_company)
       if(realm_company?.length > 0){
       
         loadCompany(realm_company[0]);
@@ -646,7 +645,7 @@ const Company = ({route, navigation, feathersStore }) => {
           ref={postalAddressElement}
           value={postalAddress}  
           onChangeText={onChangeText("postalAddress")}
-          onFocus={onFocus("doyDescriptionFocused")}
+          onFocus={onFocus("postalAddressFocused")}
           inputFocused={postalAddressFocused}
           onSubmitEditing={focusOn(postalAddressNoElement)}
           returnKeyType="next"
@@ -661,14 +660,14 @@ const Company = ({route, navigation, feathersStore }) => {
           editable={true}
         />
         <View style={styles.errorContainer}>
-          {postalAddressError && <Text style={styles.errorText}>{common.postalAddressError}</Text>}
+          {postalAddressError && <Text style={styles.errorText}>{common.streetError}</Text>}
         </View>
 
         <UnderlineTextInput
           ref={postalAddressNoElement}
           value={postalAddressNo}  
           onChangeText={onChangeText("postalAddressNo")}
-          onFocus={onFocus("doyDescriptionFocused")}
+          onFocus={onFocus("postalAddressNoFocused")}
           inputFocused={postalAddressNoFocused}
           onSubmitEditing={focusOn(postalAreaDescriptionElement)}
           returnKeyType="next"
@@ -683,14 +682,14 @@ const Company = ({route, navigation, feathersStore }) => {
           editable={true}
         />
         <View style={styles.errorContainer}>
-          {postalAddressNoError && <Text style={styles.errorText}>{common.postalAddressNoError}</Text>}
+          {postalAddressNoError && <Text style={styles.errorText}>{common.streetNumberError}</Text>}
         </View>
 
         <UnderlineTextInput
           ref={postalAreaDescriptionElement}
           value={postalAreaDescription}  
           onChangeText={onChangeText("postalAreaDescription")}
-          onFocus={onFocus("doyDescriptionFocused")}
+          onFocus={onFocus("postalAreaDescriptionFocused")}
           inputFocused={postalAreaDescriptionFocused}
           onSubmitEditing={focusOn(postalZipCodeElement)}
           returnKeyType="next"
@@ -705,7 +704,7 @@ const Company = ({route, navigation, feathersStore }) => {
           editable={true}
         />
         <View style={styles.errorContainer}>
-          {postalAreaDescriptionError && <Text style={styles.errorText}>{common.postalAreaDescriptionError}</Text>}
+          {postalAreaDescriptionError && <Text style={styles.errorText}>{common.cityError}</Text>}
         </View>
         
         <UnderlineTextInput
@@ -727,7 +726,7 @@ const Company = ({route, navigation, feathersStore }) => {
           editable={true}
         />
         <View style={styles.errorContainer}>
-          {postalZipCodeError && <Text style={styles.errorText}>{common.postalZipCodeError}</Text>}
+          {postalZipCodeError && <Text style={styles.errorText}>{common.postcodeError}</Text>}
         </View>
 
         <UnderlineTextInput
@@ -749,7 +748,7 @@ const Company = ({route, navigation, feathersStore }) => {
           editable={true}
         />
         <View style={styles.errorContainer}>
-          {companyPhoneError && <Text style={styles.errorText}>{common.companyPhoneError}</Text>}
+          {companyPhoneError && <Text style={styles.errorText}>{common.phoneError}</Text>}
         </View>
 
         <UnderlineTextInput
@@ -771,7 +770,7 @@ const Company = ({route, navigation, feathersStore }) => {
           editable={true}
         />
         <View style={styles.errorContainer}>
-          {companyEmailError && <Text style={styles.errorText}>{common.companyEmailError}</Text>}
+          {companyEmailError && <Text style={styles.errorText}>{common.emailError}</Text>}
         </View>
 
         <UnderlineTextInput
@@ -800,7 +799,7 @@ const Company = ({route, navigation, feathersStore }) => {
           ref={printerIpElement}
           value={printerIp}  
           onChangeText={onChangeText("printerIp")}
-          onFocus={onFocus("vendorFocused")}
+          onFocus={onFocus("printerIpFocused")}
           inputFocused={printerIpFocused}
           returnKeyType="next"
           blurOnSubmit={false}
@@ -829,6 +828,8 @@ const Company = ({route, navigation, feathersStore }) => {
             titleStyle={styles.buttonTitle} 
             disabled={
               !afm || afmError ||
+              !name || nameError ||
+              !nameEnglish || nameEnglishError ||
               !legalName || legalNameError ||
               !doyDescription || doyDescriptionError ||
               !legalDescription || legalDescriptionError ||
@@ -838,7 +839,9 @@ const Company = ({route, navigation, feathersStore }) => {
               !postalAreaDescription || postalAreaDescriptionError ||
               !postalZipCode || postalZipCodeError ||
               !companyPhone || companyPhoneError || 
-              !companyEmail || companyEmailError}
+              !companyEmail || companyEmailError ||
+              !vendor ||vendorError ||
+              !printerIp || printerIpError}
           /> 
         </View>
 

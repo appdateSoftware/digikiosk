@@ -201,7 +201,7 @@ class FeathersStore{
 
     createLogEntry = async (payload) => {      
       return await this.app
-        .service('errorLogs')
+        .service('errorlogs')
         .create(payload); 
     }
 

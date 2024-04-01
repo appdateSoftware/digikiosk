@@ -15,10 +15,10 @@ export const commonEL = {
     phoneError : "Παρακαλώ συμπληρώστε ένα έγκυρο τηλέφωνο.",
     emailError : "Παρακαλώ συμπληρώστε ένα έγκυρο email.",
     afmError: "Παρακαλώ συμπληρώστε ένα έγκυρο ΑΦΜ.",
-    legalNameError: "",
-    doyDescriptionError: "",
-    legalDescriptionError: "",
-    firmActDescriptionError: "",
+    legalNameError: "Παρακαλώ συμπληρώστε μία έγκυρη επωνυμία.",
+    doyDescriptionError: "Παρακαλώ συμπληρώστε ένα έγκυρο όνομα ΔΟΥ.",
+    legalDescriptionError: "Παρακαλώ συμπληρώστε έναν έγκυρο τύπο εταιρίας.",
+    firmActDescriptionError: "Παρακαλώ συμπληρώστε μία έγκυρη δραστηριότητα",
     cityError : "Παρακαλώ συμπληρώστε μία πόλη.",
     streetError: "Παρακαλώ συμπληρώστε μία οδό",
     streetNumberError: "Παρακαλώ συμπληρώστε έναν αριθμό",
@@ -62,6 +62,8 @@ export const commonEL = {
     restoreDBQuestion: "Είστε σίγουροι για την επαναφορά της βάσης δεδομένων?",
     changeUser: "Αλλαγή χρήστη",
     passwordErrorMatch : "Λανθασμένος Κωδικός password. Παρακαλώ προσπαθείστε ξανά",
+    vendorError: "Παρακαλώ καταχωρείστε ένα έγκυρο όνομα",
+    printerIpError: "Παρακαλώ καταχωρείστε μία έγκυρη ip για τον εκτυπωτή",
 
 
     firstName : "Όνομα",
