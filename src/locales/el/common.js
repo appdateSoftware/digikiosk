@@ -65,6 +65,10 @@ export const commonEL = {
     vendorError: "Παρακαλώ καταχωρείστε ένα έγκυρο όνομα",
     printerIpError: "Παρακαλώ καταχωρείστε μία έγκυρη ip για τον εκτυπωτή",
     historyTitle: "Ιστορικό παραστατικών",
+    fromDate: "Από ημερομηνία",
+    toDate: "'Εως ημερομηνία",
+    textEmpty: "Δεν υπάρχουν δεδομένα!",
+    accounting: "Λογιστικά στοιχεία",
 
 
     firstName : "Όνομα",

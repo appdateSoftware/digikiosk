@@ -1,47 +1,24 @@
 /**
- * Food Delivery - React Native Template
+ * Digi-Kiosk
  *
  * @format
  * @flow
  */
 
-// import dependencies
 import React from 'react';
 import { StyleSheet, View, Pressable } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 
 
-// import components
 import { ButtonText } from '../text/CustomText';
 
-// import colors
 import Colors from '../../theme/colors';
 
-// LinkButton Styles
-const styles = StyleSheet.create({
-  title: {
-    padding: 2,
-    color: Colors.primaryColor
-  },
-  container: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 8
-  },
-  iconContainer: {
-    marginRight: 10
-  },
-  iconContainerRight: {
-    marginLeft: 10
-  }
-});
 
 const ripple = {
   borderless: true,
 }
 
-// LinkButton
 const LinkButton = ({ 
   onPress, 
   title, 
@@ -68,9 +45,28 @@ const LinkButton = ({
         </View>
       }
       </View>     
-  </Pressable>
-  
+  </Pressable>  
  
 );
+
+const styles = StyleSheet.create({
+  title: {
+    padding: 2,
+    color: Colors.primaryColor
+  },
+  container: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 8
+  },
+  iconContainer: {
+    marginRight: 10
+  },
+  iconContainerRight: {
+    marginLeft: 10
+  }
+});
+
 
 export default LinkButton;

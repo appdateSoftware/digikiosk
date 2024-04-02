@@ -12,7 +12,8 @@ import {
   SafeAreaView,
   StatusBar,
   StyleSheet,
-  View
+  View,
+  Image
 } from "react-native";
 import Divider from "../components/Divider";
 import {
@@ -29,6 +30,11 @@ import Icon from "../components/Icon";
 import {Calendar, LocaleConfig} from 'react-native-calendars';
 import { DateTime } from "luxon";
 import {Picker} from '@react-native-picker/picker';
+import LinkButton from "../components/buttons/LinkButton";
+import CalendarModal from "../components/modals/CalendarModal";
+import Text from '../components/Text';
+import Card from '../components/buttons/Card';
+import {shadowDefault} from '../utils/shadow';
 
 
 import Colors from "../theme/colors";
@@ -101,7 +107,8 @@ const HistoryScreen =({feathersStore}) => {
   const [to, setTo] = useState(null) ;
   const [invoiceType, setInvoiceType] = useState("alp");
   const [invoiceTypes, setInvoiceTypes] = useState([]);
-
+  const [showFromModal, setShowFromModal] = useState(false) ;
+  const [showToModal, setShowToModal] = useState(false) ;
 
   useEffect(() => {
     setInvoiceTypes(AppSchema.invoiceTypes);
@@ -177,6 +184,13 @@ const HistoryScreen =({feathersStore}) => {
     setInvoiceType(p);
   };
 
+  const toGreekLocale = date => { //--> Calendar operates internally with dates of the format: 2024-03-12
+    if(date){
+      dateArray = date.split('-');
+      return dateArray[2] + "/" + dateArray[1] + "/" + dateArray[0];
+    }else return "";  
+  }
+
   return ( 
       <SafeAreaView style={styles.screenContainer}>
         
@@ -200,30 +214,38 @@ const HistoryScreen =({feathersStore}) => {
             </Picker>
           </View>
           <View style={styles.headerSection}>
-            <Calendar
-              onDayPress={day => {
-                setFrom(day.dateString);
-              }}          
+            <LinkButton
+              onPress={() => setShowFromModal(true)} 
+              title={toGreekLocale(from)}         
             />
           </View>
           <View style={styles.headerSection}>
-          <Calendar
-              onDayPress={day => {
-                setTo(day.dateString);
-              }}            
+          <LinkButton
+              onPress={() => setShowToModal(true)} 
+              title={toGreekLocale(to)}         
             />
           </View>
-        </View>   
-        <View style={styles.container}>
-          <FlatList
-            data={realm_receipts}
-            keyExtractor={keyExtractor}
-            renderItem={renderReceiptItem}
-            ItemSeparatorComponent={renderSeparator}
-            contentContainerStyle={styles.receiptList}
-          />        
-          
         </View> 
+        {realm_receipts?.length > 0 ?
+          <View style={styles.container}>
+            <FlatList
+              data={realm_receipts}
+              keyExtractor={keyExtractor}
+              renderItem={renderReceiptItem}
+              ItemSeparatorComponent={renderSeparator}
+              contentContainerStyle={styles.receiptList}
+            />           
+          </View> 
+          :
+          <View style={styles.viewEmpty}>
+            <Card style={styles.cardEmpty}>
+              {require('../assets/img/empty.png') && <Image source={require('../assets/img/empty.png')} />}
+              <Text third medium h3 h3Style={styles.textEmpty}>
+                {common.textEmpty}
+              </Text>
+            </Card>
+          </View>
+        }   
         <ActivityIndicatorModal
           message={common.wait}
           onRequestClose={closeIndicatorModal}
@@ -235,6 +257,26 @@ const HistoryScreen =({feathersStore}) => {
           deleteButton={deleteSection}
           visible={deleteModal}
         />     
+        <CalendarModal
+          title={common.fromDate}
+          cancelButton={() => setShowFromModal(false)}
+          setFrom={setFrom}
+          visible={showFromModal}
+          buttonTitle={common.exit}
+          markedDates={{
+            [from]: {selected: true, disableTouchEvent: true}
+          }}
+        />   
+        <CalendarModal
+          title={common.toDate}
+          cancelButton={() => setShowToModal(false)}
+          setFrom={setTo}
+          visible={showToModal}
+          buttonTitle={common.exit}
+          markedDates={{
+            [to]: {selected: true, disableTouchEvent: true}
+          }}
+        /> 
       </SafeAreaView>
     );
   }
@@ -246,11 +288,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background
   },
   container: {
-    flex: 1,
     padding: 12
   },
   header: {
-    flex: 1,
     width: "100%",
     flexDirection: "row",
     justifyContent: "center",
@@ -260,6 +300,7 @@ const styles = StyleSheet.create({
     margin: 2
   },
   headerSection: {
+    flexDirection: "row",
     width: "33%",
     justifyContent: "center",
     alignItems: "center",
@@ -299,13 +340,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     color: Colors.accentColor
   },
-  radioIconContainer: {
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 16,
-    width: 24,
-    height: 24
-  },
+ 
   sectionText: { paddingVertical: 4 },
   buttonsContainer: { 
     flex:1,  
@@ -323,6 +358,23 @@ const styles = StyleSheet.create({
   vSpacer: {
     height: 25
   }, 
+  viewEmpty: {
+    flex: 1,
+  },
+  cardEmpty: {
+    flex: 1,
+    marginBottom: 30,
+    marginHorizontal: 20,
+    paddingHorizontal: 44,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...shadowDefault,
+  },
+  textEmpty: {
+    textAlign: 'center',
+    marginTop: 30,
+  },
 });
 
 export default inject('feathersStore')(observer(HistoryScreen));

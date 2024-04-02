@@ -65,7 +65,13 @@ const MainTab = () => {
       <Tab.Screen
         name="Accounting"
         component={AccountingScreen}
-        options={{headerShown: false}}
+        options= {{       
+          title: common.accounting,
+          headerStyle: {
+            elevation: 1,
+            shadowOpacity: 0,
+          }
+        }}
       />   
     </Tab.Navigator>
   );

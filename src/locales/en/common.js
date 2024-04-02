@@ -28,6 +28,7 @@ export const commonEN = {
   name: "Όνομα",
 
 
+
     vendor: "Vendor",
     printerIp: "Printer ip",
     invoiceTypeSelection: "Select Invoice Type",
@@ -36,6 +37,10 @@ export const commonEN = {
     changeUser: "Change user",
     passwordErrorMatch : "Wrong password. Please try again!",
     historyTitle: "Receipts Database",
+    fromDate: "From date",
+    toDate: "To date",
+    textEmpty: "There are no data!",
+    accounting: "Accounting Data",
 
 
 
