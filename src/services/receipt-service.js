@@ -7,7 +7,7 @@ export class AppSchema extends Realm.Object {
   receipt;
   createdAt;
 
-  static persistedCollections = ["Receipt", "Language", "User", "Counter", "Section", "Company"];
+  static persistedCollections = ["Receipt", "Language", , "Counter", "Section", "Company", "User"];
 
   static rolesArray = [{
     "id" : 1,
@@ -190,18 +190,18 @@ export class AppSchema extends Realm.Object {
     primaryKey: 'numericId',
     properties: {  
       receiptKind: {type: 'string'},
-      numericId: {type: 'int', indexed: true},    
+      numericId: {type: 'string', indexed: true},    
       issuer:  {type: 'string'},
-      receiptTotal: {type: 'double'},  
+      receiptTotal: {type: 'mixed'},  
       receiptDate:  {type: 'string'},
       receiptTime:  {type: 'string'},  
       createdAt: {type: 'int'},
-      receiptItems: {type:'list', objectType:  'Product'},    
+      receiptItems: {type:'string'},    
       paymentMethod:  {type: 'string'},
-      cash: {type: 'double', default: 0},  
-      change: {type: 'double', default: 0},
-      totalNetPrice: {type: 'double'},  
-      vatAnalysis: {type:'list', objectType: 'Vat' },
+      cash: {type: 'string', default: "0"},  
+      change: {type: 'string', default: "0"},
+      totalNetPrice: {type: 'mixed'},  
+      vatAnalysis: {type:'string' },
       req: {type: 'string'},
       footer:  {type: 'string'},
       companyData: {type: "mixed"}     
@@ -213,12 +213,12 @@ export class AppSchema extends Realm.Object {
     properties: {   
       'name': {type: 'string', default: 'ΔΙΑΦΟΡΑ 24%'},    
       'nameEnglish': {type: 'string', default: 'VARIOUS 24%'}, 
-      'product_totalPrice': {type: 'double'},    
+      'product_totalPrice': {type: 'mixed'},    
       'color': {type: 'string', default: 'blue'},  
-      'vatId': {type: 'int', default: '1'},  
+      'vatId': {type: 'mixed', default: '1'},  
       'vatLabel': {type: 'string'}, 
-      'vatAmount': {type: 'double'},
-      'underlyingValue': {type: 'double'}, 
+      'vatAmount': {type: 'mixed'},
+      'underlyingValue': {type: 'mixed'}, 
     }
   };
 
@@ -254,8 +254,8 @@ export class AppSchema extends Realm.Object {
     primaryKey: 'vatId',      
     properties: {
       vatId: {type: 'int'},  
-      vatAmount: {type: 'double'},
-      underlyingValue: {type: 'double'},      
+      vatAmount: {type: 'mixed'},
+      underlyingValue: {type: 'mixed'},      
     }
   };
 

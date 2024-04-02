@@ -69,7 +69,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   }, []);
 
   useEffect( () => { 
-  //  sendBackup();
+    sendBackup();
   }, [realm_sections, feathersStore?.isAuthenticated]);
 
   const sendBackup = async() => {
@@ -359,7 +359,11 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     const day = date.getDate().toString().padStart(2, "0"); 
     const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const year = date.getFullYear().toString().padStart(2, "0");
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    const seconds = date.getSeconds().toString().padStart(2, "0");
     const localDate = day + '/' + month + '/' + year;
+    const isoTime = hours + ":" + minutes + ":" + seconds;
     let itemsList =""; 
     let vatAnalysis ="";  
     let totalNetPrice = 0.0;   
@@ -371,7 +375,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       `<text-line>Συντελεστής` + 
       '<x-position>245</x-position><text>ΦΠΑ%</text>' +
       '<x-position>350</x-position><text>Αξία ΦΠΑ</text>' +
-      '<x-position>455</x-position><text>Καθαρή Αξία</text-line>' +
+      '<x-position>455</x-position><text>Καθ. Αξία</text-line>' +
       '</align>';          
       
     for (let item of unReceiptedItems){
@@ -387,12 +391,12 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     const receiptTotal = parseFloat(cashToPay).toFixed(2);
 
     let receipt ={
-      receiptKind: feathersStore.invoiceType.name,
+      receiptKind: feathersStore.invoiceType,
       numericId: setNumericId(),
       issuer: feathersStore.user.name,
       receiptTotal: parse_fix(receiptTotal),
       receiptDate: localDate,
-      receiptTime: date.toLocaleTimeString(),    
+      receiptTime: isoTime,    
       createdAt: date.getTime(), 
       receiptItems: unReceiptedItems,
       paymentMethod,
@@ -403,7 +407,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     if( companyData?.afm )Object.assign(receipt, {companyData})
 
     const calcVats  = calculateVats([...unReceiptedItems]);
-    Object.assign(receipt,  {...calcVats}, {vatAnalysis: calcVats});
+    Object.assign(receipt,  {...calcVats}, {vatAnalysis: JSON.stringify(calcVats)});
 
     for (let vat of AppSchema.vatsArray){
       if(receipt[`vat${vat.id}`]?.vatAmount > 0){
@@ -428,6 +432,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
         realm_counter[0][`${feathersStore.invoiceType}`] = receipt.numericId - 1;      
       });     
       openMyDataErrorAlert();
+      setIssuingReceipt(false);
       return;
     }
     //------->  
@@ -446,12 +451,12 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       '</align>' +
       '<line-feed />' +
       '<align mode="left">' +
-      `<text-line>${localDate} ${date.toLocaleTimeString()}</text-line>` +
-      `<text-line>ΑΡ. ΑΠΟΔΕΙΞΗΣ: ${receipt.numericId}</text-line>` +     
+      `<text-line>${localDate} ${isoTime}</text-line>` +
+      `<text-line>ΑΡ. ΠΑΡΑΣΤΑΤΙΚΟΥ: ${receipt.numericId}</text-line>` +     
       '</align>' +
        (companyData?.afm ? 
         '<align mode="center">' +
-        `<text-line>------------------------------------------</text-line>` +                
+        `<text-line>----------------------------------------------</text-line>` +                
         '</align>' +
         '<align mode="left">' +
         `<text-line>Στοιχεία πελάτη: ${companyData.legalName}</text-line>` +
@@ -459,12 +464,12 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
         '</align>'
       : "")  +
       '<align mode="center">' +
-      `<text-line>------------------------------------------</text-line>` +    
+      `<text-line>----------------------------------------------</text-line>` +    
       '</align>' +            
           itemsList + 
       '<line-feed />' +         
       '<align mode="center">' +
-      `<text-line>------------------------------------------</text-line>` +
+      `<text-line>----------------------------------------------</text-line>` +
       '</align>' +
         vatAnalysisHeader +
         vatAnalysis +
@@ -474,14 +479,14 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       `<x-position>455</x-position><text>${parse_fix(receipt.totalNetPrice)}</text-line>` +
       '</align>' +   
       '<align mode="center">' +
-      `<text-line>------------------------------------------</text-line>` +
+      `<text-line>----------------------------------------------</text-line>` +
       '</align>' +
       '<align mode="left">' +
       `<text-line>${paymentMethod === "VISA" ? "ΚΑΡΤΑ" : "ΜΕΤΡΗΤΑ"}` + 
       `<x-position>455</x-position><text>${parse_fix(paymentMethod === "VISA" ? receiptTotal : cash)}</text-line>` +
       '</align>' +
       '<align mode="center">' +
-      `<text-line>------------------------------------------</text-line>` +
+      `<text-line>----------------------------------------------</text-line>` +
       '</align>' +
       '<align mode="left">' +  
       `<text-line>Σύνολο:` + 
@@ -505,25 +510,38 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     
     await printLocally(req);
     Object.assign(receipt, {footer: response.footer, req});
+    
+    //--------> Persist in Realm
+
+    Object.assign(receipt, {
+      numericId: feathersStore.invoiceType + "_" + receipt.numericId.toString(),
+      receiptItems: JSON.stringify(receipt.receiptItems)
+    })
     realm.write(()=>{     
       realm.create('Receipt', receipt);
     });
-    for(let listItem of orderItems)Object.assign(listItem, {paid: true})
+
+    //------------>
+    resetCashInputs();
+    for(let listItem of orderItems){
+      if(listItem.toBePaid)Object.assign(listItem, {paid: true, toBePaid: false});
+    }
+    if(orderItems.filter(item => item?.paid)?.length === orderItems?.length)setOrderItems([]);
     setIssuingReceipt(false);
   }
 
   const constructCompanyTitleNonEpos = () => {
     return(
-      `<bold><text-line size="1:1">${realm_company.name}</text-line></bold>` +
+      `<bold><text-line size="1:1">${realm_company[0].name}</text-line></bold>` +
       '<line-feed />' +
-      `<bold><text-line>${realm_company?.legalName || realm_company.name}</text-line></bold>` +
+      `<bold><text-line>${realm_company[0]?.legalName || realm_company[0].name}</text-line></bold>` +
       '<line-feed />' +
       '<bold>' +
-        `<text-line>${realm_company.postalAddress} ${realm_company.postalAddressNo} ${realm_company.postalAreaDescription} ${realm_company.postalZipCode}</text-line>` + 
-        `<text-line>ΑΦΜ: ${realm_company.afm} ΔΟΥ ${realm_company.doyDescription}</text-line>` +
-        `<text-line>${realm_company.firmActDescription}</text-line>` +
-        (realm_company.companyPhone ? `<text-line>ΤΗΛ: ${realm_company.companyPhone}</text-line>` : '') +
-        (realm_company.companyEmail ? `<text-line>ΤΗΛ: ${realm_company.companyEmail}</text-line>` : '') +
+        `<text-line>${realm_company[0].postalAddress} ${realm_company[0].postalAddressNo} ${realm_company[0].postalAreaDescription} ${realm_company[0].postalZipCode}</text-line>` + 
+        `<text-line>ΑΦΜ: ${realm_company[0].afm} ΔΟΥ ${realm_company[0].doyDescription}</text-line>` +
+        `<text-line>${realm_company[0].firmActDescription}</text-line>` +
+        (realm_company[0].companyPhone ? `<text-line>ΤΗΛ: ${realm_company[0].companyPhone}</text-line>` : '') +
+        (realm_company[0].companyEmail ? `<text-line>E-mail: ${realm_company[0].companyEmail}</text-line>` : '') +
       '</bold>'
     )
   }
@@ -737,7 +755,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
         userId: feathersStore.loggedInUser._id
       }
       const response = await feathersStore.postToMyData(payload);     
-      if(response?.data){
+      if(response?.data?.invoiceURL){
           return {       
           qrcode:  `${response.data.invoiceURL}`,
           footer: `${response.data.invoiceMark} ${response.data.invoiceUid} ${response.data.authenticationCode}`
@@ -758,22 +776,64 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
 
   const printLocally = (req) => {
 
+      const PORT = 9100;
     const ip = realm_company[0].printerIp;   
     console.log( realm_company[0].printerIp)
    
     const options = {
-      port: 9100,
-      host: ip,
-      localAddress: ip,
+      port: 9100,   //connect to
+      host: ip,   //connect to
+  //    localAddress: ip, //connect from
       reuseAddress: true,
-      // localPort: 20000,
-      // interface: "wifi",
+      // localPort: 20000,    //connect from
+      // interface: "ethernet",
     }
     const make = "zywell";
- 
+
+/*
+    //-------> TEST
+    const req =`
+    <?xml version="1.0" encoding="UTF-8"?>
+    <document>
+    <set-cp/>
+      <align mode="center">
+        <bold>
+          <text-line size="1:0">TEST 2 <set-symbol-cp>€</set-symbol-cp></text-line>
+        </bold>
+      </align>
+      <align mode="left">
+        <text-line size="0:0">\u03b1 DUCEROAD duceroad</text-line>  
+        <x-position>100</x-position><text>Move 100</text>
+        <bold><text-line size="0:0">αβγ</text-line></bold>
+        <text-line size="0:0">abcdefghijklmnopqrstuvwxyz</text-line>     
+        <text>αβγδεζηθικλμνξοπρστυφχψωΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ</text>
+       <text>αβγδεζηθικλμνξοπρστυφχψωΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ</text>
+      </align>        
+      <line-feed />        
+      <paper-cut />
+    </document>
+  `
+//---------> TEST END
+*/
+
     return new Promise((resolve, reject) => {
 
       const buffer = EscPos.getBufferFromXML(req, make);
+
+      let device = new TcpSocket.Socket();
+
+      device.connect(options, () => {
+        if(realm_unprinted?.length > 0){
+          realm_unprinted.forEach(async item =>  await this.printLocally(item?.req));
+          realm.write(()=>{ 
+            realm.delete(item)                        
+          }); 
+        };  
+        device.write(buffer);
+        device.emit("close");
+      });
+
+      /*
 
       const device = TcpSocket.createConnection(options, () => {  
         if(realm_unprinted?.length > 0){
@@ -785,7 +845,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
         device.write(buffer);
         device.emit("close");
       });
-
+*/
       device.on("close", () => {
         if(device) {
           device.destroy();

@@ -64,6 +64,7 @@ export const commonEL = {
     passwordErrorMatch : "Λανθασμένος Κωδικός password. Παρακαλώ προσπαθείστε ξανά",
     vendorError: "Παρακαλώ καταχωρείστε ένα έγκυρο όνομα",
     printerIpError: "Παρακαλώ καταχωρείστε μία έγκυρη ip για τον εκτυπωτή",
+    historyTitle: "Ιστορικό παραστατικών",
 
 
     firstName : "Όνομα",

@@ -5,7 +5,7 @@
  * @flow
  */
 
-import React, { useState, useCallback, useLayoutEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FlatList,
   ScrollView,
@@ -14,10 +14,7 @@ import {
   StyleSheet,
   View
 } from "react-native";
-import { useFocusEffect } from '@react-navigation/native';
 import Divider from "../components/Divider";
-import HeaderIconButton from "../components/HeaderIconButton";
-import Icon from "../components/Icon";
 import {
   Caption,
   Subtitle1,
@@ -25,10 +22,14 @@ import {
 } from "../components/text/CustomText";
 import TouchableItem from "../components/TouchableItem";
 import ActivityIndicatorModal from "../components/modals/ActivityIndicatorModal";
-import ContainedButton from "../components/buttons/ContainedButton";
 import DeleteModal from "../components/modals/DeleteModal";
 import {useRealm, useQuery } from '@realm/react';
 import { AppSchema } from "../services/receipt-service";
+import Icon from "../components/Icon";
+import {Calendar, LocaleConfig} from 'react-native-calendars';
+import { DateTime } from "luxon";
+import {Picker} from '@react-native-picker/picker';
+
 
 import Colors from "../theme/colors";
 
@@ -45,8 +46,7 @@ const trashIcon = "trash-outline";
 
 
 // DeliverySectionA Component
-const Section = ({  
-  editSection,
+const Receipt = ({  
   deleteSection, 
   name,
   colorCaption,
@@ -54,6 +54,7 @@ const Section = ({
   colorValue,
   vatCaption,
   vat,
+  printThermal,
   itemIndex
 }) => (
   
@@ -68,25 +69,25 @@ const Section = ({
       </View>
 
       <View style={styles.buttonsContainer}> 
-        <TouchableItem style={styles.end} borderless  onPress={editSection}>
+        <TouchableItem style={styles.end} borderless  onPress={printThermal}>
           <View style={styles.iconContainer}>
             <Icon name={editIcon} size={21} color={Colors.secondaryText}/>                       
           </View>
         </TouchableItem>          
-        {itemIndex > 0 &&
+     
         <TouchableItem style={styles.end} borderless  onPress={deleteSection}>
           <View style={styles.iconContainer}>
             <Icon name={trashIcon} size={21} color={Colors.secondaryColor}/>                       
           </View>
         </TouchableItem> 
-        } 
+         
       </View>
     </View>
 
 );
 
 // DeliverySectionA
-const HistoryScreen =({navigation, feathersStore}) => {
+const HistoryScreen =({feathersStore}) => {
 
   const realm = useRealm();
   const realm_receipts = useQuery('Receipt');
@@ -96,30 +97,33 @@ const HistoryScreen =({navigation, feathersStore}) => {
   const [indicatorModal, setIndicatorModal] = useState(false) ;
   const [deleteModal, setDeleteModal] = useState(false) ;
   const [itemToDelete, setItemToDelete] = useState(null) ;
-  
-  useLayoutEffect(() => {
-    navigation.setOptions ({
-      headerRight: () => (      
-        <HeaderIconButton
-          onPress={async () => {
-           
-            navigation.goBack();
-          }}
-          name={saveIcon}
-          color={Colors.primaryColor}
-        />
-      )
-  })}, [navigation]);
+  const [from, setFrom] = useState(null) ;
+  const [to, setTo] = useState(null) ;
+  const [invoiceType, setInvoiceType] = useState("alp");
+  const [invoiceTypes, setInvoiceTypes] = useState([]);
 
-  const  editSection = item => () => {       
-    const index = realm_receipts.indexOf(item);      
-    navigation.navigate('AddSection', 
-      {item: JSON.stringify(item), index, title: common.changeSection});    
-  };    
-  
-  const addButtonPressed = () => {  
-    navigation.navigate("AddSection", {title: common.addSection}) 
-  }  
+
+  useEffect(() => {
+    setInvoiceTypes(AppSchema.invoiceTypes);
+    setFrom(DateTime.now().startOf("month").toISODate());
+    setTo(DateTime.now().toISODate());
+  }, []);
+
+  useEffect(() => {
+
+  }, [from, to, invoiceType])
+
+  const printThermal = () => item => {
+
+  }
+
+  const createPDF = () => item => {
+
+  }
+
+  const issueCredit = () => item => {
+
+  } 
 
   const openDeleteModal = item => () => {
     setItemToDelete(item);
@@ -137,10 +141,9 @@ const HistoryScreen =({navigation, feathersStore}) => {
     
   const keyExtractor = (item, index) => index.toString();
 
-  const renderSectionItem = ({ item, index }) => (
-    <Section
+  const renderReceiptItem = ({ item, index }) => (
+    <Receipt
       key={item._id}
-      editSection={editSection(item)}
       deleteSection={openDeleteModal(item)}     
       name={item?.name || ""}
       color={item?.color || ""}   
@@ -170,33 +173,56 @@ const HistoryScreen =({navigation, feathersStore}) => {
     setDeleteModal(false); 
   };
 
+  const invoiceTypeChange = p => {    
+    setInvoiceType(p);
+  };
+
   return ( 
       <SafeAreaView style={styles.screenContainer}>
         
         <StatusBar
           backgroundColor={Colors.statusBarColor}
           barStyle="dark-content"
-        />      
+        />   
+        <View style={styles.header}>
+          <View style={[styles.headerSection, styles.invoiceType]}>
+            <Picker
+                style={[ styles.picker]}
+                selectedValue={invoiceType}
+                mode={'dropdown'}
+                onValueChange={(itemValue, itemIndex) =>
+                invoiceTypeChange(itemValue)
+              }
+            >
+              {invoiceTypes?.map((i, index)=> (              
+                <Picker.Item key={index}  color={Colors.primaryText} label={i.invoiceTypeNumber} value={i.name}/>
+              ))}        
+            </Picker>
+          </View>
+          <View style={styles.headerSection}>
+            <Calendar
+              onDayPress={day => {
+                setFrom(day.dateString);
+              }}          
+            />
+          </View>
+          <View style={styles.headerSection}>
+          <Calendar
+              onDayPress={day => {
+                setTo(day.dateString);
+              }}            
+            />
+          </View>
+        </View>   
         <View style={styles.container}>
           <FlatList
             data={realm_receipts}
             keyExtractor={keyExtractor}
-            renderItem={renderSectionItem}
+            renderItem={renderReceiptItem}
             ItemSeparatorComponent={renderSeparator}
-            contentContainerStyle={styles.sectionList}
+            contentContainerStyle={styles.receiptList}
           />        
-          <View style={styles.vSpacer}></View> 
-          <View style={styles.saveButton}>                       
-            <ContainedButton
-              onPress={addButtonPressed}
-              color={Colors.primaryColor}
-              socialIconName="plus"
-              iconColor={Colors.onPrimaryColor} 
-              title={common.addSection}
-              titleColor={Colors.onPrimaryColor} 
-              titleStyle={styles.buttonTitle}            
-            /> 
-          </View>    
+          
         </View> 
         <ActivityIndicatorModal
           message={common.wait}
@@ -214,7 +240,6 @@ const HistoryScreen =({navigation, feathersStore}) => {
   }
 
 
-// DeliverySectionA Styles
 const styles = StyleSheet.create({
   screenContainer: {
     flex: 1,
@@ -225,13 +250,29 @@ const styles = StyleSheet.create({
     padding: 12
   },
   header: {
+    flex: 1,
+    width: "100%",
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     alignItems: "center",
     backgroundColor: Colors.background,
-    elevation: 1
+    elevation: 1,
+    margin: 2
   },
-  sectionList: {
+  headerSection: {
+    width: "33%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  invoiceType:{
+    justifyContent: "flex-start"
+  },
+  picker: {
+    justifyContent: "center",
+    alignItems: "center",
+    width: "100%"
+  },
+  receiptList: {
     paddingVertical: 8
   },
   sectionCard: {

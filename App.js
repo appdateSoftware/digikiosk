@@ -54,7 +54,13 @@ const MainTab = () => {
       <Tab.Screen
         name="History"
         component={HistoryScreen}
-        options={{headerShown: false}}
+        options= {{       
+          title: common.historyTitle,
+          headerStyle: {
+            elevation: 1,
+            shadowOpacity: 0,
+          }
+        }}
       />
       <Tab.Screen
         name="Accounting"

@@ -161,14 +161,18 @@ const SettingsA = ({navigation, feathersStore}) => {
     setRestoreDBIndicator(true);
     const user = await feathersStore.getUser();
     const backup = user.backup;
+    realm.write(()=>{     
+      realm.deleteAll(); 
+    })
     for(let collection of AppSchema.persistedCollections){
-      restoreCollection(collection, backup[`${collection}`])
+      restoreCollection(collection, backup[`${collection?.toLowerCase()}`])
     }
     setRestoreDBIndicator(false);
     closeRestoreDBModal()
   }
 
-  const restoreCollection = (collection, objects) => {
+  const restoreCollection = (collection, objects) => {    
+    if(objects?.length > 0)
     for (let obj of objects){
       realm.write(()=>{     
         realm.create(`${collection}`, obj); 
