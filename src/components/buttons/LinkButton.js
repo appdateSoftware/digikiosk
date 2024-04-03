@@ -51,14 +51,12 @@ const LinkButton = ({
 
 const styles = StyleSheet.create({
   title: {
-    padding: 2,
     color: Colors.primaryColor
   },
   container: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 8
   },
   iconContainer: {
     marginRight: 10

@@ -47,7 +47,7 @@ import _useTranslate from '../hooks/_useTranslate';
 
 // DeliverySectionA Config
 const saveIcon = "checkmark-outline";
-const editIcon = "create-outline";
+const printIcon = "print-outline";
 const trashIcon = "trash-outline";
 
 
@@ -77,7 +77,7 @@ const Receipt = ({
       <View style={styles.buttonsContainer}> 
         <TouchableItem style={styles.end} borderless  onPress={printThermal}>
           <View style={styles.iconContainer}>
-            <Icon name={editIcon} size={21} color={Colors.secondaryText}/>                       
+            <Icon name={printIcon} size={21} color={Colors.secondaryText}/>                       
           </View>
         </TouchableItem>          
      
@@ -198,54 +198,40 @@ const AccountingScreen =({feathersStore}) => {
           backgroundColor={Colors.statusBarColor}
           barStyle="dark-content"
         />   
-        <View style={styles.header}>
-          <View style={[styles.headerSection, styles.invoiceType]}>
-            <Picker
-                style={[ styles.picker]}
-                selectedValue={invoiceType}
-                mode={'dropdown'}
-                onValueChange={(itemValue, itemIndex) =>
-                invoiceTypeChange(itemValue)
-              }
-            >
-              {invoiceTypes?.map((i, index)=> (              
-                <Picker.Item key={index}  color={Colors.primaryText} label={i.invoiceTypeNumber} value={i.name}/>
-              ))}        
-            </Picker>
-          </View>
+        <View style={styles.header}>        
           <View style={styles.headerSection}>
+            <Text>{common.fromTitle}</Text>
             <LinkButton
               onPress={() => setShowFromModal(true)} 
               title={toGreekLocale(from)}         
             />
           </View>
           <View style={styles.headerSection}>
-          <LinkButton
+            <Text>{common.toTitle}</Text>
+            <LinkButton
               onPress={() => setShowToModal(true)} 
               title={toGreekLocale(to)}         
             />
           </View>
-        </View> 
-        {realm_receipts?.length > 0 ?
-          <View style={styles.container}>
-            <FlatList
-              data={realm_receipts}
-              keyExtractor={keyExtractor}
-              renderItem={renderReceiptItem}
-              ItemSeparatorComponent={renderSeparator}
-              contentContainerStyle={styles.receiptList}
-            />           
-          </View> 
-          :
-          <View style={styles.viewEmpty}>
-            <Card style={styles.cardEmpty}>
-              {require('../assets/img/empty.png') && <Image source={require('../assets/img/empty.png')} />}
-              <Text third medium h3 h3Style={styles.textEmpty}>
-                {common.textEmpty}
-              </Text>
-            </Card>
+          <View style={styles.headerButtonSection}>
+            <TouchableItem style={styles.end} borderless  onPress={printThermal}>
+              <View style={styles.iconContainer}>
+                <Icon name={printIcon} size={21} color={Colors.secondaryText}/>                       
+              </View>
+            </TouchableItem> 
           </View>
-        }   
+          
+        </View> 
+        <View style={styles.container}>
+          <FlatList
+            data={realm_receipts}
+            keyExtractor={keyExtractor}
+            renderItem={renderReceiptItem}
+            ItemSeparatorComponent={renderSeparator}
+            contentContainerStyle={styles.receiptList}
+          />           
+        </View> 
+       
         <ActivityIndicatorModal
           message={common.wait}
           onRequestClose={closeIndicatorModal}
@@ -301,7 +287,13 @@ const styles = StyleSheet.create({
   },
   headerSection: {
     flexDirection: "row",
-    width: "33%",
+    width: "40%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  headerButtonSection: {
+    flexDirection: "row",
+    width: "20%",
     justifyContent: "center",
     alignItems: "center",
   },

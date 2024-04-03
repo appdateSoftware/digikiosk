@@ -41,7 +41,10 @@ export const commonEN = {
     toDate: "To date",
     textEmpty: "There are no data!",
     accounting: "Accounting Data",
-
+    fromTitle: "From: ",
+    toTitle: "To: ",
+    debitQuestion: "Are you sure for the debit issuance?",
+    issueDebit: "Debit",
 
 
 

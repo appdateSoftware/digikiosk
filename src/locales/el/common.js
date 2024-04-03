@@ -69,6 +69,10 @@ export const commonEL = {
     toDate: "'Εως ημερομηνία",
     textEmpty: "Δεν υπάρχουν δεδομένα!",
     accounting: "Λογιστικά στοιχεία",
+    fromTitle: "Από: ",
+    toTitle: "'Εως: ",
+    debitQuestion: "Είστε σίγουροι για την έκδοση πιστωτικού;",
+    issueDebit: "Πιστωτικό",
 
 
     firstName : "Όνομα",

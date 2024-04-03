@@ -47,7 +47,7 @@ import _useTranslate from '../hooks/_useTranslate';
 
 // DeliverySectionA Config
 const saveIcon = "checkmark-outline";
-const editIcon = "create-outline";
+const printIcon = "print-outline";
 const trashIcon = "trash-outline";
 
 
@@ -77,7 +77,7 @@ const Receipt = ({
       <View style={styles.buttonsContainer}> 
         <TouchableItem style={styles.end} borderless  onPress={printThermal}>
           <View style={styles.iconContainer}>
-            <Icon name={editIcon} size={21} color={Colors.secondaryText}/>                       
+            <Icon name={printIcon} size={21} color={Colors.secondaryText}/>                       
           </View>
         </TouchableItem>          
      
@@ -128,7 +128,7 @@ const HistoryScreen =({feathersStore}) => {
 
   }
 
-  const issueCredit = () => item => {
+  const issueDebit = () => item => {
 
   } 
 
@@ -253,8 +253,11 @@ const HistoryScreen =({feathersStore}) => {
           visible={indicatorModal}
         />            
         <DeleteModal
+          titleText={common.debitQuestion}
+          cancelText={common.cancel}
+          deleteText={common.issueDebit}
           cancelButton={closeDeleteModal}
-          deleteButton={deleteSection}
+          deleteButton={issueDebit}
           visible={deleteModal}
         />     
         <CalendarModal
