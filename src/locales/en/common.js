@@ -45,6 +45,16 @@ export const commonEN = {
     toTitle: "To: ",
     debitQuestion: "Are you sure for the debit issuance?",
     issueDebit: "Debit",
+    sales: "SALES",
+    retail: "RETAIL",
+    wholesales: "WHOLESALES",
+    totalCap:"TOTAL",
+    net: "NET",
+    gross: "GROSS",
+    totalSales: "TOTAL SALES",
+    quantityC: "QUANTITY",
+    debit: "DEBIT",
+    average: "AVERAGE",
 
 
 

@@ -5,15 +5,13 @@
  * @flow
  */
 
-import React, { useState, useEffect } from "react";
-import {
-  FlatList,
-  ScrollView,
+import React, { useState, useEffect, Fragment } from "react";
+import { 
   SafeAreaView,
   StatusBar,
   StyleSheet,
   View,
-  Image
+  ScrollView
 } from "react-native";
 import Divider from "../components/Divider";
 import {
@@ -27,14 +25,12 @@ import DeleteModal from "../components/modals/DeleteModal";
 import {useRealm, useQuery } from '@realm/react';
 import { AppSchema } from "../services/receipt-service";
 import Icon from "../components/Icon";
-import {Calendar, LocaleConfig} from 'react-native-calendars';
 import { DateTime } from "luxon";
-import {Picker} from '@react-native-picker/picker';
 import LinkButton from "../components/buttons/LinkButton";
 import CalendarModal from "../components/modals/CalendarModal";
 import Text from '../components/Text';
-import Card from '../components/buttons/Card';
-import {shadowDefault} from '../utils/shadow';
+import TcpSocket from 'react-native-tcp-socket';
+import {EscPos} from '@tillpos/xml-escpos-helper';
 
 
 import Colors from "../theme/colors";
@@ -46,123 +42,115 @@ import { inject, observer } from "mobx-react";
 import _useTranslate from '../hooks/_useTranslate';
 
 // DeliverySectionA Config
-const saveIcon = "checkmark-outline";
 const printIcon = "print-outline";
-const trashIcon = "trash-outline";
-
 
 // DeliverySectionA Component
-const Receipt = ({  
-  deleteSection, 
-  name,
-  colorCaption,
-  color,
-  colorValue,
-  vatCaption,
-  vat,
-  printThermal,
-  itemIndex
+const Line = ({  
+  cell1,
+  cell2,
+  cell3,
+  cell4
 }) => (
   
-    <View style={[styles.sectionCard, {borderColor: colorValue}]}>
-      <View style={styles.leftAddresContainer}>       
-        <View style={styles.sectionInfo}>         
-          <Subtitle1 style={styles.sectionText}>
-            {`${name}`}
-          </Subtitle1>
-          <Subtitle2>{colorCaption}: {`${color}`},  {vatCaption}: {`${vat}`}%</Subtitle2>
-        </View>
-      </View>
-
-      <View style={styles.buttonsContainer}> 
-        <TouchableItem style={styles.end} borderless  onPress={printThermal}>
-          <View style={styles.iconContainer}>
-            <Icon name={printIcon} size={21} color={Colors.secondaryText}/>                       
-          </View>
-        </TouchableItem>          
-     
-        <TouchableItem style={styles.end} borderless  onPress={deleteSection}>
-          <View style={styles.iconContainer}>
-            <Icon name={trashIcon} size={21} color={Colors.secondaryColor}/>                       
-          </View>
-        </TouchableItem> 
-         
-      </View>
+    <View style={[styles.line]}>           
+      <Text style={styles.section}>
+        {cell1 ? `${cell1}` : ""}
+      </Text>
+      <Text style={[styles.section, styles.dataCell]}>
+        {cell2 ? `${cell2}` : "0.00"}
+      </Text>  
+      <Text style={[styles.section, styles.dataCell]}>
+        {cell3 ? `${cell3}` : "0.00"}
+      </Text>  
+      <Text style={[styles.section, styles.dataCell]}>
+        {cell4 ? `${cell4}` : "0.00"}
+      </Text>     
     </View>
 
 );
 
-// DeliverySectionA
 const AccountingScreen =({feathersStore}) => {
 
   const realm = useRealm();
   const realm_receipts = useQuery('Receipt');
+  const realm_company = useQuery("Company");
+  const realm_unprinted = useQuery('Unprinted');
 
   let common = _useTranslate(feathersStore.language);
 
   const [indicatorModal, setIndicatorModal] = useState(false) ;
-  const [deleteModal, setDeleteModal] = useState(false) ;
-  const [itemToDelete, setItemToDelete] = useState(null) ;
   const [from, setFrom] = useState(null) ;
   const [to, setTo] = useState(null) ;
-  const [invoiceType, setInvoiceType] = useState("alp");
-  const [invoiceTypes, setInvoiceTypes] = useState([]);
   const [showFromModal, setShowFromModal] = useState(false) ;
   const [showToModal, setShowToModal] = useState(false) ;
+  const [filteredReceipts, setFilteredReceipts] = useState([]) ;
+  const [vats, setVats] = useState([]) ;
+
+
 
   useEffect(() => {
-    setInvoiceTypes(AppSchema.invoiceTypes);
     setFrom(DateTime.now().startOf("month").toISODate());
     setTo(DateTime.now().toISODate());
+    setVats(AppSchema.vatsArray)
   }, []);
 
   useEffect(() => {
+    const filtered = realm_receipts.filtered('createdAt > $0 && createdAt < $1'
+    , toTimeStamp(from), toTimeStamp(to));
+    setFilteredReceipts(filtered);
+  }, [from, to])
 
-  }, [from, to, invoiceType])
-
-  const printThermal = () => item => {
-
-  }
-
-  const createPDF = () => item => {
-
-  }
-
-  const issueCredit = () => item => {
-
+  const printThermal = req => async() =>{
+    await printLocally(req)
   } 
-
-  const openDeleteModal = item => () => {
-    setItemToDelete(item);
-    setDeleteModal(true);
+  
+  const findRetailNet = (vatId) => {
+    return filteredReceipts
+      .filter(r => ["alp", "apy"].includes(r.receiptKind))
+      .map(rec => JSON.parse(rec.vatAnalysis)[`vat${vatId}`] || 0)
+      .map(vatAnalysis => vatAnalysis.underlyingValue)
+      .reduce((a,b) => +a + +b, 0);
   }
 
-  const  deleteSection = async() => {
-    setDeleteModal(false);   
-    setIndicatorModal(true);        
-    realm.write(()=>{ 
-      realm.delete(itemToDelete)                        
-    }); 
-    setIndicatorModal(false); 
-  };  
-    
-  const keyExtractor = (item, index) => index.toString();
+  const findWholeSalesNet = (vatId) => {
+    return filteredReceipts
+      .filter(r => ["tpy", "tda"].includes(r.receiptKind))
+      .map(rec => JSON.parse(rec.vatAnalysis)[`vat${vatId}`] || 0)
+      .map(vatAnalysis => vatAnalysis.underlyingValue)
+      .reduce((a,b) => +a + +b, 0);
+  }
 
-  const renderReceiptItem = ({ item, index }) => (
-    <Receipt
-      key={item._id}
-      deleteSection={openDeleteModal(item)}     
-      name={item?.name || ""}
-      color={item?.color || ""}   
-      colorValue={findColor(item?.color)} 
-      colorCaption={common.color}   
-      vatCaption={common.vat}
-      vat={findVat(item?.vat)}  
-      itemIndex={index}
-    />
-  );
+  const findTotalNet = (vatId) => {
+    return filteredReceipts
+      .filter(r => ["alp", "apy", "tpy", "tda"].includes(r.receiptKind))
+      .map(rec => JSON.parse(rec.vatAnalysis)[`vat${vatId}`] || 0)
+      .map(vatAnalysis => vatAnalysis.underlyingValue)
+      .reduce((a,b) => +a + +b, 0);
+  }
 
-  const renderSeparator = () => <Divider />;
+  const findRetailVat = (vatId) => {
+    return filteredReceipts
+      .filter(r => ["alp", "apy"].includes(r.receiptKind))
+      .map(rec => JSON.parse(rec.vatAnalysis)[`vat${vatId}`] || 0)
+      .map(vatAnalysis => vatAnalysis.vatAmount)
+      .reduce((a,b) => +a + +b, 0);
+  }
+
+  const findWholeSalesVat = (vatId) => {
+    return filteredReceipts
+      .filter(r => ["tpy", "tda"].includes(r.receiptKind))
+      .map(rec => JSON.parse(rec.vatAnalysis)[`vat${vatId}`] || 0)
+      .map(vatAnalysis => vatAnalysis.vatAmount)
+      .reduce((a,b) => +a + +b, 0);
+  }
+
+  const findTotalVat = (vatId) => {
+    return filteredReceipts
+      .filter(r => ["alp", "apy", "tpy", "tda"].includes(r.receiptKind))
+      .map(rec => JSON.parse(rec.vatAnalysis)[`vat${vatId}`] || 0)
+      .map(vatAnalysis => vatAnalysis.vatAmount)
+      .reduce((a,b) => +a + +b, 0);
+  }
 
   const findVat = (id) => {
     return AppSchema.vatsArray.find(vat => +vat.id === +id)?.label || ""
@@ -176,20 +164,77 @@ const AccountingScreen =({feathersStore}) => {
     setIndicatorModal(false); 
   }; 
 
-  const closeDeleteModal = () => {    
-    setDeleteModal(false); 
-  };
-
-  const invoiceTypeChange = p => {    
-    setInvoiceType(p);
-  };
-
   const toGreekLocale = date => { //--> Calendar operates internally with dates of the format: 2024-03-12
     if(date){
       dateArray = date.split('-');
       return dateArray[2] + "/" + dateArray[1] + "/" + dateArray[0];
     }else return "";  
   }
+
+  const toTimeStamp = isoDate => {
+    return DateTime.fromISO(isoDate).endOf('day').toMillis();
+  }
+
+  const printLocally = (req) => {
+
+    const make = "zywell";
+    const ip = realm_company[0].printerIp;   
+    console.log( realm_company[0].printerIp)
+  
+    const options = {
+      port: 9100,   //connect to
+      host: ip,   //connect to
+      reuseAddress: true,   
+    }
+
+    return new Promise((resolve, reject) => {
+
+      const buffer = EscPos.getBufferFromXML(req, make);
+
+      let device = new TcpSocket.Socket();
+
+      device.connect(options, () => {
+        if(realm_unprinted?.length > 0){
+          realm_unprinted.forEach(async item =>  await this.printLocally(item?.req));
+          realm.write(()=>{ 
+            realm.delete(item)                        
+          }); 
+        };  
+        device.write(buffer);
+        device.emit("close");
+      });
+  
+      device.on("close", () => {
+        if(device) {
+          device.destroy();
+          device = null;
+        }
+        resolve(true);
+        return;
+      });
+
+      device.on("error", async(error) => {
+        console.log(`Network error occured. `, error);
+        if(ex.code === "ECONNREFUSED"){ //After restart printer gets stuck and needs retries   
+          console.log('Restart'); 
+          device.destroy();
+          device = null;
+          await this.printLocally(req);   //TODO: Retry up to 10 times   
+        }else if(ex.code === "ETIMEDOUT"){ //if printer is offline
+          realm.write(()=>{     
+            realm.create('Unprinted', req); 
+          }) 
+        }
+        reject(true);
+        return;
+      });   
+    });    
+  };  
+
+  const parse_fix = price => {
+    return price ? parseFloat(price).toFixed(2) : 0;
+  } 
+
 
   return ( 
       <SafeAreaView style={styles.screenContainer}>
@@ -222,27 +267,55 @@ const AccountingScreen =({feathersStore}) => {
           </View>
           
         </View> 
-        <View style={styles.container}>
-          <FlatList
-            data={realm_receipts}
-            keyExtractor={keyExtractor}
-            renderItem={renderReceiptItem}
-            ItemSeparatorComponent={renderSeparator}
-            contentContainerStyle={styles.receiptList}
-          />           
-        </View> 
+        <ScrollView style={styles.container}>
+          {vats?.filter(itm => findRetailNet(itm.id) > 0).map((item, index) => {
+            return(              
+              <Fragment key={index}>
+              <View style={styles.subHeader}><Text>{common.sales} {item.label}%</Text></View>
+              <Line cell2={common.retail} cell3={common.wholesales} cell4={common.totalCap}/>
+              <Line 
+                cell1={common.net} 
+                cell2={parse_fix(findRetailNet(item.id))}
+                cell3={parse_fix(findWholeSalesNet(item.id))}
+                cell4={parse_fix(findTotalNet(item.id))}
+              />
+              <Line 
+                cell1={`${common.vat} ${item.label}%`}
+                cell2={parse_fix(findRetailVat(item.id))}
+                cell3={parse_fix(findWholeSalesVat(item.id))}
+                cell4={parse_fix(findTotalVat(item.id))}
+              />
+              <Line 
+                cell1={common.gross}  
+                cell2={parse_fix(+findRetailNet(item.id) + +findRetailVat(item.id))}
+                cell3={parse_fix(+findWholeSalesNet(item.id) + +findWholeSalesVat(item.id))}
+                cell4={parse_fix(+findTotalNet(item.id) + +findTotalVat(item.id))} 
+              />  
+              <Divider/>   
+              </Fragment>  )     
+          })                     
+          }
+          <View style={styles.bottomSection}>
+            <View style={styles.subHeader}><Text>{common.totalSales}</Text></View>
+            <Line cell2={common.retail} cell3={common.wholesales} cell4={common.totalCap}/>
+            <Line cell1={common.quantityC} cell2={"0"} cell3={"0"} cell4={"0"}/>
+            <Line cell1={common.gross}/>
+            <Line cell1={common.debit}/> 
+            <Line cell1={common.net}/>
+            <Line cell1={common.vat}/> 
+            <Divider/>   
+            <Line cell1={common.totalCap}/>
+            <Line cell1={common.average}/> 
+            <Divider/>
+          </View>
+        </ScrollView> 
        
         <ActivityIndicatorModal
           message={common.wait}
           onRequestClose={closeIndicatorModal}
           title={common.waitStorage}
           visible={indicatorModal}
-        />            
-        <DeleteModal
-          cancelButton={closeDeleteModal}
-          deleteButton={deleteSection}
-          visible={deleteModal}
-        />     
+        />       
         <CalendarModal
           title={common.fromDate}
           cancelButton={() => setShowFromModal(false)}
@@ -271,10 +344,11 @@ const AccountingScreen =({feathersStore}) => {
 const styles = StyleSheet.create({
   screenContainer: {
     flex: 1,
-    backgroundColor: Colors.background
+    backgroundColor: Colors.background,
   },
   container: {
-    padding: 12
+    padding: 12,
+    paddingBottom: 0
   },
   header: {
     width: "100%",
@@ -297,76 +371,35 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  invoiceType:{
-    justifyContent: "flex-start"
-  },
-  picker: {
+  subHeader:{
+    width: "100%",
+    flexDirection: "row",
     justifyContent: "center",
-    alignItems: "center",
-    width: "100%"
+    alignItems: "flex-start",
+    padding: 2,
   },
-  receiptList: {
-    paddingVertical: 8
-  },
-  sectionCard: {
-    flex: 1,
+  line: {
+    width: "100%",
     flexDirection: "row",
     justifyContent: "flex-start",
     alignItems: "flex-start",
-    paddingTop: 16,
-    paddingHorizontal: 16,
-    paddingBottom: 20,    
-    borderWidth: 2
+    padding: 2,   
   },
-  active: {
-    backgroundColor: "#f7f7f7"
-  },
-  leftAddresContainer: {
-    flex: 8,
+  section: { 
+    width: "25%",
     flexDirection: "row",
-    justifyContent: "flex-start",
-    alignItems: "flex-start"
   },
-  sectionInfo: { flex: 1, marginRight: 4 },
-  caption: {
-    paddingVertical: 2,
-    color: Colors.accentColor
-  },
- 
-  sectionText: { paddingVertical: 4 },
-  buttonsContainer: { 
-    flex:1,  
-    justifyContent: "space-between",
-  },
-  iconContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",  
-  },
+  dataCell:{
+    justifyContent: "flex-end",
+  }, 
   end: {
     flex: 1,
     alignSelf: "flex-end"  
   },
-  vSpacer: {
-    height: 25
-  }, 
-  viewEmpty: {
-    flex: 1,
-  },
-  cardEmpty: {
-    flex: 1,
-    marginBottom: 30,
-    marginHorizontal: 20,
-    paddingHorizontal: 44,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...shadowDefault,
-  },
-  textEmpty: {
-    textAlign: 'center',
-    marginTop: 30,
-  },
+  bottomSection: {
+    marginTop: 12,
+    marginBottom: 16
+  }
 });
 
 export default inject('feathersStore')(observer(AccountingScreen));

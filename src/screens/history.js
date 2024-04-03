@@ -8,7 +8,6 @@
 import React, { useState, useEffect } from "react";
 import {
   FlatList,
-  ScrollView,
   SafeAreaView,
   StatusBar,
   StyleSheet,
@@ -27,7 +26,6 @@ import DeleteModal from "../components/modals/DeleteModal";
 import {useRealm, useQuery } from '@realm/react';
 import { AppSchema } from "../services/receipt-service";
 import Icon from "../components/Icon";
-import {Calendar, LocaleConfig} from 'react-native-calendars';
 import { DateTime } from "luxon";
 import {Picker} from '@react-native-picker/picker';
 import LinkButton from "../components/buttons/LinkButton";
@@ -35,7 +33,8 @@ import CalendarModal from "../components/modals/CalendarModal";
 import Text from '../components/Text';
 import Card from '../components/buttons/Card';
 import {shadowDefault} from '../utils/shadow';
-
+import TcpSocket from 'react-native-tcp-socket';
+import {EscPos} from '@tillpos/xml-escpos-helper';
 
 import Colors from "../theme/colors";
 
@@ -46,7 +45,6 @@ import { inject, observer } from "mobx-react";
 import _useTranslate from '../hooks/_useTranslate';
 
 // DeliverySectionA Config
-const saveIcon = "checkmark-outline";
 const printIcon = "print-outline";
 const trashIcon = "trash-outline";
 
@@ -54,23 +52,26 @@ const trashIcon = "trash-outline";
 // DeliverySectionA Component
 const Receipt = ({  
   deleteSection, 
-  name,
-  colorCaption,
-  color,
-  colorValue,
-  vatCaption,
-  vat,
+  receiptKind,
+  numericId,
+  receiptDate,
+  receiptTime,
+  totalCaption,
+  receiptTotal,
+  paymentMethod,
+  companyName,
   printThermal,
-  itemIndex
+  issueDebit,  
 }) => (
   
-    <View style={[styles.sectionCard, {borderColor: colorValue}]}>
+    <View style={[styles.receiptCard]}>
       <View style={styles.leftAddresContainer}>       
         <View style={styles.sectionInfo}>         
           <Subtitle1 style={styles.sectionText}>
-            {`${name}`}
+            {`${receiptKind} ${numericId}  ${totalCaption}: ${receiptTotal}€`}
           </Subtitle1>
-          <Subtitle2>{colorCaption}: {`${color}`},  {vatCaption}: {`${vat}`}%</Subtitle2>
+          <Subtitle2>{`${receiptDate} ${receiptTime} ${paymentMethod}`}</Subtitle2>
+          {companyName?.length > 0 && <Subtitle2>{`${companyName}`}</Subtitle2>}
         </View>
       </View>
 
@@ -97,6 +98,8 @@ const HistoryScreen =({feathersStore}) => {
 
   const realm = useRealm();
   const realm_receipts = useQuery('Receipt');
+  const realm_company = useQuery("Company");
+  const realm_unprinted = useQuery('Unprinted');
 
   let common = _useTranslate(feathersStore.language);
 
@@ -109,6 +112,8 @@ const HistoryScreen =({feathersStore}) => {
   const [invoiceTypes, setInvoiceTypes] = useState([]);
   const [showFromModal, setShowFromModal] = useState(false) ;
   const [showToModal, setShowToModal] = useState(false) ;
+  const [filteredReceipts, setFilteredReceipts] = useState([]) ;
+
 
   useEffect(() => {
     setInvoiceTypes(AppSchema.invoiceTypes);
@@ -117,34 +122,27 @@ const HistoryScreen =({feathersStore}) => {
   }, []);
 
   useEffect(() => {
-
+    const filtered = realm_receipts.filtered('receiptKind TEXT $0 && createdAt > $1 && createdAt < $2'
+    , invoiceType, toTimeStamp(from), toTimeStamp(to));
+    setFilteredReceipts(filtered);
   }, [from, to, invoiceType])
 
-  const printThermal = () => item => {
+  const printThermal = req => async() =>{
+    await printLocally(req)
+  }
+
+  const createPDF = () => item => async() => {
 
   }
 
-  const createPDF = () => item => {
-
-  }
-
-  const issueDebit = () => item => {
+  const issueDebit = () => item => async() => {
 
   } 
 
   const openDeleteModal = item => () => {
     setItemToDelete(item);
     setDeleteModal(true);
-  }
-
-  const  deleteSection = async() => {
-    setDeleteModal(false);   
-    setIndicatorModal(true);        
-    realm.write(()=>{ 
-      realm.delete(itemToDelete)                        
-    }); 
-    setIndicatorModal(false); 
-  };  
+  } 
     
   const keyExtractor = (item, index) => index.toString();
 
@@ -152,12 +150,16 @@ const HistoryScreen =({feathersStore}) => {
     <Receipt
       key={item._id}
       deleteSection={openDeleteModal(item)}     
-      name={item?.name || ""}
-      color={item?.color || ""}   
-      colorValue={findColor(item?.color)} 
-      colorCaption={common.color}   
-      vatCaption={common.vat}
-      vat={findVat(item?.vat)}  
+      receiptKind={findInvoiceType(item?.receiptKind) || ""}
+      numericId={item.numericId?.split("_")[1]}
+      receiptDate={item.receiptDate}
+      receiptTime={item.receiptTime}
+      totalCaption={common.total}
+      receiptTotal={item.receiptTotal}
+      paymentMethod={item.paymentMethod}
+      companyName={item?.companyData?.legalName || ""} 
+      printThermal={printThermal(item.req)}
+      issueDebit={issueDebit(item)}          
       itemIndex={index}
     />
   );
@@ -166,11 +168,7 @@ const HistoryScreen =({feathersStore}) => {
 
   const findVat = (id) => {
     return AppSchema.vatsArray.find(vat => +vat.id === +id)?.label || ""
-  }
-
-  const findColor = (id) => {
-    return AppSchema.colorsArray.find(color => color.id === id)?.value || ""
-  }
+  } 
  
   const closeIndicatorModal = () => {    
     setIndicatorModal(false); 
@@ -184,12 +182,76 @@ const HistoryScreen =({feathersStore}) => {
     setInvoiceType(p);
   };
 
+  const findInvoiceType = () => {
+    return AppSchema.invoiceTypes.find(it => it.name === feathersStore.invoiceType)?.invoiceTypeNumber || ""
+  }
+
   const toGreekLocale = date => { //--> Calendar operates internally with dates of the format: 2024-03-12
     if(date){
       dateArray = date.split('-');
       return dateArray[2] + "/" + dateArray[1] + "/" + dateArray[0];
     }else return "";  
   }
+
+  const toTimeStamp = isoDate => {
+    return DateTime.fromISO(isoDate).endOf('day').toMillis();
+  }
+
+  const printLocally = (req) => {
+
+  const make = "zywell";
+  const ip = realm_company[0].printerIp;   
+  console.log( realm_company[0].printerIp)
+ 
+  const options = {
+    port: 9100,   //connect to
+    host: ip,   //connect to
+    reuseAddress: true,   
+  }
+
+  return new Promise((resolve, reject) => {
+
+    const buffer = EscPos.getBufferFromXML(req, make);
+
+    let device = new TcpSocket.Socket();
+
+    device.connect(options, () => {
+      if(realm_unprinted?.length > 0){
+        realm_unprinted.forEach(async item =>  await this.printLocally(item?.req));
+        realm.write(()=>{ 
+          realm.delete(item)                        
+        }); 
+      };  
+      device.write(buffer);
+      device.emit("close");
+    });
+ 
+    device.on("close", () => {
+      if(device) {
+        device.destroy();
+        device = null;
+      }
+      resolve(true);
+      return;
+    });
+
+    device.on("error", async(error) => {
+      console.log(`Network error occured. `, error);
+      if(ex.code === "ECONNREFUSED"){ //After restart printer gets stuck and needs retries   
+        console.log('Restart'); 
+        device.destroy();
+        device = null;
+        await this.printLocally(req);   //TODO: Retry up to 10 times   
+      }else if(ex.code === "ETIMEDOUT"){ //if printer is offline
+        realm.write(()=>{     
+          realm.create('Unprinted', req); 
+        }) 
+      }
+      reject(true);
+      return;
+    });   
+  });    
+};  
 
   return ( 
       <SafeAreaView style={styles.screenContainer}>
@@ -226,10 +288,10 @@ const HistoryScreen =({feathersStore}) => {
             />
           </View>
         </View> 
-        {realm_receipts?.length > 0 ?
+        {filteredReceipts?.length > 0 ?
           <View style={styles.container}>
             <FlatList
-              data={realm_receipts}
+              data={filteredReceipts}
               keyExtractor={keyExtractor}
               renderItem={renderReceiptItem}
               ItemSeparatorComponent={renderSeparator}
@@ -319,15 +381,14 @@ const styles = StyleSheet.create({
   receiptList: {
     paddingVertical: 8
   },
-  sectionCard: {
+  receiptCard: {
     flex: 1,
     flexDirection: "row",
     justifyContent: "flex-start",
     alignItems: "flex-start",
-    paddingTop: 16,
-    paddingHorizontal: 16,
-    paddingBottom: 20,    
-    borderWidth: 2
+    padding: 2,
+    borderWidth: 1,
+    borderColor: Colors.discount
   },
   active: {
     backgroundColor: "#f7f7f7"
@@ -352,15 +413,13 @@ const styles = StyleSheet.create({
   iconContainer: {
     flex: 1,
     justifyContent: "center",
-    alignItems: "center",  
+    alignItems: "center",
+    marginVertical: 2  
   },
   end: {
     flex: 1,
     alignSelf: "flex-end"  
-  },
-  vSpacer: {
-    height: 25
-  }, 
+  },  
   viewEmpty: {
     flex: 1,
   },

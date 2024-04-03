@@ -189,8 +189,8 @@ export class AppSchema extends Realm.Object {
     name: 'Receipt',
     primaryKey: 'numericId',
     properties: {  
-      receiptKind: {type: 'string'},
-      numericId: {type: 'string', indexed: true},    
+      receiptKind: {type: 'string', indexed: 'full-text'},
+      numericId: {type: 'string'},    
       issuer:  {type: 'string'},
       receiptTotal: {type: 'mixed'},  
       receiptDate:  {type: 'string'},

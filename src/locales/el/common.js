@@ -73,6 +73,17 @@ export const commonEL = {
     toTitle: "'Εως: ",
     debitQuestion: "Είστε σίγουροι για την έκδοση πιστωτικού;",
     issueDebit: "Πιστωτικό",
+    sales: "ΠΩΛΗΣΕΙΣ",
+    retail: "ΛΙΑΝΙΚΗ",
+    wholesales: "ΧΟΝΔΡΙΚΗ",
+    totalCap:"ΣΥΝΟΛΟ",
+    net: "ΚΑΘΑΡΟ",
+    gross: "ΜΙΚΤΟ",
+    totalSales: "ΠΩΛΗΣΕΙΣ ΣΥΝΟΛΟ",
+    quantityC: "ΠΟΣΟΤΗΤΑ",
+    debit: "ΠΙΣΤΩΤΙΚΑ",
+    average: "ΜΕΣΟΣ ΟΡΟΣ",
+
 
 
     firstName : "Όνομα",
