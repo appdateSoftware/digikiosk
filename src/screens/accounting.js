@@ -56,13 +56,13 @@ const Line = ({
       <Text style={styles.section}>
         {cell1 ? `${cell1}` : ""}
       </Text>
-      <Text style={[styles.section, styles.dataCell]}>
+      <Text style={[styles.dataCell]}>
         {cell2 ? `${cell2}` : "0.00"}
       </Text>  
-      <Text style={[styles.section, styles.dataCell]}>
+      <Text style={[styles.dataCell]}>
         {cell3 ? `${cell3}` : "0.00"}
       </Text>  
-      <Text style={[styles.section, styles.dataCell]}>
+      <Text style={[styles.dataCell]}>
         {cell4 ? `${cell4}` : "0.00"}
       </Text>     
     </View>
@@ -152,14 +152,151 @@ const AccountingScreen =({feathersStore}) => {
       .reduce((a,b) => +a + +b, 0);
   }
 
-  const findVat = (id) => {
-    return AppSchema.vatsArray.find(vat => +vat.id === +id)?.label || ""
+  const findRetailDebitVat = (vatId) => {
+    return filteredReceipts
+      .filter(r => ["psl"].includes(r.receiptKind))
+      .map(rec => JSON.parse(rec.vatAnalysis)[`vat${vatId}`] || 0)
+      .map(vatAnalysis => vatAnalysis.underlyingValue)
+      .reduce((a,b) => +a + +b, 0);
   }
 
-  const findColor = (id) => {
-    return AppSchema.colorsArray.find(color => color.id === id)?.value || ""
+  const findWholeSalesDebitVat = (vatId) => {
+    return filteredReceipts
+      .filter(r => ["pt"].includes(r.receiptKind))
+      .map(rec => JSON.parse(rec.vatAnalysis)[`vat${vatId}`] || 0)
+      .map(vatAnalysis => vatAnalysis.underlyingValue)
+      .reduce((a,b) => +a + +b, 0);
   }
- 
+
+  const findTotalDebitVat = (vatId) => {
+    return filteredReceipts
+      .filter(r => ["psl", "pt"].includes(r.receiptKind))
+      .map(rec => JSON.parse(rec.vatAnalysis)[`vat${vatId}`] || 0)
+      .map(vatAnalysis => vatAnalysis.underlyingValue)
+      .reduce((a,b) => +a + +b, 0);
+  }
+
+  const findRetailDebitNet = (vatId) => {
+    return filteredReceipts
+      .filter(r => ["psl"].includes(r.receiptKind))
+      .map(rec => JSON.parse(rec.vatAnalysis)[`vat${vatId}`] || 0)
+      .map(vatAnalysis => vatAnalysis.underlyingValue)
+      .reduce((a,b) => +a + +b, 0);
+  }
+
+  const findWholeSalesDebitNet = (vatId) => {
+    return filteredReceipts
+      .filter(r => ["pt"].includes(r.receiptKind))
+      .map(rec => JSON.parse(rec.vatAnalysis)[`vat${vatId}`] || 0)
+      .map(vatAnalysis => vatAnalysis.underlyingValue)
+      .reduce((a,b) => +a + +b, 0);
+  }
+
+  const findTotalDebitNet = (vatId) => {
+    return filteredReceipts
+      .filter(r => ["psl", "pt"].includes(r.receiptKind))
+      .map(rec => JSON.parse(rec.vatAnalysis)[`vat${vatId}`] || 0)
+      .map(vatAnalysis => vatAnalysis.underlyingValue)
+      .reduce((a,b) => +a + +b, 0);
+  }
+
+  const findTotalRetailNet = () => {
+    let sum = 0;
+    for (let vat of AppSchema.vatsArray){
+      sum = sum + +findRetailNet(vat.id)
+    }
+    return sum;     
+  }
+
+  const findTotalWholeSalesNet = () => {
+    let sum = 0;
+    for (let vat of AppSchema.vatsArray){
+      sum = sum + +findWholeSalesNet(vat.id)
+    }
+    return sum;  
+  }
+
+  const findTotalAllNet = () => {
+    let sum = 0;
+    for (let vat of AppSchema.vatsArray){
+      sum = sum + +findTotalNet(vat.id)
+    }
+    return sum;  
+  }
+
+  const findTotalRetailVat = () => {
+    let sum = 0;
+    for (let vat of AppSchema.vatsArray){
+      sum = sum + +findRetailVat(vat.id)
+    }
+    return sum;  
+  }
+
+  const findTotalWholeSalesVat = () => {
+    let sum = 0;
+    for (let vat of AppSchema.vatsArray){
+      sum = sum + +findWholeSalesVat(vat.id)
+    }
+    return sum;  
+  }
+
+  const findTotalAllVat = () => {
+    let sum = 0;
+    for (let vat of AppSchema.vatsArray){
+      sum = sum + +findTotalVat(vat.id)
+    }
+    return sum;  
+  }
+
+  const findTotalRetailDebitNet = () => {
+    let sum = 0;
+    for (let vat of AppSchema.vatsArray){
+      sum = sum + +findRetailDebitNet(vat.id)
+    }
+    return sum;     
+  }
+
+  const findTotalWholeSalesDebitNet = () => {
+    let sum = 0;
+    for (let vat of AppSchema.vatsArray){
+      sum = sum + +findWholeSalesDebitNet(vat.id)
+    }
+    return sum;  
+  }
+
+  const findTotalAllDebitNet = () => {
+    let sum = 0;
+    for (let vat of AppSchema.vatsArray){
+      sum = sum + +findTotalDebitNet(vat.id)
+    }
+    return sum;  
+  }
+
+  const findTotalRetailDebitVat = () => {
+    let sum = 0;
+    for (let vat of AppSchema.vatsArray){
+      sum = sum + +findRetailDebitVat(vat.id)
+    }
+    return sum;  
+  }
+
+  const findTotalWholeSalesDebitVat = () => {
+    let sum = 0;
+    for (let vat of AppSchema.vatsArray){
+      sum = sum + +findWholeSalesDebitVat(vat.id)
+    }
+    return sum;  
+  }
+
+  const findTotalAllDebitVat = () => {
+    let sum = 0;
+    for (let vat of AppSchema.vatsArray){
+      sum = sum + +findTotalDebitVat(vat.id)
+    }
+    return sum;  
+  }
+
+  
   const closeIndicatorModal = () => {    
     setIndicatorModal(false); 
   }; 
@@ -299,13 +436,37 @@ const AccountingScreen =({feathersStore}) => {
             <View style={styles.subHeader}><Text>{common.totalSales}</Text></View>
             <Line cell2={common.retail} cell3={common.wholesales} cell4={common.totalCap}/>
             <Line cell1={common.quantityC} cell2={"0"} cell3={"0"} cell4={"0"}/>
-            <Line cell1={common.gross}/>
-            <Line cell1={common.debit}/> 
-            <Line cell1={common.net}/>
-            <Line cell1={common.vat}/> 
+            <Line 
+              cell1={common.gross}
+
+            />
+            <Line 
+              cell1={common.debit}
+              cell2={parse_fix(+findTotalRetailDebitNet() + +findTotalRetailDebitVat())}
+              cell3={parse_fix(+findTotalWholeSalesDebitNet() + +findTotalWholeSalesDebitVat())}
+              cell4={parse_fix(+findTotalAllDebitNet() + +findTotalAllDebitVat())}
+            /> 
+            <Line 
+              cell1={common.net}
+              cell2={parse_fix(findTotalRetailNet())}
+              cell3={parse_fix(findTotalWholeSalesNet())}
+              cell4={parse_fix(findTotalAllNet())}
+            />
+            <Line 
+              cell1={common.vat}
+              cell2={parse_fix(findTotalRetailVat() - findTotalRetailDebitVat())}
+              cell3={parse_fix(findTotalWholeSalesVat() - findTotalWholeSalesDebitVat())}
+              cell4={parse_fix(findTotalAllVat() - findTotalAllDebitVat())}
+            />
             <Divider/>   
-            <Line cell1={common.totalCap}/>
-            <Line cell1={common.average}/> 
+            <Line 
+              cell1={common.totalCap}
+              cell2={parse_fix(+findTotalRetailNet() + +findTotalRetailVat())}
+              cell3={parse_fix(+findTotalWholeSalesNet() + +findTotalWholeSalesVat())}
+              cell4={parse_fix(+findTotalAllNet() + +findTotalAllVat())}
+            />
+            <Line 
+              cell1={common.average}/> 
             <Divider/>
           </View>
         </ScrollView> 
@@ -390,6 +551,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   dataCell:{
+    width: "25%",
+    flexDirection: "row",
     justifyContent: "flex-end",
   }, 
   end: {
