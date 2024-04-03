@@ -435,10 +435,17 @@ const AccountingScreen =({feathersStore}) => {
           <View style={styles.bottomSection}>
             <View style={styles.subHeader}><Text>{common.totalSales}</Text></View>
             <Line cell2={common.retail} cell3={common.wholesales} cell4={common.totalCap}/>
-            <Line cell1={common.quantityC} cell2={"0"} cell3={"0"} cell4={"0"}/>
+            <Line 
+              cell1={common.quantityC} 
+              cell2={"0"} 
+              cell3={"0"} 
+              cell4={"0"}
+            />
             <Line 
               cell1={common.gross}
-
+              cell2={parse_fix(+findTotalRetailNet() + +findTotalRetailVat())}
+              cell3={parse_fix(+findTotalWholeSalesNet() + +findTotalWholeSalesVat())}
+              cell4={parse_fix(+findTotalAllNet() + +findTotalAllVat())}
             />
             <Line 
               cell1={common.debit}
@@ -448,9 +455,9 @@ const AccountingScreen =({feathersStore}) => {
             /> 
             <Line 
               cell1={common.net}
-              cell2={parse_fix(findTotalRetailNet())}
-              cell3={parse_fix(findTotalWholeSalesNet())}
-              cell4={parse_fix(findTotalAllNet())}
+              cell2={parse_fix(findTotalRetailNet() - findTotalRetailDebitNet())}
+              cell3={parse_fix(findTotalWholeSalesNet() - findTotalWholeSalesDebitNet())}
+              cell4={parse_fix(findTotalAllNet() - findTotalAllDebitVat())}
             />
             <Line 
               cell1={common.vat}
@@ -461,9 +468,9 @@ const AccountingScreen =({feathersStore}) => {
             <Divider/>   
             <Line 
               cell1={common.totalCap}
-              cell2={parse_fix(+findTotalRetailNet() + +findTotalRetailVat())}
-              cell3={parse_fix(+findTotalWholeSalesNet() + +findTotalWholeSalesVat())}
-              cell4={parse_fix(+findTotalAllNet() + +findTotalAllVat())}
+              cell2={parse_fix(+findTotalRetailNet() + +findTotalRetailVat() - findTotalRetailDebitNet() - findTotalRetailDebitVat())}
+              cell3={parse_fix(+findTotalWholeSalesNet() + +findTotalWholeSalesVat() - findTotalWholeSalesDebitNet() - findTotalWholeSalesDebitVat())}
+              cell4={parse_fix(+findTotalAllNet() + +findTotalAllVat() - findTotalAllDebitNet() - findTotalAllDebitVat())}
             />
             <Line 
               cell1={common.average}/> 
