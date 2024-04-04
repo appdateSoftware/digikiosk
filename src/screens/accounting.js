@@ -86,8 +86,6 @@ const AccountingScreen =({feathersStore}) => {
   const [filteredReceipts, setFilteredReceipts] = useState([]) ;
   const [vats, setVats] = useState([]) ;
 
-
-
   useEffect(() => {
     setFrom(DateTime.now().startOf("month").toISODate());
     setTo(DateTime.now().toISODate());
@@ -100,10 +98,6 @@ const AccountingScreen =({feathersStore}) => {
     setFilteredReceipts(filtered);
   }, [from, to])
 
-  const printThermal = req => async() =>{
-    await printLocally(req)
-  } 
-  
   const findRetailNet = (vatId) => {
     return filteredReceipts
       .filter(r => ["alp", "apy"].includes(r.receiptKind))
@@ -347,6 +341,103 @@ const AccountingScreen =({feathersStore}) => {
     return DateTime.fromISO(isoDate).endOf('day').toMillis();
   }
 
+  const printThermal = async() =>{
+
+    let vatSections = "";
+    for (let item of vats?.filter(itm => findRetailNet(itm.id) > 0)){
+      vatSections = vatSections + (              
+        '<align mode="center">' + 
+        `<text-line>${common.sales} ${item.label}%</text-line>` +
+        '</align>' +
+        '<align mode="left">' +
+        `<text-line><x-position>245</x-position><text>${common.retail}</text>` +
+        `<x-position>350</x-position><text>${common.wholesales}</text>` +
+        `<x-position>455</x-position><text>${common.totalCap}</text></text-line>` +
+        `<text-line>${common.net}` + 
+        `<x-position>245</x-position><text>${parse_fix(findRetailNet(item.id))}</text>` +
+        `<x-position>350</x-position><text>${parse_fix(findWholeSalesNet(item.id))}</text>` +
+        `<x-position>455</x-position><text>${parse_fix(findTotalNet(item.id))}</text></text-line>` +
+        `<text-line>${common.vat} ${item.label}%` + 
+        `<x-position>245</x-position><text>${parse_fix(findRetailVat(item.id))}</text>` +
+        `<x-position>350</x-position><text>${parse_fix(findWholeSalesVat(item.id))}</text>` +
+        `<x-position>455</x-position><text>${parse_fix(findTotalVat(item.id))}</text></text-line>` +
+        `<text-line>${common.gross}` + 
+        `<x-position>245</x-position><text>${parse_fix(+findRetailNet(item.id) + +findRetailVat(item.id))}</text>` +
+        `<x-position>350</x-position><text>${parse_fix(+findWholeSalesNet(item.id) + +findWholeSalesVat(item.id))}</text>` +
+        `<x-position>455</x-position><text>${parse_fix(+findTotalNet(item.id) + +findTotalVat(item.id))}</text></text-line>` +
+        '</align>' +
+        '<align mode="center">' +    
+        `<text-line>----------------------------------------------</text-line>` +    
+        '</align>'
+      )     
+    }; 
+
+    const req =  
+    '<?xml version="1.0" encoding="UTF-8"?>' +
+    '<document>' +
+      '<set-cp/>' +
+      '<align mode="center">' +    
+      '<bold>' +      
+      `<text-line>ΣΤΟΙΧΕΙΑ ΧΡΟΝΙΚΟΥ ΔΙΑΣΤΗΜΑΤΟΣ</text-line>` +
+      `<text-line>ΑΠΟ: ${from}  ΕΩΣ: ${to}</text-line>` +
+      '<line-feed />' +                             
+      `<text-line>ΠΩΛΗΣΕΙΣ</text-line>` +
+      '</bold>' +
+      '</align>' +
+        vatSections +
+      '<align mode="center">' + 
+      `<text-line>${common.totalSales}%</text-line>` +
+      '</align>' +
+      '<align mode="left">' +
+      `<text-line><x-position>245</x-position><text>${common.retail}</text>` +
+      `<x-position>350</x-position><text>${common.wholesales}</text>` +
+      `<x-position>455</x-position><text>${common.totalCap}</text></text-line>` +
+      `<text-line>${common.quantityC}` + 
+      `<x-position>245</x-position><text>${findRetailQuantity() > 0 ? findRetailQuantity() : "0"}</text>` +
+      `<x-position>350</x-position><text>${findWholeSalesQuantity() > 0 ? findWholeSalesQuantity() : "0"}</text>` +
+      `<x-position>455</x-position><text>${findTotalQuantity() > 0 ? findTotalQuantity() : "0"}</text></text-line>` +
+      `<text-line>${common.gross}` + 
+      `<x-position>245</x-position><text>${parse_fix(+findTotalRetailNet() + +findTotalRetailVat())}</text>` +
+      `<x-position>350</x-position><text>${parse_fix(+findTotalWholeSalesNet() + +findTotalWholeSalesVat())}</text>` +
+      `<x-position>455</x-position><text>${parse_fix(+findTotalAllNet() + +findTotalAllVat())}</text></text-line>` +
+      `<text-line>${common.debit}` + 
+      `<x-position>245</x-position><text>${parse_fix(+findTotalRetailDebitNet() + +findTotalRetailDebitVat())}</text>` +
+      `<x-position>350</x-position><text>${parse_fix(+findTotalWholeSalesDebitNet() + +findTotalWholeSalesDebitVat())}</text>` +
+      `<x-position>455</x-position><text>${parse_fix(+findTotalAllDebitNet() + +findTotalAllDebitVat())}</text></text-line>` +
+      `<text-line>${common.net}` + 
+      `<x-position>245</x-position><text>${parse_fix(findTotalRetailNet() - findTotalRetailDebitNet())}</text>` +
+      `<x-position>350</x-position><text>${parse_fix(findTotalWholeSalesNet() - findTotalWholeSalesDebitNet())}</text>` +
+      `<x-position>455</x-position><text>${parse_fix(findTotalAllNet() - findTotalAllDebitVat())}</text></text-line>` +
+      `<text-line>${common.vat}` + 
+      `<x-position>245</x-position><text>${parse_fix(findTotalRetailVat() - findTotalRetailDebitVat())}</text>` +
+      `<x-position>350</x-position><text>${parse_fix(findTotalWholeSalesVat() - findTotalWholeSalesDebitVat())}</text>` +
+      `<x-position>455</x-position><text>${parse_fix(findTotalAllVat() - findTotalAllDebitVat())}</text></text-line>` +
+      '</align>' +
+      '<align mode="center">' +    
+      `<text-line>----------------------------------------------</text-line>` +    
+      '</align>' +
+      '<align mode="left">' +
+      `<text-line>${common.totalCap}` + 
+      `<x-position>245</x-position><text>${parse_fix(+findTotalRetailNet() + +findTotalRetailVat() - findTotalRetailDebitNet() - findTotalRetailDebitVat())}</text>` +
+      `<x-position>350</x-position><text>${parse_fix(+findTotalWholeSalesNet() + +findTotalWholeSalesVat() - findTotalWholeSalesDebitNet() - findTotalWholeSalesDebitVat())}</text>` +
+      `<x-position>455</x-position><text>${parse_fix(+findTotalAllNet() + +findTotalAllVat() - findTotalAllDebitNet() - findTotalAllDebitVat())}</text></text-line>` +
+      `<text-line>${common.average}` + 
+      `<x-position>245</x-position><text>${parse_fix(findRetailAverage())}</text>` +
+      `<x-position>350</x-position><text>${parse_fix(findWholeSalesAverage())}</text>` +
+      `<x-position>455</x-position><text>${parse_fix(findTotalAverage())}</text></text-line>` +
+      '</align>' +      
+      '<line-feed />' +
+      '<align mode="center">' +
+      `<text-line>------------------------------------------</text-line>` +
+      '<feed unit="24"/>' +
+      '</align>' +
+      '<line-feed />' +
+      '<paper-cut />' +
+    '</document>' ;
+
+    await printLocally(req);
+  }
+
   const printLocally = (req) => {
 
     const make = "zywell";
@@ -404,7 +495,7 @@ const AccountingScreen =({feathersStore}) => {
   };  
 
   const parse_fix = price => {
-    return price ? parseFloat(price).toFixed(2) : 0;
+    return price ? parseFloat(price).toFixed(2) : parseFloat(0).toFixed(2);
   } 
 
 
