@@ -31,6 +31,7 @@ class FeathersStore{
   paymentMethod = "CASH";
   masterLanguage = "el";
   loggedInUser = {};
+  demoMode = true;
  
   currentVersion = "1.0.1";
 
@@ -45,6 +46,7 @@ class FeathersStore{
       paymentMethod: observable,    
       loggedInUser: observable,
       currentVersion: observable,
+      demoMode: observable,
       setIsAuthenticated: action,
       setUser: action,
       setObservables: action,
@@ -53,7 +55,8 @@ class FeathersStore{
       setLanguage: action, 
       setPaymentMethod: action,  
       setInvoiceType: action, 
-      setNewVersion: action
+      setNewVersion: action,
+      setDemoMode: action
     })
   } 
   
@@ -75,6 +78,10 @@ class FeathersStore{
 
   setLanguage = value => {
     this.language = value;
+  }
+
+  setDemoMode = value => {
+    this.demoMode = value;
   }
 
   setPaymentMethod = value => {

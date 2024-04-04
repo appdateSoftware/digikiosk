@@ -89,7 +89,8 @@ const MainTab = () => {
         AppSchema.UserSchema,
         AppSchema.CompanySchema,
         AppSchema.SectionSchema,  
-        AppSchema.UnprintedSchema 
+        AppSchema.UnprintedSchema,
+        AppSchema.DemoSchema  
       ]} 
         deleteRealmIfMigrationNeeded={true}
       >

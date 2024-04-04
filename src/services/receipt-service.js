@@ -229,6 +229,13 @@ export class AppSchema extends Realm.Object {
     }
   };
 
+  static DemoSchema = {
+    name: 'Demo',      
+    properties: {
+      val: {type: 'bool', default: 'true'},       
+    }
+  };
+
   static InvoiceTypeSchema = {
     name: 'InvoiceType',      
     properties: {

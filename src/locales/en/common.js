@@ -26,7 +26,7 @@ export const commonEN = {
   save : "ΑΠΟΘΗΚΕΥΣΗ",
   saveSmall:"Αποθήκευση",
   name: "Όνομα",
-
+  
 
 
     vendor: "Vendor",
@@ -55,6 +55,8 @@ export const commonEN = {
     quantityC: "QUANTITY",
     debit: "DEBIT",
     average: "AVERAGE",
+    demoMode: "Demo mode",
+
 
 
 

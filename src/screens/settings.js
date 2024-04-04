@@ -8,7 +8,7 @@
 // import dependencies
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
-  Alert,
+  Switch,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -50,8 +50,7 @@ const sectionsIcon = "grid-outline";
 const usersIcon = "people-outline";
 const aboutIcon = "storefront-outline";
 const logoutIcon = "log-out-outline";
-const loginIcon = "log-in-outline";
-
+const cloudIcon = "cloud";
 const greek = require("../assets/img/languages/greek.png");
 const english = require("../assets/img/languages/us.png");
 const germany = require("../assets/img/languages/germany.png");
@@ -100,6 +99,12 @@ const SettingsA = ({navigation, feathersStore}) => {
   const [restoreDBModal, setRestoreDBModal] = useState(false);
   const [restoreDBIndicator, setRestoreDBIndicator] = useState(false);
   const [changeUserModal, setChangeUserModal] = useState(false);
+  const [demoMode, setDemoMode] = useState(true);
+
+  useEffect(() => {
+    setDemoMode(feathersStore.demoMode)
+  }, [feathersStore.demoMode])
+
      
   const navigateTo = screen => () => {    
     navigation.navigate(screen);
@@ -137,8 +142,6 @@ const SettingsA = ({navigation, feathersStore}) => {
   const findRole = id => {
     return AppSchema.rolesArray.find(role => +role.id === + id)?.label;
   }
-
- 
  
   const openRestoreDBModal = () => {
     setRestoreDBModal(true)
@@ -180,7 +183,14 @@ const SettingsA = ({navigation, feathersStore}) => {
     }
   }
 
-  const addresses = feathersStore.user?.addresses;
+  const toggleDemoMode = value => {
+    realm.write(()=>{
+      realm.objects('Demo')[0].val = value     
+    })
+    feathersStore.setDemoMode(value);
+    navigation.navigate("SplashScreen");
+  }
+
   return (
       <SafeAreaView style={styles.container}>
         <StatusBar
@@ -272,7 +282,36 @@ const SettingsA = ({navigation, feathersStore}) => {
             icon={"folder"}
             title={common.restoreDB}
           />
-          <Divider type="inset" marginLeft={DIVIDER_MARGIN_LEFT} />     
+          <Divider type="inset" marginLeft={DIVIDER_MARGIN_LEFT} /> 
+
+           <View style={[styles.row, styles.setting]}>
+            <View style={styles.leftSide}>
+              <View style={styles.iconContainer}>
+                {feathersStore?.demoMode ? (
+                  <Icon
+                    name={cloudIcon}
+                    size={24}
+                    color={Colors.discount}
+                  />
+                ) : (
+                  <Icon
+                    name={cloudIcon}
+                    size={24}
+                    color={Colors.primaryColor}
+                  />
+                )}
+              </View>
+              <Subtitle1 style={styles.mediumText}>
+                {common.demoMode}
+              </Subtitle1>
+            </View>
+
+            <Switch
+              value={demoMode}
+              onValueChange={toggleDemoMode}
+            />
+          </View>
+          <Divider type="inset" marginLeft={DIVIDER_MARGIN_LEFT} />    
 
           <TouchableItem onPress={openChangeUserModal}>
             <View style={[styles.row, styles.setting]}>

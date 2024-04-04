@@ -83,6 +83,7 @@ export const commonEL = {
     quantityC: "ΠΟΣΟΤΗΤΑ",
     debit: "ΠΙΣΤΩΤΙΚΑ",
     average: "ΜΕΣΟΣ ΟΡΟΣ",
+    demoMode: "Δοκιμαστική λειτουργία",
 
 
 

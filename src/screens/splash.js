@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useState} from 'react';
-import { View, StyleSheet, Text, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, Text, ActivityIndicator} from 'react-native';
 import { inject, observer } from "mobx-react";
 import { useFocusEffect } from '@react-navigation/native';
 import Colors from "../theme/colors";
@@ -53,6 +53,19 @@ const SplashScreen = ({navigation, feathersStore}) => {
     invoiceType = realm.objects('InvoiceType')[0]?.name; 
     feathersStore.setInvoiceType(invoiceType); 
     } 
+
+    let demoMode = true;
+    if(realm){      
+      realm.objects('Demo')?.length == 0 ?
+      realm.write(()=>{
+        realm.create('Demo',{
+          val: true
+        })
+      })
+    :
+    demoMode = realm.objects('Demo')[0]?.val; 
+    feathersStore.setDemoMode(demoMode); 
+    } 
     
     if(realm){      
       if(realm_users?.length == 0){
@@ -76,7 +89,7 @@ const SplashScreen = ({navigation, feathersStore}) => {
 
   useEffect(() => {   
     load(); 
-  }, [])
+  }, [realm])
 
   useEffect(() => {
     if(feathersStore.isAuthenticated)
@@ -87,8 +100,13 @@ const SplashScreen = ({navigation, feathersStore}) => {
     try{  
       const uniqueId = await getUniqueId();  
       console.log(uniqueId );
-      await feathersStore.connect();      
-      await feathersStore.login(uniqueId + "@gmail.com", DEFAULT_PSW)
+      await feathersStore.connect();
+      if(feathersStore.demoMode){
+        await feathersStore.login(DEFAULT_EMAIL, DEFAULT_PSW)
+      }else{
+        await feathersStore.login(uniqueId + "@gmail.com", DEFAULT_PSW)
+      }      
+     
     }catch (error){
       setErrorModal(true);
       console.log(error);

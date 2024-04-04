@@ -6,7 +6,6 @@ import {
   ActivityIndicator,
   BackHandler,
   Alert,
-  Image,
   Linking
 } from 'react-native';
 import Text from '../components/Text';
@@ -917,10 +916,19 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     </View>
   );
 
+  const demoModeComponent = () => (
+    <View style={styles.header}>     
+      <Text style={styles.demoMode}>
+        {common?.demoMode}
+      </Text>
+    </View>
+  );
+
   return ( 
     <>
       <View style={styles.screenContainer}>
         {feathersStore?.newVersion && headerComponent()}
+        {feathersStore?.demoMode && demoModeComponent()}
         <View style={styles.container}>
           <View style={styles.leftContainer}> 
             <ScrollView            
@@ -997,7 +1005,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
                 color={Colors.secondaryColor}
                 borderColor={Colors.onSurface}
                 buttonStyle={styles.sideButton}
-                disabled={!(cashToPay > 0)}
+                disabled={!(cashToPay > 0) || feathersStore?.demoMode}
                 showActivityIndicator={issuingReceipt}
               /> 
               <Button
@@ -1015,7 +1023,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
                 color={Colors.selectionNew}
                 borderColor={Colors.onSurface}
                 buttonStyle={styles.sideButton}  
-                disabled={!(cashToPay > 0)}
+                disabled={!(cashToPay > 0) || feathersStore?.demoMode}
                 showActivityIndicator={issuingReceipt}
               /> 
               <Button
@@ -1119,6 +1127,14 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.tertiaryColor ,    //'#ccd'
     fontSize: 14,
     color: Colors.onSecondaryColor,  //'#333'
+    textAlign: 'center',
+    paddingVertical: 2, 
+    marginBottom: 8,   
+  },
+  demoMode: {
+    backgroundColor: Colors.accentColor ,    //'#ccd'
+    fontSize: 14,
+    color: Colors.onAccentColor,  //'#333'
     textAlign: 'center',
     paddingVertical: 2, 
     marginBottom: 8,   
