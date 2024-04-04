@@ -296,6 +296,41 @@ const AccountingScreen =({feathersStore}) => {
     return sum;  
   }
 
+  const findRetailQuantity = () => {
+    const retailQuantity = filteredReceipts.filter(r => ["alp", "apy"].includes(r.receiptKind))?.length || 0;
+    const retailDebitQuantity = filteredReceipts.filter(r => ["psl"].includes(r.receiptKind))?.length || 0;
+    return retailQuantity - retailDebitQuantity;
+  }
+
+  const findWholeSalesQuantity = () => {
+    const wholeSalesQuantity = filteredReceipts.filter(r => ["tpy", "tda"].includes(r.receiptKind))?.length || 0;
+    const wholeSalesDebitQuantity = filteredReceipts.filter(r => ["pt"].includes(r.receiptKind))?.length || 0;
+    return wholeSalesQuantity - wholeSalesDebitQuantity;
+  }
+
+  const findTotalQuantity = () => {
+    const totalQuantity = filteredReceipts.filter(r => ["alp", "apy", "tpy", "tda"].includes(r.receiptKind))?.length || 0;
+    const totalDebitQuantity = filteredReceipts.filter(r => ["psl", "pt"].includes(r.receiptKind))?.length || 0;
+    return totalQuantity - totalDebitQuantity;
+  }
+
+  const findRetailAverage = () => {
+    if(findRetailQuantity() > 0)
+      return (+findTotalRetailNet() + +findTotalRetailVat() - findTotalRetailDebitNet() - findTotalRetailDebitVat()) / findRetailQuantity();
+    else return 0;
+  }
+
+  const findWholeSalesAverage = () => {
+    if(findWholeSalesQuantity() > 0)
+      return (+findTotalWholeSalesNet() + +findTotalWholeSaleslVat() - findTotalWholeSalesDebitNet() - findTotalWholeSalesDebitVat()) / findWholeSalesQuantity();
+    else return 0;
+  }
+
+  const findTotalAverage = () => {
+    if(findTotalQuantity() > 0)
+      return (+findTotalAllNet() + +findTotalAllVat() - findTotalAllDebitNet() - findTotalAllDebitVat()) / findTotalQuantity();
+    else return 0;
+  }
   
   const closeIndicatorModal = () => {    
     setIndicatorModal(false); 
@@ -437,9 +472,9 @@ const AccountingScreen =({feathersStore}) => {
             <Line cell2={common.retail} cell3={common.wholesales} cell4={common.totalCap}/>
             <Line 
               cell1={common.quantityC} 
-              cell2={"0"} 
-              cell3={"0"} 
-              cell4={"0"}
+              cell2={findRetailQuantity() > 0 ? findRetailQuantity() : "0"} 
+              cell3={findWholeSalesQuantity() > 0 ? findWholeSalesQuantity() : "0"} 
+              cell4={findTotalQuantity() > 0 ? findTotalQuantity() : "0"}
             />
             <Line 
               cell1={common.gross}
@@ -473,7 +508,11 @@ const AccountingScreen =({feathersStore}) => {
               cell4={parse_fix(+findTotalAllNet() + +findTotalAllVat() - findTotalAllDebitNet() - findTotalAllDebitVat())}
             />
             <Line 
-              cell1={common.average}/> 
+              cell1={common.average}
+              cell2={parse_fix(findRetailAverage())}
+              cell3={parse_fix(findWholeSalesAverage())}
+              cell4={parse_fix(findTotalAverage())}
+            />
             <Divider/>
           </View>
         </ScrollView> 
