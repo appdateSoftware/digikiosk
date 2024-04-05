@@ -156,7 +156,9 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   } 
 
   useEffect(() => {
-    setChange(parse_fix(cash - cashToPay).toString())
+    let _change = cash - cashToPay;
+    if(_change < 0)_change = 0;
+    setChange(parse_fix(_change).toString())
   }, [cash, cashToPay])  
 
   const deleteItem = index => () => {  
@@ -352,6 +354,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
 
   const _issueReceipt = async() => { 
     const paymentMethod = feathersStore.paymentMethod;
+    console.log(paymentMethod)
     const companyData = feathersStore.companyData;
     setIssuingReceipt(true);
     const date = new Date(); 
