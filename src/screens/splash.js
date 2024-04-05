@@ -17,6 +17,8 @@ const SplashScreen = ({navigation, feathersStore}) => {
   const realm_users = useQuery('User');
   
   const [errorModal, setErrorModal] = useState(false) ;
+  const [uniqueId, setUniqueId] = useState(false) ;
+
 
   useFocusEffect(
     useCallback(() => {
@@ -98,13 +100,13 @@ const SplashScreen = ({navigation, feathersStore}) => {
  
   const load = async () => {
     try{  
-      const uniqueId = await getUniqueId();  
-      console.log(uniqueId );
+      const _uniqueId = await getUniqueId();  
+      setUniqueId(_uniqueId);
       await feathersStore.connect();
       if(feathersStore.demoMode){
         await feathersStore.login(DEFAULT_EMAIL, DEFAULT_PSW)
       }else{
-        await feathersStore.login(uniqueId + "@gmail.com", DEFAULT_PSW)
+        await feathersStore.login(_uniqueId + "@gmail.com", DEFAULT_PSW)
       }      
      
     }catch (error){
@@ -133,8 +135,10 @@ return(
   
      <ErrorModal
       cancelButton={closeErrorModal}
-      errorText={"Λάθος κωδικός. Παρακαλώ προσπαθείστε ξανά"}
+      errorText={`Παρακαλώ επικοινωνείστε με digi-kiosk.com. DeviceId: ${uniqueId}`}
       visible={errorModal}
+      uniqueId={uniqueId}
+      uniqueIdText={'Αντιγραφή'}
     />
   </>
 );

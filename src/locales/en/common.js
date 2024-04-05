@@ -56,6 +56,8 @@ export const commonEN = {
     debit: "DEBIT",
     average: "AVERAGE",
     demoMode: "Demo mode",
+    copy: "Copy",
+
 
 
 

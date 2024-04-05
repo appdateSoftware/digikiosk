@@ -33,7 +33,7 @@ class FeathersStore{
   loggedInUser = {};
   demoMode = true;
  
-  currentVersion = "1.0.2";
+  currentVersion = "1.0.3";
 
   constructor(){
     makeObservable(this,  {     

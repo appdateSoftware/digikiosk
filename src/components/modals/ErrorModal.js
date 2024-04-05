@@ -6,16 +6,17 @@
  */
 
 // import dependencies
-import React from "react";
+import React, {useEffect, useState}from "react";
 import { 
   Modal,
   StyleSheet,
   Text,  
-  View
+  View, 
 } from "react-native";
 
 import Colors from "../../theme/colors";
 import ContainedButton from "../../components/buttons/ContainedButton";
+import Clipboard from '@react-native-clipboard/clipboard';
 
 const styles = StyleSheet.create({
   centeredView: {
@@ -26,7 +27,7 @@ const styles = StyleSheet.create({
   },
   modalView: {
     margin: 20,    
-    width: "80%",
+    width: "90%",
     backgroundColor: Colors.selection,
     borderRadius: 20,
     paddingHorizontal: 35,
@@ -52,6 +53,12 @@ const styles = StyleSheet.create({
     color: Colors.onSecondaryColor,    
     textAlign: "center",
     marginBottom: 16
+  },
+  buttonsContainer: {
+    flexDirection: "row",
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "space-around"
   }
 });
 
@@ -60,8 +67,22 @@ const ErrorModal = ({
   cancelButton,
   errorText,
   cancelText = "ΣΥΝΕΧΕΙΑ",
-  visible = false
-}) => (
+  visible = false,
+  uniqueId,
+  uniqueIdText
+}) => {
+
+  const [deviceId, setDeviceId] = useState("")
+
+  useEffect(() => {
+    setDeviceId(uniqueId)
+  }, [uniqueId])
+
+  const copyUniqueId = () => {
+    Clipboard.setString(uniqueId);
+  }
+  
+  return (
   <Modal
     animationType="slide"
     transparent={true}
@@ -69,20 +90,34 @@ const ErrorModal = ({
   >
     <View style={styles.centeredView}>
       <View style={styles.modalView}>       
-        <Text style={styles.textStyle}>{errorText}</Text>       
-        <ContainedButton
-          color={Colors.googleButton}
-          onPress={cancelButton}
-          height={34}
-          width="100%"
-          title={cancelText}
-          titleStyle={styles.buttonTitle}
-          borderWidth={2}
-          borderColor={Colors.onPrimaryColor}     
-        />
-      </View>
+        <Text style={styles.textStyle}>{errorText}</Text>
+        <View style={styles.buttonsContainer}>        
+          <ContainedButton
+            color={Colors.googleButton}
+            onPress={cancelButton}
+            height={34}
+            width="40%"
+            title={cancelText}
+            titleStyle={styles.buttonTitle}
+            borderWidth={2}
+            borderColor={Colors.onPrimaryColor}     
+          />
+          {deviceId &&
+            <ContainedButton
+              color={Colors.primaryColor}
+              onPress={copyUniqueId}
+              height={34}
+              width="40%"
+              title={uniqueIdText}
+              titleStyle={styles.buttonTitle}
+              borderWidth={2}
+              borderColor={Colors.onPrimaryColor}     
+            />
+          }
+        </View> 
+      </View>      
     </View>
   </Modal>
-);
+)};
 
 export default ErrorModal;
