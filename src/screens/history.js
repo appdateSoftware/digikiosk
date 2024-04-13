@@ -140,6 +140,15 @@ const HistoryScreen =({feathersStore}) => {
   }
 
   const issueDebit = () => item => async() => {
+    const oldReceipt = {
+      receiptKind : item.receiptKind,
+      receiptItems: item.receiptItems,
+      receiptTotal: item.receiptTotal,
+      totalNetPrice: item.totalNetPrice,
+      vatAnalysis: item.vatAnalysis,
+      paymentMethod: item.paymentMethod,
+      companyData: item?.companyData
+    };
     if(["tpy", "tda", "pt"].includes(item.receiptKind)){
 
     }
@@ -263,20 +272,27 @@ const HistoryScreen =({feathersStore}) => {
       setErrorModal(true);
     });   
   });    
-};  
+}; 
 
-const issueReceipt = (paymentMethod) => async() => { 
-  feathersStore.setPaymentMethod(paymentMethod);
-  if(["tpy", "tda", "pt"].includes(feathersStore.invoiceType)){
-    setInvoiceDataModal(true);
-  }else{
-    await _issueReceipt(paymentMethod);
+const setNumericId = () => {
+  let numericId = 1;   
+  if(realm_counter?.length > 0){
+    numericId = +realm_counter[0][`${feathersStore.invoiceType}`] + 1;
+    realm.write(()=>{     
+      realm_counter[0][`${feathersStore.invoiceType}`] = numericId;      
+    })
+  }else{    //init
+    realm.write(()=>{     
+      realm.create('Counter', {[`${feathersStore.invoiceType}`]: 1});
+    })
   }
-}
+  
+  return numericId;
+} 
 
-const _issueReceipt = async() => { 
-  const paymentMethod = feathersStore.paymentMethod;
-  const companyData = feathersStore.companyData;
+const issueReceipt = async(oldReceipt) => { 
+  const paymentMethod = oldReceipt.paymentMethod;
+  const companyData = oldReceipt.companyData;
   setIssuingReceipt(true);
   const date = new Date(); 
   const day = date.getDate().toString().padStart(2, "0"); 
@@ -289,8 +305,8 @@ const _issueReceipt = async() => {
   const isoTime = hours + ":" + minutes + ":" + seconds;
   let itemsList =""; 
   let vatAnalysis ="";  
-  let totalNetPrice = 0.0;   
-  let unReceiptedItems =  orderItems.filter(i => i?.toBePaid); 
+  let totalNetPrice = oldReceipt.totalNetPrice;   
+  let unReceiptedItems =  oldReceipt.receiptItems; 
 
   let vatAnalysisHeader = 
     '<align mode="left">' +    
