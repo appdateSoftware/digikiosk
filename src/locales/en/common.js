@@ -58,6 +58,8 @@ export const commonEN = {
     demoMode: "Demo mode",
     copy: "Copy",
     printerConnectionError: "The printer is off-line!",
+    waitPrint: "Printing...",
+
 
 
 

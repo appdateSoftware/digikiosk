@@ -86,6 +86,7 @@ export const commonEL = {
     demoMode: "Δοκιμαστική λειτουργία",
     copy: "Αντιγραφή",
     printerConnectionError: "Ο εκτυπωτής είναι εκτός σύνδεσης!",
+    waitPrint: "Γίνεται εκτύπωση...",
 
 
 

@@ -207,13 +207,17 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   
   const setCharacterInput = (ch) => () => {      
    
-    if(enterPrice)setPrice(oldVal => {
+    if(enterPrice){
+      if(ch === "." && price.includes("."))return;
+      setPrice(oldVal => {
       let priceString = oldVal + ch;
       if(+priceString >= 1){
         if(priceString[0] === "0")priceString = priceString.slice(1);       
       }
       return priceString;
-    });else{  
+      });
+    }else{  
+      if(ch === "." && cash.includes("."))return;
       let priceString = "";
       setCash(oldVal => {      
         priceString = oldVal + ch;

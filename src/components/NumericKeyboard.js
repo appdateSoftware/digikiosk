@@ -78,7 +78,7 @@ const NumericKeyboard = ({ onPress = () => {}, pressBackspace = () => {} }) => (
       <Text style={styles.number}>9</Text>
     </TouchableOpacity>
     <TouchableOpacity onPress={onPress(".")} style={styles.keyboardButton}>
-      <Text style={styles.number}>.</Text>
+      <Text style={styles.number}>,</Text>
     </TouchableOpacity>
     <TouchableOpacity onPress={onPress("0")} style={styles.keyboardButton}>
       <Text style={styles.number}>0</Text>
