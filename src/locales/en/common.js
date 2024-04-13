@@ -57,6 +57,8 @@ export const commonEN = {
     average: "AVERAGE",
     demoMode: "Demo mode",
     copy: "Copy",
+    printerConnectionError: "The printer is off-line!",
+
 
 
 

@@ -113,7 +113,7 @@ export class AppSchema extends Realm.Object {
     {
       id: "11.4",
       name: "psl",
-      invoiceTypeName: "ΠΙΣΤΩΤΙΚΟ ΣΤΟΙΧΕΙΟ ΛΙΑΝΙΚΗΣ",
+      invoiceTypeName: "'ΠΙΣΤΩΤΙΚΟ ΣΤΟΙΧΕΙΟ ΛΙΑΝΙΚΗΣ'",
       invoiceTypeNumber: "ΠΣΛ",
       invoiceTypeNumberName: "ΠΣΛ-Α"
     },

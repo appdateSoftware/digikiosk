@@ -85,6 +85,7 @@ export const commonEL = {
     average: "ΜΕΣΟΣ ΟΡΟΣ",
     demoMode: "Δοκιμαστική λειτουργία",
     copy: "Αντιγραφή",
+    printerConnectionError: "Ο εκτυπωτής είναι εκτός σύνδεσης!",
 
 
 

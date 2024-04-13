@@ -583,7 +583,7 @@ const AccountingScreen =({feathersStore}) => {
               cell1={common.net}
               cell2={parse_fix(findTotalRetailNet() - findTotalRetailDebitNet())}
               cell3={parse_fix(findTotalWholeSalesNet() - findTotalWholeSalesDebitNet())}
-              cell4={parse_fix(findTotalAllNet() - findTotalAllDebitVat())}
+              cell4={parse_fix(findTotalAllNet() - findTotalAllDebitNet())}
             />
             <Line 
               cell1={common.vat}

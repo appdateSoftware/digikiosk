@@ -35,6 +35,7 @@ import Card from '../components/buttons/Card';
 import {shadowDefault} from '../utils/shadow';
 import TcpSocket from 'react-native-tcp-socket';
 import {EscPos} from '@tillpos/xml-escpos-helper';
+import ErrorModal from "../components/modals/ErrorModal";
 
 import Colors from "../theme/colors";
 
@@ -113,7 +114,7 @@ const HistoryScreen =({feathersStore}) => {
   const [showFromModal, setShowFromModal] = useState(false) ;
   const [showToModal, setShowToModal] = useState(false) ;
   const [filteredReceipts, setFilteredReceipts] = useState([]) ;
-
+  const [errorModal, setErrorModal] = useState(false) ;   
 
   useEffect(() => {
     setInvoiceTypes(AppSchema.invoiceTypes);
@@ -123,7 +124,7 @@ const HistoryScreen =({feathersStore}) => {
 
   useEffect(() => {
     const filtered = realm_receipts.filtered('receiptKind TEXT $0 && createdAt > $1 && createdAt < $2'
-    , invoiceType, toTimeStamp(from), toTimeStamp(to));
+    , invoiceType, toTimeStamp(from), toTimeStamp(to)).sorted("createdAt",true);
     setFilteredReceipts(filtered);
   }, [from, to, invoiceType])
 
@@ -176,6 +177,10 @@ const HistoryScreen =({feathersStore}) => {
 
   const closeDeleteModal = () => {    
     setDeleteModal(false); 
+  };
+
+  const closeErrorModal = () => {    
+    setErrorModal(false); 
   };
 
   const invoiceTypeChange = p => {    
@@ -237,18 +242,18 @@ const HistoryScreen =({feathersStore}) => {
 
     device.on("error", async(error) => {
       console.log(`Network error occured. `, error);
-      if(ex.code === "ECONNREFUSED"){ //After restart printer gets stuck and needs retries   
+      if(error.toString().includes("ECONNREFUSED")){ //After restart printer gets stuck and needs retries   
         console.log('Restart'); 
         device.destroy();
         device = null;
         await this.printLocally(req);   //TODO: Retry up to 10 times   
-      }else if(ex.code === "ETIMEDOUT"){ //if printer is offline
+      }else if(error.toString().includes("ETIMEDOUT")){ //if printer is offline
         realm.write(()=>{     
-          realm.create('Unprinted', req); 
+          realm.create('Unprinted', {req}); 
         }) 
       }
-      reject(true);
-      return;
+  //    reject(true);
+      setErrorModal(true);
     });   
   });    
 };  
@@ -342,6 +347,11 @@ const HistoryScreen =({feathersStore}) => {
             [to]: {selected: true, disableTouchEvent: true}
           }}
         /> 
+         <ErrorModal
+          cancelButton={closeErrorModal}
+          errorText={common.printerConnectionError}
+          visible={errorModal}
+        />   
       </SafeAreaView>
     );
   }

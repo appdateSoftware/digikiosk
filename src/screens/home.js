@@ -31,6 +31,8 @@ import TcpSocket from 'react-native-tcp-socket';
 import {EscPos} from '@tillpos/xml-escpos-helper';
 import {pickLanguageWord} from '../utils/pickLanguageWord.js';
 import { AppSchema } from "../services/receipt-service";
+import ErrorModal from "../components/modals/ErrorModal";
+
 
 import { inject, observer } from "mobx-react";
 
@@ -62,6 +64,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   const [loading, setLoading] = useState(true);
   const [invoiceTypeModal, setInvoiceTypeModal] = useState(false);
   const [invoiceDataModal, setInvoiceDataModal] = useState(false);
+  const [errorModal, setErrorModal] = useState(false) ;
 
   useEffect( () => { //Check for updates  
     checkForUpdates();
@@ -246,10 +249,10 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     setEnterPrice(true)
   }
 
-  const resetCashInputs = () => {
+  const resetCashInputs = () => { 
     setCashToPay("0");
     setChange("0");
-    setCash("0");
+    setCash("0");   
   } 
 
   const renderSectionItem = (item, index) => (
@@ -354,7 +357,6 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
 
   const _issueReceipt = async() => { 
     const paymentMethod = feathersStore.paymentMethod;
-    console.log(paymentMethod)
     const companyData = feathersStore.companyData;
     setIssuingReceipt(true);
     const date = new Date(); 
@@ -524,6 +526,8 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     });
 
     //------------>
+    setTotal(prevVal => prevVal - receiptTotal);
+    setUnpaid(prevVal => prevVal - receiptTotal);
     resetCashInputs();
     for(let listItem of orderItems){
       if(listItem.toBePaid)Object.assign(listItem, {paid: true, toBePaid: false});
@@ -737,7 +741,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
             "Postal": `${persistedReceipt.companyData.postalZipCode}`
         },
         "CustomerPhones": [
-          `${persistedReceipt.companyData?.companyPhone | ""}`
+          `${persistedReceipt.companyData?.companyPhone || ""}`
         ],
         "CustomerEmails": [
           `${persistedReceipt.companyData?.companyEmail || ""}`
@@ -858,18 +862,18 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       });
 
       device.on("error", async(error) => {
-        console.log(`Network error occured. `, error);
-        if(ex.code === "ECONNREFUSED"){ //After restart printer gets stuck and needs retries   
+        console.log(`Network error occured. `, error.toString());
+        if(error.toString().includes("ECONNREFUSED")){ //After restart printer gets stuck and needs retries   
           console.log('Restart'); 
           device.destroy();
           device = null;
           await this.printLocally(req);   //TODO: Retry up to 10 times   
-        }else if(ex.code === "ETIMEDOUT"){ //if printer is offline
+        }else if(error.toString().includes("ETIMEDOUT")){ //if printer is offline
           realm.write(()=>{     
-            realm.create('Unprinted', req); 
+            realm.create('Unprinted', {req}); 
           }) 
         }
-        reject(true);
+        setErrorModal(true);
         return;
       });   
     });    
@@ -910,6 +914,10 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   const closeInvoiceDataModal = () => {
     setInvoiceDataModal(false);
   }
+
+  const closeErrorModal = () => {    
+    setErrorModal(false); 
+  };
    
   const headerComponent = () => (
     <View style={styles.header}>     
@@ -1071,6 +1079,11 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
         visible={invoiceDataModal}
         issueReceipt={_issueReceipt}
       />
+       <ErrorModal
+          cancelButton={closeErrorModal}
+          errorText={common.printerConnectionError}
+          visible={errorModal}
+        />   
     </>
   );
           
