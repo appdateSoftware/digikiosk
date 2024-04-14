@@ -438,9 +438,9 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     if(!response?.qrcode){
       realm.write(()=>{     
         realm_counter[0][`${feathersStore.invoiceType}`] = receipt.numericId - 1;      
-      });     
-      openMyDataErrorAlert();
+      });           
       setIssuingReceipt(false);
+      openMyDataErrorAlert();
       return;
     }
     //------->  

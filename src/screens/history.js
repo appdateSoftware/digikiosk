@@ -52,7 +52,7 @@ const trashIcon = "trash-outline";
 
 // DeliverySectionA Component
 const Receipt = ({  
-  deleteSection, 
+  debitModal, 
   receiptKind,
   numericId,
   receiptDate,
@@ -62,7 +62,6 @@ const Receipt = ({
   paymentMethod,
   companyName,
   printThermal,
-  issueDebit,  
 }) => (
   
     <View style={[styles.receiptCard]}>
@@ -83,7 +82,7 @@ const Receipt = ({
           </View>
         </TouchableItem>          
      
-        <TouchableItem style={styles.end} borderless  onPress={deleteSection}>
+        <TouchableItem style={styles.end} borderless  onPress={debitModal}>
           <View style={styles.iconContainer}>
             <Icon name={trashIcon} size={21} color={Colors.secondaryColor}/>                       
           </View>
@@ -139,24 +138,22 @@ const HistoryScreen =({feathersStore}) => {
 
   }
 
-  const issueDebit = () => item => async() => {
+  const issueDebit = async() => {
+    setDeleteModal(false);    
     const oldReceipt = {
-      receiptKind : item.receiptKind,
-      receiptItems: item.receiptItems,
-      receiptTotal: item.receiptTotal,
-      totalNetPrice: item.totalNetPrice,
-      vatAnalysis: item.vatAnalysis,
-      paymentMethod: item.paymentMethod,
-      companyData: item?.companyData
-    };
-    if(["tpy", "tda", "pt"].includes(item.receiptKind)){
-
-    }
-
+      receiptKind : itemToDelete.receiptKind,
+      receiptItems: itemToDelete.receiptItems,
+      receiptTotal: itemToDelete.receiptTotal,
+      totalNetPrice: itemToDelete.totalNetPrice,
+      vatAnalysis: itemToDelete.vatAnalysis,
+      paymentMethod: itemToDelete.paymentMethod,
+      companyData: itemToDelete?.companyData
+    };   
+    await issueReceipt(oldReceipt);      
   } 
 
   const openDeleteModal = item => () => {
-    setItemToDelete(item);
+    setItemToDelete(item)
     setDeleteModal(true);
   } 
     
@@ -164,9 +161,9 @@ const HistoryScreen =({feathersStore}) => {
 
   const renderReceiptItem = ({ item, index }) => (
     <Receipt
-      key={item._id}
-      deleteSection={openDeleteModal(item)}     
-      receiptKind={findInvoiceType(item?.receiptKind) || ""}
+      key={item.numericId}
+      debitModal={openDeleteModal(item)}     
+      receiptKind={findInvoiceType(item?.receiptKind)?.invoiceTypeNumber}
       numericId={item.numericId?.split("_")[1]}
       receiptDate={item.receiptDate}
       receiptTime={item.receiptTime}
@@ -175,7 +172,6 @@ const HistoryScreen =({feathersStore}) => {
       paymentMethod={item.paymentMethod}
       companyName={item?.companyData?.legalName || ""} 
       printThermal={printThermal(item.req)}
-      issueDebit={issueDebit(item)}          
       itemIndex={index}
     />
   );
@@ -190,6 +186,10 @@ const HistoryScreen =({feathersStore}) => {
     setIndicatorModal(false); 
   }; 
 
+  const closeReceiptIndicatorModal = () => {    
+    setIssuingReceipt(false); 
+  }; 
+
   const closeDeleteModal = () => {    
     setDeleteModal(false); 
   };
@@ -202,8 +202,8 @@ const HistoryScreen =({feathersStore}) => {
     setInvoiceType(p);
   };
 
-  const findInvoiceType = () => {
-    return AppSchema.invoiceTypes.find(it => it.name === feathersStore.invoiceType)?.invoiceTypeNumber || ""
+  const findInvoiceType = (invoiceType) => {
+    return AppSchema.invoiceTypes.find(it => it.name === invoiceType)
   }
 
   const toGreekLocale = date => { //--> Calendar operates internally with dates of the format: 2024-03-12
@@ -269,17 +269,18 @@ const HistoryScreen =({feathersStore}) => {
       }
   //    reject(true);
       setIndicatorModal(false);
+      setIssuingReceipt(false);
       setErrorModal(true);
     });   
   });    
 }; 
 
-const setNumericId = () => {
+const setNumericId = (invoiceType) => {
   let numericId = 1;   
   if(realm_counter?.length > 0){
-    numericId = +realm_counter[0][`${feathersStore.invoiceType}`] + 1;
+    numericId = +realm_counter[0][`${invoiceType}`] + 1;
     realm.write(()=>{     
-      realm_counter[0][`${feathersStore.invoiceType}`] = numericId;      
+      realm_counter[0][`${invoiceType}`] = numericId;      
     })
   }else{    //init
     realm.write(()=>{     
@@ -290,10 +291,12 @@ const setNumericId = () => {
   return numericId;
 } 
 
-const issueReceipt = async(oldReceipt) => { 
+const issueReceipt = async(oldReceipt) => {   
+  setIssuingReceipt(true);
   const paymentMethod = oldReceipt.paymentMethod;
   const companyData = oldReceipt.companyData;
-  setIssuingReceipt(true);
+  let invoiceType = "psl";
+  if(["tpy", "tda"].includes(oldReceipt.invoiceType))invoiceType = "pt";
   const date = new Date(); 
   const day = date.getDate().toString().padStart(2, "0"); 
   const month = (date.getMonth() + 1).toString().padStart(2, "0");
@@ -306,7 +309,7 @@ const issueReceipt = async(oldReceipt) => {
   let itemsList =""; 
   let vatAnalysis ="";  
   let totalNetPrice = oldReceipt.totalNetPrice;   
-  let unReceiptedItems =  oldReceipt.receiptItems; 
+  let unReceiptedItems =  JSON.parse(oldReceipt.receiptItems); 
 
   let vatAnalysisHeader = 
     '<align mode="left">' +    
@@ -325,22 +328,18 @@ const issueReceipt = async(oldReceipt) => {
         `<x-position>350</x-position><text>${parse_fix(item.underlyingValue)}</text>` +
         `<x-position>455</x-position><text>${parse_fix(item.product_totalPrice)}<set-symbol-cp>€</set-symbol-cp></text-line>` +
       '</align>';          
-  }
-  
-  const receiptTotal = parseFloat(cashToPay).toFixed(2);
+  }  
 
   let receipt ={
-    receiptKind: feathersStore.invoiceType,
-    numericId: setNumericId(),
+    receiptKind: invoiceType,
+    numericId: setNumericId(invoiceType),
     issuer: feathersStore.user.name,
-    receiptTotal: parse_fix(receiptTotal),
+    receiptTotal: parse_fix(oldReceipt.receiptTotal),
     receiptDate: localDate,
     receiptTime: isoTime,    
     createdAt: date.getTime(), 
     receiptItems: unReceiptedItems,
-    paymentMethod,
-    cash,
-    change     
+    paymentMethod
   };
 
   if( companyData?.afm )Object.assign(receipt, {companyData})
@@ -357,7 +356,6 @@ const issueReceipt = async(oldReceipt) => {
         `<x-position>350</x-position><text>${parse_fix(receipt[`vat${vat.id}`].vatAmount)}</text>` +
         `<x-position>455</x-position><text>${parse_fix(receipt[`vat${vat.id}`].underlyingValue)}</text-line>` +
       '</align>'; 
-      totalNetPrice = +totalNetPrice + +receipt[`vat${vat.id}`].underlyingValue;
     }
   }
   
@@ -368,10 +366,10 @@ const issueReceipt = async(oldReceipt) => {
   //---> Rollback
   if(!response?.qrcode){
     realm.write(()=>{     
-      realm_counter[0][`${feathersStore.invoiceType}`] = receipt.numericId - 1;      
-    });     
-    openMyDataErrorAlert();
+      realm_counter[0][`${invoiceType}`] = receipt.numericId - 1;      
+    });         
     setIssuingReceipt(false);
+    openMyDataErrorAlert();
     return;
   }
   //------->  
@@ -384,7 +382,7 @@ const issueReceipt = async(oldReceipt) => {
       constructCompanyTitleNonEpos() +             
     '<line-feed />' +
     '<bold>' +                             
-      `<text-line>${findInvoiceType().invoiceTypeName}</text-line>` +              
+      `<text-line>${findInvoiceType(invoiceType).invoiceTypeName}</text-line>` +              
       `<text-line>ΧΕΙΡΙΣΤΗΣ: ${feathersStore.user.name}</text-line>` +
     '</bold>' +
     '</align>' +
@@ -414,26 +412,15 @@ const issueReceipt = async(oldReceipt) => {
       vatAnalysis +
     '<align mode="left">' +
     `<text-line>Σύνολο:` + 
-    `<x-position>350</x-position><text>${parse_fix(receiptTotal - receipt.totalNetPrice)}</text>` +
+    `<x-position>350</x-position><text>${parse_fix(receipt.receiptTotal - receipt.totalNetPrice)}</text>` +
     `<x-position>455</x-position><text>${parse_fix(receipt.totalNetPrice)}</text-line>` +
     '</align>' +   
     '<align mode="center">' +
     `<text-line>----------------------------------------------</text-line>` +
-    '</align>' +
-    '<align mode="left">' +
-    `<text-line>${paymentMethod === "VISA" ? "ΚΑΡΤΑ" : "ΜΕΤΡΗΤΑ"}` + 
-    `<x-position>455</x-position><text>${parse_fix(paymentMethod === "VISA" ? receiptTotal : cash)}</text-line>` +
-    '</align>' +
-    '<align mode="center">' +
-    `<text-line>----------------------------------------------</text-line>` +
-    '</align>' +
+    '</align>' +    
     '<align mode="left">' +  
     `<text-line>Σύνολο:` + 
-    `<x-position>455</x-position><text>${parse_fix(receiptTotal)}<set-symbol-cp>€</set-symbol-cp></text></text-line>` +  
-    (paymentMethod === "CASH" ?
-    `<text-line>Ρέστα:` + 
-    `<x-position>455</x-position><text>${parse_fix(change)}<set-symbol-cp>€</set-symbol-cp></text></text-line>`
-    : "") +  
+    `<x-position>455</x-position><text>${parse_fix(receipt.receiptTotal)}<set-symbol-cp>€</set-symbol-cp></text></text-line>` +   
     '<line-feed/>' +         
     '<line-feed/>' +    
     `<text-line>${response?.footer}</text-line>` +
@@ -453,7 +440,7 @@ const issueReceipt = async(oldReceipt) => {
   //--------> Persist in Realm
 
   Object.assign(receipt, {
-    numericId: feathersStore.invoiceType + "_" + receipt.numericId.toString(),
+    numericId: invoiceType + "_" + receipt.numericId.toString(),
     receiptItems: JSON.stringify(receipt.receiptItems)
   })
   realm.write(()=>{     
@@ -461,11 +448,7 @@ const issueReceipt = async(oldReceipt) => {
   });
 
   //------------>
-  
-  for(let listItem of orderItems){
-    if(listItem.toBePaid)Object.assign(listItem, {paid: true, toBePaid: false});
-  }
-  if(orderItems.filter(item => item?.paid)?.length === orderItems?.length)setOrderItems([]);
+ 
   setIssuingReceipt(false);
 }
 
@@ -483,10 +466,6 @@ const constructCompanyTitleNonEpos = () => {
       (realm_company[0].companyEmail ? `<text-line>E-mail: ${realm_company[0].companyEmail}</text-line>` : '') +
     '</bold>'
   )
-}
-
-const _findInvoiceType = (invoiceType) => {
-  return AppSchema.invoiceTypes.find(it => it.name === invoiceType)
 }
 
 const constructMyData = async(persistedReceipt) => {
@@ -560,12 +539,12 @@ const constructMyData = async(persistedReceipt) => {
   {
     "ActionTypeId": 1,
     "InvoiceDate": isoDate,
-    "InvoiceTypeCode": findInvoiceType().id,
-    "InvoiceTypeName": findInvoiceType().invoiceTypeName,
+    "InvoiceTypeCode": findInvoiceType(persistedReceipt.receiptKind).id,
+    "InvoiceTypeName": findInvoiceType(persistedReceipt.receiptKind).invoiceTypeName,
     "InvoiceTypeSeries": `${persistedReceipt.numericId}`,
     "InvoiceTypeSeriesName": "",
-    "InvoiceTypeNumber": findInvoiceType().invoiceTypeNumber,
-    "InvoiceTypeNumberName": findInvoiceType().invoiceTypeNumberName,
+    "InvoiceTypeNumber": findInvoiceType(persistedReceipt.receiptKind).invoiceTypeNumber,
+    "InvoiceTypeNumberName": findInvoiceType(persistedReceipt.receiptKind).invoiceTypeNumberName,
     "Currency": "EURO",
     "CurrencyCode": "EUR",
     "IsRetailInvoice": true,
@@ -713,14 +692,34 @@ const constructMyData = async(persistedReceipt) => {
       console.log(error);
       await logError(error, persistedReceipt);
       setIssuingReceipt(false);
-      return;
-  }   
-} 
+        return;
+    }   
+  } 
 
+  const getVat = id => {
+    return AppSchema.vatsArray.find(v => +v.id === +id)?.label.toString().padStart(2, '0') + "%"
+  }
+
+  const calculateVats = items => {    
+    let vatsObj = {}
+    for(let vat of AppSchema.vatsArray){
+      let vatAmount = items.filter(item => +item.vatId === +vat.id)
+        .map(i => i.vatAmount)        
+        .reduce((a,b) => (+a + +b), 0).toFixed(2);
+      let underlyingValue = items.filter(item => +item.vatId === +vat.id)
+        .map(i => i.underlyingValue)        
+        .reduce((a,b) => (+a + +b), 0).toFixed(2);
+    Object.assign(vatsObj, {[`vat${vat.id}`]: {vatId: +vat.id, vatAmount, underlyingValue}})
+    }  
+    return vatsObj;
+  }
+
+  const parse_fix = price => {
+    return price ? parseFloat(price).toFixed(2) : 0;
+  }
 
   return ( 
-      <SafeAreaView style={styles.screenContainer}>
-        
+      <SafeAreaView style={styles.screenContainer}>        
         <StatusBar
           backgroundColor={Colors.statusBarColor}
           barStyle="dark-content"
@@ -778,7 +777,13 @@ const constructMyData = async(persistedReceipt) => {
           onRequestClose={closeIndicatorModal}
           title={common.waitPrint}
           visible={indicatorModal}
-        />            
+        />  
+        <ActivityIndicatorModal
+          message={common.wait}
+          onRequestClose={closeReceiptIndicatorModal}
+          title={common.waitPrint}
+          visible={issuingReceipt}
+        />           
         <DeleteModal
           titleText={common.debitQuestion}
           cancelText={common.cancel}

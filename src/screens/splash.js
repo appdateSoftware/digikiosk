@@ -64,9 +64,9 @@ const SplashScreen = ({navigation, feathersStore}) => {
           val: true
         })
       })
-    :
-    demoMode = realm.objects('Demo')[0]?.val; 
-    feathersStore.setDemoMode(demoMode); 
+      :
+      demoMode = realm.objects('Demo')[0]?.val; 
+      feathersStore.setDemoMode(demoMode); 
     } 
     
     if(realm){      
@@ -101,12 +101,14 @@ const SplashScreen = ({navigation, feathersStore}) => {
   const load = async () => {
     try{  
       const _uniqueId = await getUniqueId();  
-      setUniqueId(_uniqueId);
+      setUniqueId(_uniqueId); 
       await feathersStore.connect();
-      if(feathersStore.demoMode){
-        await feathersStore.login(DEFAULT_EMAIL, DEFAULT_PSW)
+      if(feathersStore.demoMode){         
+        await feathersStore.login(DEFAULT_EMAIL, DEFAULT_PSW);
+        feathersStore.setIsAuthenticated(true);      
       }else{
-        await feathersStore.login(_uniqueId + "@gmail.com", DEFAULT_PSW)
+        await feathersStore.login(_uniqueId + "@gmail.com", DEFAULT_PSW);
+        feathersStore.setIsAuthenticated(true);    
       }      
      
     }catch (error){
