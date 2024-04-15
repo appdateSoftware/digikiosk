@@ -66,6 +66,7 @@ const SplashScreen = ({navigation, feathersStore}) => {
       })
       :
       demoMode = realm.objects('Demo')[0]?.val; 
+      console.log("demoMode: ", demoMode)
       feathersStore.setDemoMode(demoMode); 
     } 
     
@@ -137,7 +138,7 @@ return(
   
      <ErrorModal
       cancelButton={closeErrorModal}
-      errorText={`Παρακαλώ επικοινωνείστε με digi-kiosk.com. DeviceId: ${uniqueId}`}
+      errorText={`Παρακαλώ επικοινωνείστε με digikiosk.gr 211-4115591. DeviceId: ${uniqueId}`}
       visible={errorModal}
       uniqueId={uniqueId}
       uniqueIdText={'Αντιγραφή'}

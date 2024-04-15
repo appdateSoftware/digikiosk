@@ -188,6 +188,7 @@ const SettingsA = ({navigation, feathersStore}) => {
       realm.objects('Demo')[0].val = value     
     })
     feathersStore.setDemoMode(value);
+    feathersStore.logout();
     navigation.navigate("SplashScreen");
   }
 
