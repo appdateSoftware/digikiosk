@@ -60,25 +60,28 @@ export class AppSchema extends Realm.Object {
 
   static colorsArray = [{
     "id" : "blue",
-    "value" : Colors.primaryColor
-  }, {
-    "id" : "turquize",
-    "value" : Colors.accentColor
-  }, {
+    "value" : "rgb(35, 87, 188)"
+  },{
     "id" : "red",
-    "value" : Colors.tertiaryColor
-  }, {
-    "id" : "light yellow",
-    "value" : Colors.overlayColor
+    "value" : "rgb(213, 33, 39)"
+  },{
+    "id" : "violet",
+    "value" : "rgb(115, 59, 151)"
   }, {
     "id" : "orange",
-    "value" : Colors.selection
+    "value" : "rgb(246, 133, 30)"
+  }, {
+    "id" : "purple",
+    "value" : "rgb(70, 19, 155)"
+  }, {
+    "id" : "bordeaux",
+    "value" : "rgb(127, 23, 52)"
+  }, {
+    "id" : "brown",
+    "value" : "rgb(99, 49, 0)"
   }, {
     "id" : "black",
     "value" : Colors.black
-  }, {
-    "id" : "dark blue",
-    "value" : Colors.primaryColorDark
   }];
 
   static invoiceTypes = [

@@ -32,6 +32,7 @@ class FeathersStore{
   masterLanguage = "el";
   loggedInUser = {};
   demoMode = true;
+  isTablet = true;
  
   currentVersion = "1.0.3";
 
@@ -47,6 +48,7 @@ class FeathersStore{
       loggedInUser: observable,
       currentVersion: observable,
       demoMode: observable,
+      isTablet: observable,
       setIsAuthenticated: action,
       setUser: action,
       setObservables: action,
@@ -56,7 +58,8 @@ class FeathersStore{
       setPaymentMethod: action,  
       setInvoiceType: action, 
       setNewVersion: action,
-      setDemoMode: action
+      setDemoMode: action,
+      setIsTablet: action
     })
   } 
   
@@ -82,6 +85,10 @@ class FeathersStore{
 
   setDemoMode = value => {
     this.demoMode = value;
+  }
+
+  setIsTablet = value => {
+    this.isTablet = value;
   }
 
   setPaymentMethod = value => {

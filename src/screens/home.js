@@ -2,15 +2,16 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   StyleSheet,
   View,
+  Text,
   ScrollView,
   ActivityIndicator,
   BackHandler,
   Alert,
-  Linking
+  Linking,
+  TouchableOpacity
 } from 'react-native';
-import Text from '../components/Text';
 import NumericKeyboard from '../components/NumericKeyboard';
-
+import NumericKeyboardTablet from '../components/NumericKeyboardTablet';
 import InvoiceDataModal from "../components/modals/InvoiceDataModal";
 import TouchableItem from "../components/TouchableItem";
 import ProductOrderedListItem from "../components/ProductOrderedListItem";
@@ -21,7 +22,9 @@ import Colors from "../theme/colors";
 import Color from "color";
 import {useRealm, useQuery } from '@realm/react';
 import Button from "../components/buttons/Button";
+import ButtonTablet from "../components/buttons/ButtonTablet";
 import FakeButton from "../components/buttons/FakeButton";
+import FakeButtonTablet from "../components/buttons/FakeButtonTablet";
 import ButtonWithField from "../components/buttons/ButtonWithField";
 import Icon from "../components/Icon";
 import cloneDeep from 'lodash/cloneDeep';
@@ -39,6 +42,12 @@ import { inject, observer } from "mobx-react";
 import useTranslate from '../hooks/useTranslate';
 
 const checkIcon = "checkmark";
+const checkIconCircle = "checkmark-circle-outline";
+const arrowBackCircle = "arrow-back-circle-outline";
+const arrowForwardCircle = "arrow-forward-circle-outline";
+const chevronDownIcon = "chevron-down";
+const downArrow = "caret-down";
+const upArrow = "caret-up";
 
 const HomeScreen = ({navigation, route, feathersStore}) => { 
 
@@ -65,10 +74,30 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   const [invoiceTypeModal, setInvoiceTypeModal] = useState(false);
   const [invoiceDataModal, setInvoiceDataModal] = useState(false);
   const [errorModal, setErrorModal] = useState(false) ;
+  const [sectionsShowing, setSectionsShowing] = useState([]);
+  const [backIndex, setBackIndex] = useState(0);
+  const [forwardIndex, setForwardIndex] = useState(0);
 
   useEffect( () => { //Check for updates  
     checkForUpdates();
   }, []);
+
+  useEffect( () => { //Check for updates
+    let _sectionsShowing = [];
+    if(realm_sections.length > 3){
+      for(let i = 0; i < 4; i++)_sectionsShowing.push(realm_sections[i]);      
+      setBackIndex(0);
+      setForwardIndex(3);
+    }else if(realm_sections.length > 0){
+      for(let i = 0; i < realm_sections.length; i++)_sectionsShowing.push(realm_sections[i]);
+      setBackIndex(0)
+      setForwardIndex(realm_sections.length - 1);
+    }else{
+      setBackIndex(0);
+      setForwardIndex(0);
+    }
+    setSectionsShowing(_sectionsShowing);
+  }, [realm_sections]);
 
   useEffect( () => { 
     sendBackup();
@@ -249,6 +278,18 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     setEnterPrice(false)
   }
 
+  const toggleEnterPrice = () => {
+    setEnterPrice(oldVal => !oldVal)
+  }
+
+  const clrPressed = () => {
+    if(enterPrice)setPrice("0");
+    else{
+      setCash("0");
+      setChange("0");
+    }   
+  }
+
   const pricePressed = () => {
     setEnterPrice(true)
   }
@@ -258,6 +299,26 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     setChange("0");
     setCash("0");   
   } 
+
+  const backPressed = () => {
+    if(backIndex > 0){
+      let _sectionsShowing = [];
+      for(let i = backIndex - 1; i < forwardIndex; i++)_sectionsShowing.push(realm_sections[i]);
+      setSectionsShowing(_sectionsShowing);
+      setBackIndex(oldVal => oldVal - 1);
+      setForwardIndex(oldVal => oldVal - 1);
+    }
+  }
+
+  const forwardPressed = () => {
+    if(forwardIndex < realm_sections.length - 1){
+      let _sectionsShowing = [];
+      for(let i = backIndex + 1; i < forwardIndex + 2; i++)_sectionsShowing.push(realm_sections[i]);
+      setSectionsShowing(_sectionsShowing);
+      setBackIndex(oldVal => oldVal + 1);
+      setForwardIndex(oldVal => oldVal + 1);
+    }
+  }
 
   const renderSectionItem = (item, index) => (
     <View
@@ -955,7 +1016,65 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
           <View style={styles.rightContainer}>
             <ScrollView            
               contentContainerStyle={styles.productsList}
-            >
+            >   
+            { feathersStore.isTablet ?    
+              <>
+              <FakeButtonTablet
+                title={`${common.total}: ${total.toFixed(2) || 0}€`}
+                titleColor={Colors.onPrimaryColor}
+                color={Colors.primaryColor}
+                borderColor={Colors.onSurface}
+                buttonStyle={styles.sideButtonTablet} 
+              />
+              <FakeButtonTablet
+                title={`${common.remainder}: ${unpaid?.toFixed(2) || 0}€`}
+                titleColor={Colors.onPrimaryColor}
+                color={Colors.primaryColor}
+                borderColor={Colors.onSurface}
+                buttonStyle={styles.sideButtonTablet} 
+              />          
+              <FakeButtonTablet
+                title={`${common.cashSmall}`}
+                titleColor={Colors.onPrimaryColor}
+                color={Colors.primaryColor}
+                borderColor={Colors.onSurface}
+                buttonStyle={styles.sideButtonTablet} 
+                input={cashToPay}          
+                textInput={true}
+                editable={false}
+              />         
+              <FakeButtonTablet
+                title={`${common.received}`}
+                titleColor={Colors.onPrimaryColor}
+                color={enterPrice ? Colors.cashDisabled : Colors.primaryColor}
+                borderColor={Colors.onSurface}
+                buttonStyle={styles.sideButtonTablet} 
+                input={cash}
+                textInput={true}
+                editable={false} 
+               
+              />           
+              <FakeButtonTablet
+                title={`${common.cashChange}`}
+                titleColor={Colors.onPrimaryColor}
+                color={Colors.primaryColor}
+                borderColor={Colors.onSurface}
+                buttonStyle={styles.sideButtonTablet} 
+                input={change}           
+                textInput={true}
+                editable={false}
+              />     
+              <ButtonTablet
+                onPress={selectAll}           
+                title={`${common.payAll}`}
+                titleColor={Colors.onPrimaryColor}
+                color={Colors.keyboardButton}
+                borderColor={Colors.onSurface}
+                buttonStyle={styles.sideButtonTablet}  
+              />    
+              </>
+              :
+              <>              
               <Button
                 title={`${price}€`}
               //  disabled={issuingReceipt || total <= 0}
@@ -1049,24 +1168,115 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
                 borderColor={Colors.onSurface}
                 buttonStyle={styles.sideButton}  
               /> 
+              </>
+            }
             </ScrollView>
           </View>
        
-        </View> 
-        <View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            alwaysBounceHorizontal={false}
-            contentContainerStyle={styles.sectionsList}      
-          >
-            {realm_sections?.map(( item, index ) => renderSectionItem(item, index))}
-          </ScrollView>    
-          <NumericKeyboard 
-            onPress={setCharacterInput} 
-            pressBackspace={setBackspace}
-          />
-        </View>
+        </View>      
+          { feathersStore.isTablet ?    
+            <>  
+              <View style={styles.infoRow}>
+                <View style={styles.leftInfoRowSection}>
+                  <TouchableOpacity 
+                    onPress={openInvoiceTypeModal} 
+                    style={styles.invoiceTypeButton}
+                  >
+                    <Text style={styles.invoiceTypeText}>{findInvoiceType().invoiceTypeName}</Text>
+                    <Icon name={chevronDownIcon} size={32} color={Colors.keyboardButton} />
+                  </TouchableOpacity> 
+                  <TouchableOpacity 
+                    onPress={toggleEnterPrice} 
+                    style={styles.shiftButton}
+                  >
+                    <Icon name={enterPrice ? upArrow : downArrow} size={32} color={Colors.keyboardButton} />
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    onPress={clrPressed} 
+                  >
+                    <Text style={styles.clrText}>CLR</Text>
+                  </TouchableOpacity>
+                </View>
+                <View >
+                  <Text style={styles.priceCell}>{`${price}€`}</Text>
+                </View>
+              </View>       
+              <View style={styles.keyboardContainer}>         
+                <NumericKeyboardTablet 
+                  onPress={setCharacterInput} 
+                  pressBackspace={setBackspace}
+                /> 
+                <View style={styles.keyboardRight}>
+                  {sectionsShowing?.map(( item, index ) =>
+                    <TouchableOpacity 
+                      key={index} 
+                      disabled={+price === 0}
+                      onPress={sectionBtnPressed(item)} 
+                      style={[styles.keyboardButton, {backgroundColor: findColor(item.color)}]}>
+                      <Text style={styles.number}>{item.name}</Text>
+                    </TouchableOpacity>
+                  )}            
+                  <TouchableOpacity 
+                    disabled={backIndex === 0}
+                    onPress={backPressed} 
+                    style={[styles.paginationButton, (backIndex === 0) && {borderColor: Colors.paginationDisabled}]}
+                  >
+                    <Text style={styles.icon}>
+                      <Icon 
+                        name={arrowBackCircle} 
+                        size={32} 
+                        color={backIndex > 0 ? Colors.symbolBlack : Colors.paginationDisabled} />
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    disabled={forwardIndex === realm_sections.length - 1}
+                    onPress={forwardPressed} 
+                    style={[styles.paginationButton, (forwardIndex === realm_sections.length - 1) && {borderColor: Colors.paginationDisabled}]}
+                  >
+                    <Text style={styles.icon}>
+                      <Icon 
+                        name={arrowForwardCircle} 
+                        size={32} 
+                        color={forwardIndex < realm_sections.length - 1 ? Colors.symbolBlack : Colors.paginationDisabled} 
+                      />
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    onPress={issueReceipt("CASH")} 
+                    style={styles.greenButton}
+                    disabled={!(cashToPay > 0) || feathersStore?.demoMode}
+                  >
+                    <Text style={styles.icon}>
+                      <Icon name={checkIconCircle} size={32} color={Colors.onAccentColor} />
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    onPress={issueReceipt("VISA")} 
+                    style={styles.greenButton}
+                    disabled={!(cashToPay > 0) || feathersStore?.demoMode}
+                  >
+                    <Text style={styles.number}>VISA</Text>
+                  </TouchableOpacity>                
+                </View>
+              </View> 
+            </>
+           :
+            <View >
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                alwaysBounceHorizontal={false}
+                contentContainerStyle={styles.sectionsList}      
+              >
+                {realm_sections?.map(( item, index ) => renderSectionItem(item, index))}
+              </ScrollView> 
+              <NumericKeyboard 
+                onPress={setCharacterInput} 
+                pressBackspace={setBackspace}
+              />
+            </View>
+        }
+       
       </View>
       <CancelItemModal
         visible={cancelModalVisible}
@@ -1109,12 +1319,13 @@ const styles = StyleSheet.create({
   },
   leftContainer: {
     flex: 0.65,
-    backgroundColor: Color(Colors.overlayColor).alpha(0.2).string(),
+   // backgroundColor: Color(Colors.overlayColor).alpha(0.2).string(),
+    backgroundColor: Colors.surface,
     borderRightWidth: 1    
   },
   rightContainer: {
     flex: 0.35,  
-    backgroundColor: Colors.primaryColorLight
+    backgroundColor: Colors.surface
   },
    productsList: {
     // spacing = paddingHorizontal + ActionProductCardHorizontal margin = 12 + 4 = 16
@@ -1123,6 +1334,10 @@ const styles = StyleSheet.create({
   },
    sideButton:{
     marginTop: 4,
+    borderWidth: 1
+  },
+  sideButtonTablet:{
+    marginTop: 8,
     borderWidth: 1
   },
   categoriesContainer: {
@@ -1184,6 +1399,132 @@ const styles = StyleSheet.create({
     textShadowColor: "rgba(0, 0, 0, 0.75)",
     textShadowOffset: { width: -1, height: 1 },
     textShadowRadius: 10
-  },});
+  },
+  keyboardContainer: {
+    width: "100%",
+    flexDirection: "row"
+  },
+  keyboardRight: {
+    flexDirection: "row",
+    width: "40%",
+    flexWrap: "wrap",
+    justifyContent: "space-around",
+    paddingVertical: 8,
+    backgroundColor: Colors.itemBkgr,
+    paddingRight: 4
+  },
+  keyboardButton: {
+    width: "44%",
+    height: 82,
+    justifyContent: "flex-start",
+    alignItems: "flex-start",
+    backgroundColor: Colors.keyboardButton,
+    marginLeft: 8,
+    marginVertical: 8,
+    paddingLeft: 12,
+    paddingTop: 4 
+  },
+  greenButton: {
+    width: "44%",
+    height: 82,
+    justifyContent: "flex-start",
+    alignItems: "flex-start",
+    backgroundColor: Colors.greenButton,
+    marginLeft: 8,
+    marginVertical: 8,
+    paddingLeft: 12,
+    paddingTop: 4 
+  },
+  paginationButton: {
+    width: "44%",
+    height: 82,
+    justifyContent: "flex-start",
+    alignItems: "flex-start",
+    backgroundColor: Colors.itemBkgr,
+    marginLeft: 8,
+    marginVertical: 8,
+    paddingLeft: 12,
+    paddingTop: 4,
+    borderWidth: 1,
+    borderColor: Colors.symbolBlack
+  },
+  sectionButton:{
+    width: "44%",
+    height: 82,
+    justifyContent: "flex-start",
+    alignItems: "flex-start",
+    marginLeft: 8,
+    marginVertical: 8,
+    paddingLeft: 12,
+    paddingTop: 4 
+  },
+  number: {
+    fontWeight: "600",
+    fontSize: 28,
+    color: Colors.onAccentColor  
+  },
+  icon: {
+    marginTop: 4,
+    fontWeight: "600",
+  },
+  infoRow: {
+    flexDirection: "row",
+    width: "100%",
+    height: 82,
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: Colors.itemBkgr,
+    paddingHorizontal: 8 
+  },
+  priceCell: {
+    fontWeight: "800",
+    fontSize: 48,
+    color: Colors.keyboardButton  
+  },
+  leftInfoRowSection: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  invoiceTypeButton: {
+    flexDirection: "row",
+    width: 300,
+    height: 58,
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 2,
+    backgroundColor: Colors.itemBkgr,
+    paddingHorizontal: 2 ,
+    borderWidth: 2,
+    borderRadius: 4,
+    borderColor: Colors.keyboardButton,
+    marginLeft: 4,
+  },
+  invoiceTypeText: {
+    fontWeight: "600",
+    width: "90%",
+    fontSize: 18,
+    color: Colors.keyboardButton
+  },
+  shiftButton: {
+    flexDirection: "row",
+    width: 80,
+    height: 58,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 2,
+    backgroundColor: Colors.itemBkgr,
+    paddingHorizontal: 2 ,
+    borderWidth: 2,
+    borderRadius: 4,
+    borderColor: Colors.keyboardButton,
+    marginLeft: 12,
+  },
+  clrText: {
+    fontWeight: "800",
+    fontSize: 24,
+    color: Colors.keyboardButton, 
+    marginLeft: 12
+  }
+});
 
 export default inject('feathersStore')(observer(HomeScreen));

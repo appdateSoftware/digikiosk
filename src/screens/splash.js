@@ -6,12 +6,15 @@ import Colors from "../theme/colors";
 import ErrorModal from "../components/modals/ErrorModal";
 import { getUniqueId } from 'react-native-device-info';
 import {useRealm, useQuery} from '@realm/react';
+import {useWindowDimensions} from 'react-native';
 
 const DEFAULT_EMAIL = "defaultUser@gmail.com";
 
 const DEFAULT_PSW = ")j~nKj/,N}N6,8&cVVV#G!=F*y";
 
 const SplashScreen = ({navigation, feathersStore}) => { 
+
+  const {width} = useWindowDimensions();
 
   const realm = useRealm();
   const realm_users = useQuery('User');
@@ -66,7 +69,6 @@ const SplashScreen = ({navigation, feathersStore}) => {
       })
       :
       demoMode = realm.objects('Demo')[0]?.val; 
-      console.log("demoMode: ", demoMode)
       feathersStore.setDemoMode(demoMode); 
     } 
     
@@ -90,9 +92,15 @@ const SplashScreen = ({navigation, feathersStore}) => {
     } 
   }, [realm]); 
 
-  useEffect(() => {   
+  useEffect(() => {  
     load(); 
   }, [realm])
+
+  useEffect(() => {  
+    if(width < 600)feathersStore.setIsTablet(false);
+    else feathersStore.setIsTablet(true);
+    console.log(feathersStore.isTablet)
+  }, [width])
 
   useEffect(() => {
     if(feathersStore.isAuthenticated)
@@ -109,7 +117,7 @@ const SplashScreen = ({navigation, feathersStore}) => {
         feathersStore.setIsAuthenticated(true);      
       }else{
         await feathersStore.login(_uniqueId + "@gmail.com", DEFAULT_PSW);
-        feathersStore.setIsAuthenticated(true);    
+        feathersStore.setIsAuthenticated(true);               
       }      
      
     }catch (error){

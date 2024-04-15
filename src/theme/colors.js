@@ -139,7 +139,8 @@ const themes = {
   },
   darkTheme: {
     // primary color
-    primaryColor: "#4f86f7", //blue
+  //  primaryColor: "#4f86f7", //blue
+    primaryColor: "rgb(0, 160, 227)",
     primaryColorDark: "#115bf4",
     primaryColorLight: "#9dbcfb",
     onPrimaryColor: "#fff",
@@ -189,7 +190,16 @@ const themes = {
     completed: "#fe5f55", //--> red
     delivered: "rgb(50, 186, 50)", //--> green
     waiterDelivered: "#01baef", //--> blue,
-    discount: "#ABA8B2" //-->French grey
+    discount: "#ABA8B2", //-->French grey,
+
+    keyboardButton: "rgb(67,66,66)",
+    backspaceButton: "rgb(137, 137, 137)",
+    itemBkgr: "rgb(235, 236, 236)",
+    symbolBlack: "rgb(43, 42, 41)",
+    greenButton: "rgb(0, 145, 75)",
+    paginationDisabled: "rgb(157, 158, 158)",
+    cashDisabled: "rgb(105, 199, 238)"
+
   }
 };
 
