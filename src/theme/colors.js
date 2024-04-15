@@ -181,7 +181,7 @@ const themes = {
     selectionNew: "#Ac7919",
     surface: "#fff", 
     onSurface: "#757575",
-    error: "#cd040b",
+    error: "rgb(213, 33, 39)",
     onError: "#fff",
     black: "#000",
     white: "#fff",

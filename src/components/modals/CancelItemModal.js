@@ -77,16 +77,17 @@ const CancelItemModal = ({
     <View style={styles.centeredView}>
       <View style={styles.modalView}>
         <TouchableHighlight
-          style={{ ...styles.openButton, backgroundColor: Colors.tertiaryColor}}
+          style={[{ ...styles.openButton, backgroundColor: Colors.tertiaryColor}, feathersStore.isTablet && {paddingHorizontal: 32}]}
           onPress={deleteButton}
         >
-        <Text style={styles.textStyle}>{common.cancelItem}</Text>
+          <Text style={[styles.textStyle, feathersStore.isTablet && {fontSize: 24}]}>
+            {common.cancelItem}</Text>
         </TouchableHighlight>
         <TouchableHighlight
-          style={{ ...styles.openButton }}
+          style={[{ ...styles.openButton } ,feathersStore.isTablet && {paddingHorizontal: 32}]}
           onPress={cancelButton}
         >
-          <Text style={styles.textStyle}>{common.cancelSmall}</Text>
+          <Text style={[styles.textStyle, feathersStore.isTablet && {fontSize: 24}]}>{common.cancelSmall}</Text>
         </TouchableHighlight>
       </View>
     </View>

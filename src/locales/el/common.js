@@ -87,6 +87,10 @@ export const commonEL = {
     copy: "Αντιγραφή",
     printerConnectionError: "Ο εκτυπωτής είναι εκτός σύνδεσης!",
     waitPrint: "Γίνεται εκτύπωση...",
+    remainderCap: "ΥΠΟΛΟΙΠΟ",
+    cashC: "ΜΕΤΡΗΤΑ",
+    receivedC: "ΕΛΑΒΑ",
+    cashChangeC: "ΡΕΣΤΑ",
 
 
 

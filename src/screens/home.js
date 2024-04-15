@@ -15,11 +15,12 @@ import NumericKeyboardTablet from '../components/NumericKeyboardTablet';
 import InvoiceDataModal from "../components/modals/InvoiceDataModal";
 import TouchableItem from "../components/TouchableItem";
 import ProductOrderedListItem from "../components/ProductOrderedListItem";
+import ProductOrderedListItemTablet from "../components/ProductOrderedListItemTablet";
 import {getStatusBarHeight} from 'react-native-status-bar-height';
 import {shadowDefault} from '../utils/shadow';
 import axios from 'axios';
 import Colors from "../theme/colors";
-import Color from "color";
+import ActivityIndicatorModal from "../components/modals/ActivityIndicatorModal";
 import {useRealm, useQuery } from '@realm/react';
 import Button from "../components/buttons/Button";
 import ButtonTablet from "../components/buttons/ButtonTablet";
@@ -401,6 +402,19 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   const renderProductListItem = useCallback(
     (item, index) => (      
       <ProductOrderedListItem 
+        key={index}         
+        onPress={togglePayment(item, index)}    
+        onPressDelete={deleteItem(index)}
+        title={feathersStore._translate(item.name , item.nameEnglish)}     
+        price={parse_fix(item.product_totalPrice)}     
+        paid={item.paid}  
+        toBePaid={item.toBePaid} 
+      />
+  ), []);
+
+  const renderProductListItemTablet = useCallback(
+    (item, index) => (      
+      <ProductOrderedListItemTablet 
         key={index}         
         onPress={togglePayment(item, index)}    
         onPressDelete={deleteItem(index)}
@@ -983,6 +997,10 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   const closeErrorModal = () => {    
     setErrorModal(false); 
   };
+
+  const closeIssuingReceiptModal = () => {    
+    setIssuingReceipt(false); 
+  };
    
   const headerComponent = () => (
     <View style={styles.header}>     
@@ -1010,7 +1028,11 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
             <ScrollView            
               contentContainerStyle={styles.productsList}
             >
-              {orderItems?.map(( item, index ) => renderProductListItem(item, index))}
+              {feathersStore.isTablet ?  
+                orderItems?.map(( item, index ) => renderProductListItemTablet(item, index)) 
+                :
+                orderItems?.map(( item, index ) => renderProductListItem(item, index))
+              }
             </ScrollView>
           </View>
           <View style={styles.rightContainer}>
@@ -1020,21 +1042,21 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
             { feathersStore.isTablet ?    
               <>
               <FakeButtonTablet
-                title={`${common.total}: ${total.toFixed(2) || 0}€`}
+                title={`${common.totalCap}: ${total.toFixed(2) || 0}€`}
                 titleColor={Colors.onPrimaryColor}
                 color={Colors.primaryColor}
                 borderColor={Colors.onSurface}
                 buttonStyle={styles.sideButtonTablet} 
               />
               <FakeButtonTablet
-                title={`${common.remainder}: ${unpaid?.toFixed(2) || 0}€`}
+                title={`${common.remainderCap}: ${unpaid?.toFixed(2) || 0}€`}
                 titleColor={Colors.onPrimaryColor}
                 color={Colors.primaryColor}
                 borderColor={Colors.onSurface}
                 buttonStyle={styles.sideButtonTablet} 
               />          
               <FakeButtonTablet
-                title={`${common.cashSmall}`}
+                title={`${common.cashC}`}
                 titleColor={Colors.onPrimaryColor}
                 color={Colors.primaryColor}
                 borderColor={Colors.onSurface}
@@ -1044,7 +1066,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
                 editable={false}
               />         
               <FakeButtonTablet
-                title={`${common.received}`}
+                title={`${common.receivedC}`}
                 titleColor={Colors.onPrimaryColor}
                 color={enterPrice ? Colors.cashDisabled : Colors.primaryColor}
                 borderColor={Colors.onSurface}
@@ -1293,11 +1315,18 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
         visible={invoiceDataModal}
         issueReceipt={_issueReceipt}
       />
-       <ErrorModal
-          cancelButton={closeErrorModal}
-          errorText={common.printerConnectionError}
-          visible={errorModal}
-        />   
+      <ErrorModal
+        cancelButton={closeErrorModal}
+        errorText={common.printerConnectionError}
+        visible={errorModal}
+      />  
+      <ActivityIndicatorModal
+        message={common.wait}
+        onRequestClose={closeIssuingReceiptModal}
+        title={common.waitPrint}
+        visible={issuingReceipt}
+        isTablet={feathersStore.isTablet}
+      />   
     </>
   );
           

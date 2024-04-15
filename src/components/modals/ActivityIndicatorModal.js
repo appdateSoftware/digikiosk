@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
 
 // ActivityIndicatorModal
 const ActivityIndicatorModal = ({
-  message, onRequestClose, statusBarColor = "rgba(0, 0, 0, 0.2)", title, visible
+  message, onRequestClose, statusBarColor = "rgba(0, 0, 0, 0.2)", title, visible, isTablet
 }) => (
   <Modal 
     animationType="none" 
@@ -61,9 +61,9 @@ const ActivityIndicatorModal = ({
     <StatusBar backgroundColor={statusBarColor} />
     <View style={styles.modalWrapper}>
       <View style={styles.modalContainer}>
-        <Text style={styles.title}>{title}</Text>
+        <Text style={[styles.title, isTablet && {fontSize: 24}]}>{title}</Text>
 
-        {message !== '' && message !== undefined && <Text style={styles.message}>{message}</Text>}
+        {message !== '' && message !== undefined && <Text style={[styles.message, isTablet && {fontSize: 24}]}>{message}</Text>}
 
         <ActivityIndicator color={Colors.primaryColor} size="large" />
       </View>

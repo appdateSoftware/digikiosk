@@ -86,7 +86,8 @@ const ErrorModal = ({
   <Modal
     animationType="slide"
     transparent={true}
-    visible={visible}       
+    visible={visible}  
+    isTablet     
   >
     <View style={styles.centeredView}>
       <View style={styles.modalView}>       
