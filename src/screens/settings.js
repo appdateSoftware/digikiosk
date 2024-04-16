@@ -336,6 +336,7 @@ const SettingsA = ({navigation, feathersStore}) => {
             onRequestClose={closeModal}
             title={common.logoutMessage}
             visible={loading}
+            isTablet={feathersStore.isTablet}
         />
         <LanguageModal
           title={common.languageSelection}

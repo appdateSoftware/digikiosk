@@ -1319,6 +1319,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
         cancelButton={closeErrorModal}
         errorText={common.printerConnectionError}
         visible={errorModal}
+        isTablet={feathersStore.isTablet}
       />  
       <ActivityIndicatorModal
         message={common.wait}

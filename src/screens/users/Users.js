@@ -217,6 +217,7 @@ const Users =({navigation, feathersStore}) => {
           onRequestClose={closeIndicatorModal}
           title={common.waitStorage}
           visible={indicatorModal}
+          isTablet={feathersStore.isTablet}
         />            
         <DeleteModal
           cancelButton={closeDeleteModal}

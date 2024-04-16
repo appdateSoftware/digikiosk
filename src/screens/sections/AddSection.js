@@ -317,11 +317,13 @@ const AddSection = ({route, navigation, feathersStore }) => {
           onRequestClose={closeModal}
           title={common.waitStorage}
           visible={modalVisible}
+          isTablet={feathersStore.isTablet}
         />
         <ErrorModal
           cancelButton={closeErrorModal}
           errorText={common.otherName}
           visible={errorModal}
+          isTablet={feathersStore.isTablet}
         />        
       </SafeAreaView>
     );  

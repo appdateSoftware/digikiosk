@@ -24,17 +24,17 @@ const TabBar = ({state, navigation, feathersStore}) => {
     },
     {
       icon: 'settings-outline',
-      name: common.history,
+      name: common.settingsC,
       router: 'Settings',
     },   
     {
       icon: 'receipt-outline',
-      name: common.accountingC,
+      name: common.history,
       router: 'History',
     }, 
     {
       icon: 'stats-chart-outline',
-      name: common.settingsC,
+      name: common.accountingC,
       router: 'Accounting',
     },
   ];

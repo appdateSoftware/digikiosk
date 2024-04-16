@@ -737,12 +737,14 @@ const InvoiceDataModal = ({ feathersStore, visible, issueReceipt, cancelButton }
         onRequestClose={() => setIsLoading(false)}
         title={common.waitCompany}
         visible={isLoading}
+        isTablet={feathersStore.isTablet}
       />
       <ErrorModal
         cancelButton={() => setErrorModal(false)}
         errorText={errorText}
         cancelText={common.cancel}
         visible={errorModal}
+        isTablet={feathersStore.isTablet}
       />  
     </KeyboardAvoidingView>   
     </Modal>

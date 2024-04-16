@@ -99,7 +99,6 @@ const SplashScreen = ({navigation, feathersStore}) => {
   useEffect(() => {  
     if(width < 600)feathersStore.setIsTablet(false);
     else feathersStore.setIsTablet(true);
-    console.log(feathersStore.isTablet)
   }, [width])
 
   useEffect(() => {
@@ -150,6 +149,7 @@ return(
       visible={errorModal}
       uniqueId={uniqueId}
       uniqueIdText={'Αντιγραφή'}
+      isTablet={feathersStore.isTablet}
     />
   </>
 );

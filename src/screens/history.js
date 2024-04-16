@@ -49,52 +49,50 @@ import _useTranslate from '../hooks/_useTranslate';
 const printIcon = "print-outline";
 const trashIcon = "trash-outline";
 
-
-// DeliverySectionA Component
-const Receipt = ({  
-  debitModal, 
-  receiptKind,
-  numericId,
-  receiptDate,
-  receiptTime,
-  totalCaption,
-  receiptTotal,
-  paymentMethod,
-  companyName,
-  printThermal,
-}) => (
-  
-    <View style={[styles.receiptCard]}>
-      <View style={styles.leftAddresContainer}>       
-        <View style={styles.sectionInfo}>         
-          <Subtitle1 style={styles.sectionText}>
-            {`${receiptKind} ${numericId}  ${totalCaption}: ${receiptTotal}€`}
-          </Subtitle1>
-          <Subtitle2>{`${receiptDate} ${receiptTime} ${paymentMethod}`}</Subtitle2>
-          {companyName?.length > 0 && <Subtitle2>{`${companyName}`}</Subtitle2>}
-        </View>
-      </View>
-
-      <View style={styles.buttonsContainer}> 
-        <TouchableItem style={styles.end} borderless  onPress={printThermal}>
-          <View style={styles.iconContainer}>
-            <Icon name={printIcon} size={21} color={Colors.secondaryText}/>                       
-          </View>
-        </TouchableItem>          
-     
-        <TouchableItem style={styles.end} borderless  onPress={debitModal}>
-          <View style={styles.iconContainer}>
-            <Icon name={trashIcon} size={21} color={Colors.secondaryColor}/>                       
-          </View>
-        </TouchableItem> 
-         
-      </View>
-    </View>
-
-);
-
 // DeliverySectionA
 const HistoryScreen =({feathersStore}) => {
+
+  const Receipt = ({  
+    debitModal, 
+    receiptKind,
+    numericId,
+    receiptDate,
+    receiptTime,
+    totalCaption,
+    receiptTotal,
+    paymentMethod,
+    companyName,
+    printThermal,
+  }) => (
+    
+      <View style={[styles.receiptCard]}>
+        <View style={styles.leftAddresContainer}>       
+          <View style={styles.sectionInfo}>         
+            <Subtitle1 style={styles.sectionText}>
+              {`${receiptKind} ${numericId}  ${totalCaption}: ${receiptTotal}€`}
+            </Subtitle1>
+            <Subtitle2>{`${receiptDate} ${receiptTime} ${paymentMethod}`}</Subtitle2>
+            {companyName?.length > 0 && <Subtitle2>{`${companyName}`}</Subtitle2>}
+          </View>
+        </View>
+  
+        <View style={styles.buttonsContainer}> 
+          <TouchableItem style={styles.end} borderless  onPress={printThermal}>
+            <View style={styles.iconContainer}>
+              <Icon name={printIcon} size={feathersStore.isTablet ? 28 : 21} color={Colors.secondaryText}/>                       
+            </View>
+          </TouchableItem>          
+       
+          <TouchableItem style={styles.end} borderless  onPress={debitModal}>
+            <View style={styles.iconContainer}>
+              <Icon name={trashIcon} size={feathersStore.isTablet ? 28 : 21} color={Colors.secondaryColor}/>                       
+            </View>
+          </TouchableItem> 
+           
+        </View>
+      </View>
+  
+  );
 
   const realm = useRealm();
   const realm_receipts = useQuery('Receipt');
@@ -131,7 +129,9 @@ const HistoryScreen =({feathersStore}) => {
 
   const printThermal = req => async() =>{
     setIndicatorModal(true);   
-    await printLocally(req)
+    await printLocally(req);
+    setIndicatorModal(false);   
+
   }
 
   const createPDF = () => item => async() => {
@@ -742,13 +742,15 @@ const constructMyData = async(persistedReceipt) => {
           <View style={styles.headerSection}>
             <LinkButton
               onPress={() => setShowFromModal(true)} 
-              title={toGreekLocale(from)}         
+              title={toGreekLocale(from)}   
+              isTablet={feathersStore.isTablet}        
             />
           </View>
           <View style={styles.headerSection}>
           <LinkButton
               onPress={() => setShowToModal(true)} 
-              title={toGreekLocale(to)}         
+              title={toGreekLocale(to)}  
+              isTablet={feathersStore.isTablet}        
             />
           </View>
         </View> 
@@ -777,12 +779,14 @@ const constructMyData = async(persistedReceipt) => {
           onRequestClose={closeIndicatorModal}
           title={common.waitPrint}
           visible={indicatorModal}
+          isTablet={feathersStore.isTablet}
         />  
         <ActivityIndicatorModal
           message={common.wait}
           onRequestClose={closeReceiptIndicatorModal}
           title={common.waitPrint}
           visible={issuingReceipt}
+          isTablet={feathersStore.isTablet}
         />           
         <DeleteModal
           titleText={common.debitQuestion}
@@ -816,6 +820,7 @@ const constructMyData = async(persistedReceipt) => {
           cancelButton={closeErrorModal}
           errorText={common.printerConnectionError}
           visible={errorModal}
+          isTablet={feathersStore.isTablet}
         />   
       </SafeAreaView>
     );

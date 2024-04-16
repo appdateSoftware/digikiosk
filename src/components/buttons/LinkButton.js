@@ -27,7 +27,8 @@ const LinkButton = ({
   iconColor, 
   iconNameRight, 
   iconColorRight,
-  disabled
+  disabled,
+  isTablet
 }) => ( 
   <Pressable disabled={disabled} android_ripple={ripple} onPress={onPress}> 
     <View style={styles.container}>
@@ -36,7 +37,7 @@ const LinkButton = ({
           <Feather name={iconName} size={16} color={iconColor} />
         </View>
       }   
-      <ButtonText  style={[styles.title, titleStyle]}>
+      <ButtonText  style={[styles.title, titleStyle, isTablet && {fontSize: 16}]}>
         {title || 'Link Button'}
       </ButtonText>
       { iconNameRight &&

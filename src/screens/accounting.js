@@ -11,6 +11,7 @@ import {
   StatusBar,
   StyleSheet,
   View,
+  Text,
   ScrollView
 } from "react-native";
 import Divider from "../components/Divider";
@@ -28,10 +29,9 @@ import Icon from "../components/Icon";
 import { DateTime } from "luxon";
 import LinkButton from "../components/buttons/LinkButton";
 import CalendarModal from "../components/modals/CalendarModal";
-import Text from '../components/Text';
 import TcpSocket from 'react-native-tcp-socket';
 import {EscPos} from '@tillpos/xml-escpos-helper';
-
+import ErrorModal from "../components/modals/ErrorModal";
 
 import Colors from "../theme/colors";
 
@@ -45,29 +45,6 @@ import _useTranslate from '../hooks/_useTranslate';
 const printIcon = "print-outline";
 
 // DeliverySectionA Component
-const Line = ({  
-  cell1,
-  cell2,
-  cell3,
-  cell4
-}) => (
-  
-    <View style={[styles.line]}>           
-      <Text style={styles.section}>
-        {cell1 ? `${cell1}` : ""}
-      </Text>
-      <Text style={[styles.dataCell]}>
-        {cell2 ? `${cell2}` : "0.00"}
-      </Text>  
-      <Text style={[styles.dataCell]}>
-        {cell3 ? `${cell3}` : "0.00"}
-      </Text>  
-      <Text style={[styles.dataCell]}>
-        {cell4 ? `${cell4}` : "0.00"}
-      </Text>     
-    </View>
-
-);
 
 const AccountingScreen =({feathersStore}) => {
 
@@ -85,6 +62,31 @@ const AccountingScreen =({feathersStore}) => {
   const [showToModal, setShowToModal] = useState(false) ;
   const [filteredReceipts, setFilteredReceipts] = useState([]) ;
   const [vats, setVats] = useState([]) ;
+  const [errorModal, setErrorModal] = useState(false) ;  
+  
+  const Line = ({  
+    cell1,
+    cell2,
+    cell3,
+    cell4
+  }) => (
+    
+      <View style={[styles.line]}>           
+        <Text style={styles.section}>
+          {cell1 ? `${cell1}` : ""}
+        </Text>
+        <Text style={[styles.dataCell]}>
+          {cell2 ? `${cell2}` : "0.00"}
+        </Text>  
+        <Text style={[styles.dataCell]}>
+          {cell3 ? `${cell3}` : "0.00"}
+        </Text>  
+        <Text style={[styles.dataCell]}>
+          {cell4 ? `${cell4}` : "0.00"}
+        </Text>     
+      </View>
+  
+  );
 
   useEffect(() => {
     setFrom(DateTime.now().startOf("month").toISODate());
@@ -330,6 +332,10 @@ const AccountingScreen =({feathersStore}) => {
     setIndicatorModal(false); 
   }; 
 
+  const closeErrorModal = () => {    
+    setErrorModal(false); 
+  };
+
   const toGreekLocale = date => { //--> Calendar operates internally with dates of the format: 2024-03-12
     if(date){
       dateArray = date.split('-');
@@ -342,7 +348,7 @@ const AccountingScreen =({feathersStore}) => {
   }
 
   const printThermal = async() =>{
-
+    setIndicatorModal(true);
     let vatSections = "";
     for (let item of vats?.filter(itm => findRetailNet(itm.id) > 0)){
       vatSections = vatSections + (              
@@ -478,17 +484,19 @@ const AccountingScreen =({feathersStore}) => {
 
       device.on("error", async(error) => {
         console.log(`Network error occured. `, error);
-        if(ex.code === "ECONNREFUSED"){ //After restart printer gets stuck and needs retries   
+        if(error.toString().includes("ECONNREFUSED")){ //After restart printer gets stuck and needs retries   
           console.log('Restart'); 
           device.destroy();
           device = null;
           await this.printLocally(req);   //TODO: Retry up to 10 times   
-        }else if(ex.code === "ETIMEDOUT"){ //if printer is offline
+        }else if(error.toString().includes("ETIMEDOUT")){ //if printer is offline
           realm.write(()=>{     
             realm.create('Unprinted', req); 
           }) 
         }
-        reject(true);
+    //    reject(true);
+        setIndicatorModal(false);
+        setErrorModal(true);
         return;
       });   
     });    
@@ -497,6 +505,76 @@ const AccountingScreen =({feathersStore}) => {
   const parse_fix = price => {
     return price ? parseFloat(price).toFixed(2) : parseFloat(0).toFixed(2);
   } 
+
+  const styles = StyleSheet.create({
+    screenContainer: {
+      flex: 1,
+      backgroundColor: Colors.background,
+    },
+    container: {
+      padding: 12,
+      paddingBottom: 0
+    },
+    header: {
+      width: "100%",
+      flexDirection: "row",
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: Colors.background,
+      elevation: 1,
+      margin: 2
+    },
+    headerSection: {
+      flexDirection: "row",
+      width: "40%",
+      justifyContent: "center",
+      alignItems: "center",
+      fontSize: feathersStore.isTablet ? 16 : 12
+    },
+    headerText: {
+      fontSize: feathersStore.isTablet ? 16 : 12
+    },
+    headerButtonSection: {
+      flexDirection: "row",
+      width: "20%",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    subHeader:{
+      width: "100%",
+      flexDirection: "row",
+      justifyContent: "center",
+      alignItems: "flex-start",
+      padding: 2,
+      fontSize: feathersStore.isTablet ? 16 : 12
+
+    },
+    line: {
+      width: "100%",
+      flexDirection: "row",
+      justifyContent: "flex-start",
+      alignItems: "flex-start",
+      padding: 2,   
+    },
+    section: { 
+      width: "25%",
+      flexDirection: "row",
+    },
+    dataCell:{
+      width: "25%",
+      flexDirection: "row",
+      justifyContent: "flex-end",
+      fontSize: feathersStore.isTablet ? 16 : 12
+    }, 
+    end: {
+      flex: 1,
+      alignSelf: "flex-end"  
+    },
+    bottomSection: {
+      marginTop: 12,
+      marginBottom: 16
+    }
+  });
 
 
   return ( 
@@ -508,23 +586,25 @@ const AccountingScreen =({feathersStore}) => {
         />   
         <View style={styles.header}>        
           <View style={styles.headerSection}>
-            <Text>{common.fromTitle}</Text>
+            <Text style={styles.headerText}>{common.fromTitle}</Text>
             <LinkButton
               onPress={() => setShowFromModal(true)} 
-              title={toGreekLocale(from)}         
+              title={toGreekLocale(from)}  
+              isTablet={feathersStore.isTablet}   
             />
           </View>
           <View style={styles.headerSection}>
-            <Text>{common.toTitle}</Text>
+            <Text style={styles.headerText}>{common.toTitle}</Text>
             <LinkButton
               onPress={() => setShowToModal(true)} 
-              title={toGreekLocale(to)}         
+              title={toGreekLocale(to)}  
+              isTablet={feathersStore.isTablet}       
             />
           </View>
           <View style={styles.headerButtonSection}>
             <TouchableItem style={styles.end} borderless  onPress={printThermal}>
               <View style={styles.iconContainer}>
-                <Icon name={printIcon} size={21} color={Colors.secondaryText}/>                       
+                <Icon name={printIcon} size={feathersStore.isTablet ? 28 : 21} color={Colors.secondaryText}/>                       
               </View>
             </TouchableItem> 
           </View>
@@ -534,7 +614,7 @@ const AccountingScreen =({feathersStore}) => {
           {vats?.filter(itm => findRetailNet(itm.id) > 0).map((item, index) => {
             return(              
               <Fragment key={index}>
-              <View style={styles.subHeader}><Text>{common.sales} {item.label}%</Text></View>
+              <View style={styles.subHeader}><Text style={styles.headerText}>{common.sales} {item.label}%</Text></View>
               <Line cell2={common.retail} cell3={common.wholesales} cell4={common.totalCap}/>
               <Line 
                 cell1={common.net} 
@@ -559,7 +639,7 @@ const AccountingScreen =({feathersStore}) => {
           })                     
           }
           <View style={styles.bottomSection}>
-            <View style={styles.subHeader}><Text>{common.totalSales}</Text></View>
+            <View style={styles.subHeader}><Text style={styles.headerText}>{common.totalSales}</Text></View>
             <Line cell2={common.retail} cell3={common.wholesales} cell4={common.totalCap}/>
             <Line 
               cell1={common.quantityC} 
@@ -611,8 +691,9 @@ const AccountingScreen =({feathersStore}) => {
         <ActivityIndicatorModal
           message={common.wait}
           onRequestClose={closeIndicatorModal}
-          title={common.waitStorage}
+          title={common.waitPrint}
           visible={indicatorModal}
+          isTablet={feathersStore.isTablet}
         />       
         <CalendarModal
           title={common.fromDate}
@@ -634,72 +715,15 @@ const AccountingScreen =({feathersStore}) => {
             [to]: {selected: true, disableTouchEvent: true}
           }}
         /> 
+        <ErrorModal
+          cancelButton={closeErrorModal}
+          errorText={common.printerConnectionError}
+          visible={errorModal}
+          isTablet={feathersStore.isTablet}
+        />  
       </SafeAreaView>
     );
+  
   }
-
-
-const styles = StyleSheet.create({
-  screenContainer: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  container: {
-    padding: 12,
-    paddingBottom: 0
-  },
-  header: {
-    width: "100%",
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: Colors.background,
-    elevation: 1,
-    margin: 2
-  },
-  headerSection: {
-    flexDirection: "row",
-    width: "40%",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  headerButtonSection: {
-    flexDirection: "row",
-    width: "20%",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  subHeader:{
-    width: "100%",
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "flex-start",
-    padding: 2,
-  },
-  line: {
-    width: "100%",
-    flexDirection: "row",
-    justifyContent: "flex-start",
-    alignItems: "flex-start",
-    padding: 2,   
-  },
-  section: { 
-    width: "25%",
-    flexDirection: "row",
-  },
-  dataCell:{
-    width: "25%",
-    flexDirection: "row",
-    justifyContent: "flex-end",
-  }, 
-  end: {
-    flex: 1,
-    alignSelf: "flex-end"  
-  },
-  bottomSection: {
-    marginTop: 12,
-    marginBottom: 16
-  }
-});
 
 export default inject('feathersStore')(observer(AccountingScreen));
