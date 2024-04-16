@@ -198,7 +198,8 @@ const themes = {
     symbolBlack: "rgb(43, 42, 41)",
     greenButton: "rgb(0, 145, 75)",
     paginationDisabled: "rgb(157, 158, 158)",
-    cashDisabled: "rgb(105, 199, 238)"
+    cashDisabled: "rgb(105, 199, 238)",
+    tabIcon: "rgb(52, 81, 144)"
 
   }
 };

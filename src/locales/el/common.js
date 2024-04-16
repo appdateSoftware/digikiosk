@@ -91,6 +91,10 @@ export const commonEL = {
     cashC: "ΜΕΤΡΗΤΑ",
     receivedC: "ΕΛΑΒΑ",
     cashChangeC: "ΡΕΣΤΑ",
+    cashMachine: "ΤΑΜΕΙΑΚΗ",
+    history: "ΙΣΤΟΡΙΚΟ",
+    accountingC: "ΛΟΓΙΣΤΙΚΑ",
+    settingsC: "ΡΥΘΜΙΣΕΙΣ",
 
 
 

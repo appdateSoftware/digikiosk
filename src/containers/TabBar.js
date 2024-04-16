@@ -8,10 +8,10 @@ import Icon from '../components/Icon';
 import {shadowTabBar} from '../utils/shadow';
 import { inject, observer } from "mobx-react";
 import useTranslate from '../hooks/useTranslate';
+import Colors from "../theme/colors";
 
 const TabBar = ({state, navigation, feathersStore}) => {
   let common = useTranslate(feathersStore.language);
-  const {colors} = useTheme();
   const visit = state.index;
 
   const insets = useSafeAreaInsets();
@@ -19,22 +19,22 @@ const TabBar = ({state, navigation, feathersStore}) => {
   const data = [
     {
       icon: 'keypad-outline',
-      name: common.text_home,
+      name: common.cashMachine,
       router: 'Home',
     },
     {
       icon: 'settings-outline',
-      name: common.text_deliveries,
+      name: common.history,
       router: 'Settings',
     },   
     {
       icon: 'receipt-outline',
-      name: common.text_account,
+      name: common.accountingC,
       router: 'History',
     }, 
     {
       icon: 'stats-chart-outline',
-      name: common.text_notification,
+      name: common.settingsC,
       router: 'Accounting',
     },
   ];
@@ -52,7 +52,7 @@ const TabBar = ({state, navigation, feathersStore}) => {
             <Icon
               name={item.icon}
               size={24}
-              color={visit === index ? colors.primary : colors.thirdText}
+              color={visit === index ? Colors.tabIcon : Colors.symbolBlack}
             />
           
           </View>
@@ -60,7 +60,7 @@ const TabBar = ({state, navigation, feathersStore}) => {
             third={visit !== index}
             medium
             h6
-            h6Style={visit === index && {color: colors.primary}}>
+            h6Style={visit === index ? {color: Colors.tabIcon} : {color: Colors.symbolBlack} }>
             {item.name}
           </Text>
         </TouchableOpacity>

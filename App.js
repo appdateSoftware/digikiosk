@@ -44,7 +44,9 @@ const MainTab = () => {
       <Tab.Screen
         name="Home"
         component={HomeScreen}
-        options={{headerShown: false}}
+        options={{
+          headerShown: false,
+        }}
       />
       <Tab.Screen
         name="Settings"

@@ -60,6 +60,11 @@ export const commonEN = {
     printerConnectionError: "The printer is off-line!",
     waitPrint: "Printing...",
 
+    cashMachine: "CASHIER",
+    history: "HISTORY",
+    accountingC: "ACCOUNTING",
+    settingsC: "SETTINGS",
+
 
 
 
