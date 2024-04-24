@@ -42,6 +42,8 @@ import DeleteModal from "../components/modals/DeleteModal";
 import ChangeUserModal from "../components/modals/ChangeUserModal";
 import { AppSchema } from "../services/receipt-service";
 import {useRealm} from '@realm/react';
+import InfoModal from "../components/modals/InfoModal";
+import InputModal from "../components/modals/InputModal";
 
 // SettingsA Config
 const DIVIDER_MARGIN_LEFT = 60;
@@ -100,6 +102,8 @@ const SettingsA = ({navigation, feathersStore}) => {
   const [restoreDBIndicator, setRestoreDBIndicator] = useState(false);
   const [changeUserModal, setChangeUserModal] = useState(false);
   const [demoMode, setDemoMode] = useState(true);
+  const [myPosError, setMyPosError] = useState(false);
+  const [myPosErrorMessage, setMyPosErrorMessage] = useState("");
 
   useEffect(() => {
     setDemoMode(feathersStore.demoMode)
@@ -190,6 +194,34 @@ const SettingsA = ({navigation, feathersStore}) => {
     feathersStore.setDemoMode(value);
     feathersStore.logout();
     navigation.navigate("SplashScreen");
+  }
+
+  const myPosRefund = async() => {
+    try{  
+      if(refund > 0){
+        setRefundModal(false);
+        const transactionResult = await MyPosModule.makeMyPosRefund(+refund);
+        setRefund("0");
+        if (transactionResult.slice(-1) === "0" ) {      
+          console.log("SUCCESS: ", transactionResult);
+        }else{
+          console.log("ERROR: ", transactionResult);      
+          setMyPosError(true);
+          setMyPosErrorMessage(transactionResult);
+        }
+      }else{
+        return;
+      }
+    }catch(error){
+      setRefund("0");
+      setMyPosError(true);
+      setMyPosErrorMessage(error.toString());
+    }
+  }
+
+  const closeErrorModal = () => {
+    setMyPosError(false);
+    setMyPosErrorMessage("");
   }
 
   return (
@@ -285,6 +317,16 @@ const SettingsA = ({navigation, feathersStore}) => {
           />
           <Divider type="inset" marginLeft={DIVIDER_MARGIN_LEFT} /> 
 
+          { feathersStore.settings?.myPos &&   
+            <>
+              <Setting
+                onPress={openRefundModal}
+                icon={"md-card"}
+                title={common.myPosRefund}
+              />
+              <Divider type="inset" marginLeft={DIVIDER_MARGIN_LEFT} />
+            </>
+          }
            <View style={[styles.row, styles.setting]}>
             <View style={styles.leftSide}>
               <View style={styles.iconContainer}>
@@ -359,6 +401,28 @@ const SettingsA = ({navigation, feathersStore}) => {
           saveText={common.chamge}
           visible = {changeUserModal}          
           passwordErrorMatch={common.passwordErrorMatch}
+        />
+        <InfoModal
+          message={myPosErrorMessage}
+          iconName={"alert"}
+          iconColor={Colors.primaryColorLight}
+          title={common.failedTransaction}
+          buttonTitle={common.exit}
+          onButtonPress= {closeErrorModal}
+          visible = {myPosError}          
+        />
+        <InputModal
+          input={refund}   
+          inputMethod={onChangeRefund}   
+          message={common.refundMessage}
+          title={common.myPosRefund}
+          inputPlaceholder={common.refundPlaceholder}
+          inputKeyboardType={"numeric"}
+          buttonTitle={common.refundButtonTitle}
+          onButtonPress={myPosRefund}
+          onClosePress={closeRefundModal}
+          closeButtonText={common.cancel}
+          visible={refundModal}
         />
       </SafeAreaView>
       

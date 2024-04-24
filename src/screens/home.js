@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   BackHandler,
   Alert,
+  NativeModules,
   Linking,
   TouchableOpacity
 } from 'react-native';
@@ -36,7 +37,7 @@ import {EscPos} from '@tillpos/xml-escpos-helper';
 import {pickLanguageWord} from '../utils/pickLanguageWord.js';
 import { AppSchema } from "../services/receipt-service";
 import ErrorModal from "../components/modals/ErrorModal";
-
+import InfoModal from "../components/modals/InfoModal";
 
 import { inject, observer } from "mobx-react";
 
@@ -49,6 +50,10 @@ const arrowForwardCircle = "arrow-forward-circle-outline";
 const chevronDownIcon = "chevron-down";
 const downArrow = "caret-down";
 const upArrow = "caret-up";
+
+const DEFAULT_EMAIL = "defaultUser@gmail.com";
+
+const {MyPosModule} = NativeModules;
 
 const HomeScreen = ({navigation, route, feathersStore}) => { 
 
@@ -78,6 +83,9 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   const [sectionsShowing, setSectionsShowing] = useState([]);
   const [backIndex, setBackIndex] = useState(0);
   const [forwardIndex, setForwardIndex] = useState(0);
+  const [myPosError, setMyPosError] = useState(false);
+  const [myPosErrorMessage, setMyPosErrorMessage] = useState("");
+  const [tip, setTip] = useState("0");
 
   useEffect( () => { //Check for updates  
     checkForUpdates();
@@ -103,6 +111,10 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   useEffect( () => { 
     sendBackup();
   }, [realm_sections, feathersStore?.isAuthenticated]);
+
+  useEffect( () => { 
+    if(feathersStore.loggedInUser.email !== DEFAULT_EMAIL)feathersStore.setMyPos(feathersStore.loggedInUser?.MyPos || false);
+  }, [feathersStore?.loggedInUser]);
 
   const sendBackup = async() => {
     if(realm_sections?.length > 0){ // Check if there is a backup
@@ -424,6 +436,39 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
         toBePaid={item.toBePaid} 
       />
   ), []);
+
+  const payMyPos = async() => {       
+    await makeMyPosPayment(+cashToPay, +tip, feathersStore.user.userName?.slice(0, 4), feathersStore.selectedTable._id);
+  }
+
+  const closeMyPosErrorModal = () => {
+    setMyPosError(false);
+    setMyPosErrorMessage("");
+  }
+
+  const makeMyPosPayment = async(amount, tip, waiter, table) => {  
+    setTip("0");
+    try{    
+      const tippingModeEnabled = +tip > 0 ? true : false;
+      const transactionResult = await MyPosModule.makeMyPosPayment(amount, tippingModeEnabled, tip, waiter, table);
+      if (transactionResult.slice(-1) === "0" ) {
+        // Transaction is successful      
+          await payItems("Visa");       
+          console.log("SUCCESS: ", transactionResult);
+      }else{
+        console.log("ERROR: ", transactionResult);      
+        setMyPosError(true);
+        setMyPosErrorMessage(transactionResult);
+      }
+    }catch(error){
+      setMyPosError(true);
+      setMyPosErrorMessage(error.toString());
+    }
+  }  
+
+  const onChangeTip = text => {
+    setTip(text);
+  }
 
   const issueReceipt = (paymentMethod) => async() => { 
     feathersStore.setPaymentMethod(paymentMethod);
@@ -1182,6 +1227,32 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
                 disabled={!(cashToPay > 0) || feathersStore?.demoMode}
                 showActivityIndicator={issuingReceipt}
               /> 
+              {
+                feathersStore?.myPos &&
+                <>   
+                  <FakeButton
+                    title={`${common.tip}`}
+                    titleColor={Colors.onPrimaryColor}
+                    color={Colors.primaryColor}
+                    borderColor={Colors.onSurface}
+                    buttonStyle={{marginTop: 4}} 
+                    input={tip}   
+                    inputMethod={onChangeTip}       
+                    textInput={true}
+                    editable={true}
+                    inputStyle={styles.inputStyle}
+                  /> 
+                  <Button
+                    onPress={payMyPos}           
+                    title={`${common.myPos}`}
+                    titleColor={Colors.onPrimaryColor}
+                    color={Colors.selectionNew}
+                    borderColor={Colors.onSurface}
+                    buttonStyle={styles.sideButton} 
+                    disabled={!(cashToPay > 0)} 
+                  />         
+                </>            
+              }
               <Button
                 onPress={openInvoiceTypeModal}           
                 title={findInvoiceType().invoiceTypeNumber}
@@ -1328,6 +1399,15 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
         visible={issuingReceipt}
         isTablet={feathersStore.isTablet}
       />   
+      <InfoModal
+        message={myPosErrorMessage}
+        iconName={"alert"}
+        iconColor={Colors.primaryColorLight}
+        title={common.failedTransaction}
+        buttonTitle={common.exit}
+        onButtonPress= {closeMyPosErrorModal}
+        visible = {myPosError}
+      /> 
     </>
   );
           

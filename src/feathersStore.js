@@ -33,8 +33,9 @@ class FeathersStore{
   loggedInUser = {};
   demoMode = true;
   isTablet = true;
+  myPos = false;
  
-  currentVersion = "1.0.3";
+  currentVersion = "1.0.4";
 
   constructor(){
     makeObservable(this,  {     
@@ -49,6 +50,7 @@ class FeathersStore{
       currentVersion: observable,
       demoMode: observable,
       isTablet: observable,
+      myPos: observable,
       setIsAuthenticated: action,
       setUser: action,
       setObservables: action,
@@ -59,7 +61,8 @@ class FeathersStore{
       setInvoiceType: action, 
       setNewVersion: action,
       setDemoMode: action,
-      setIsTablet: action
+      setIsTablet: action,
+      setMyPos: action
     })
   } 
   
@@ -101,6 +104,10 @@ class FeathersStore{
 
   setNewVersion = val => {      
     this.newVersion = val;
+  }
+
+  setMyPos = value => {
+    this.myPos = value;
   }
 
 
