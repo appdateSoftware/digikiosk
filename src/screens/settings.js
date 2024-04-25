@@ -102,8 +102,10 @@ const SettingsA = ({navigation, feathersStore}) => {
   const [restoreDBIndicator, setRestoreDBIndicator] = useState(false);
   const [changeUserModal, setChangeUserModal] = useState(false);
   const [demoMode, setDemoMode] = useState(true);
+  const [refund, setRefund] = useState("0");
   const [myPosError, setMyPosError] = useState(false);
   const [myPosErrorMessage, setMyPosErrorMessage] = useState("");
+  const [refundModal, setRefundModal] = useState(false);
 
   useEffect(() => {
     setDemoMode(feathersStore.demoMode)
@@ -113,6 +115,19 @@ const SettingsA = ({navigation, feathersStore}) => {
   const navigateTo = screen => () => {    
     navigation.navigate(screen);
   }; 
+
+  const openRefundModal = () => {
+    setRefundModal(true)
+  }
+
+  const closeRefundModal = () => {
+    setRefund("0");
+    setRefundModal(false);
+  }
+
+  const onChangeRefund = text => {
+    setRefund(text);
+  }
 
   const closeModal = () => {
     setLoading(false);
@@ -247,10 +262,7 @@ const SettingsA = ({navigation, feathersStore}) => {
                 <View style={styles.profileInfo}>
                   <Subtitle1 style={styles.mediumText}>
                     {`${feathersStore.user?.name } ${findRole(feathersStore.user?.role) }`}
-                  </Subtitle1>
-                  <Subtitle2 style={styles.email}>
-                  {feathersStore.user?.email }
-                  </Subtitle2>
+                  </Subtitle1>                
                 </View>
               </View>
             </View>    
@@ -317,11 +329,11 @@ const SettingsA = ({navigation, feathersStore}) => {
           />
           <Divider type="inset" marginLeft={DIVIDER_MARGIN_LEFT} /> 
 
-          { feathersStore.settings?.myPos &&   
+          { feathersStore?.myPos &&   
             <>
               <Setting
                 onPress={openRefundModal}
-                icon={"md-card"}
+                icon={"card"}
                 title={common.myPosRefund}
               />
               <Divider type="inset" marginLeft={DIVIDER_MARGIN_LEFT} />

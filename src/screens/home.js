@@ -438,7 +438,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   ), []);
 
   const payMyPos = async() => {       
-    await makeMyPosPayment(+cashToPay, +tip, feathersStore.user.userName?.slice(0, 4), feathersStore.selectedTable._id);
+    await makeMyPosPayment(+cashToPay, +tip, "1234", "myPos-Order");
   }
 
   const closeMyPosErrorModal = () => {
