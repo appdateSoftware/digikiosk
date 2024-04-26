@@ -62,6 +62,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   const realm_sections = useQuery('Section');
   const realm_company = useQuery("Company");
   const realm_unprinted = useQuery('Unprinted');
+  const realm_users = useQuery('User');
 
   let common = useTranslate(feathersStore.language);
  
@@ -438,7 +439,10 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   ), []);
 
   const payMyPos = async() => {       
-    await makeMyPosPayment(+cashToPay, +tip, "1234", "myPos-Order");
+    let index = realm_users.findIndex(user => user.name === feathersStore.loggedInUser.name);
+    if(index < 0)index = 1; 
+    const code = index.toString().padStart(4, "0");
+    await makeMyPosPayment(+cashToPay, +tip, code, "myPos-Order");
   }
 
   const closeMyPosErrorModal = () => {
