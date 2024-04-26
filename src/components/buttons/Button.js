@@ -20,7 +20,7 @@ import Layout from '../../theme/layout';
 // Button Config
 const BUTTON_BORDER_RADIUS = 4;
 const BUTTON_HEIGHT = 48;
-const BUTTON_WIDTH = '100%';
+const BUTTON_WIDTH = '98%';
 const BUTTON_HEIGHT_SM = 40;
 const BUTTON_WIDTH_SM = Layout.SCREEN_WIDTH / 2;
 

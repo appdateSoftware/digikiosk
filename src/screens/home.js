@@ -1067,6 +1067,230 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     </View>
   );
 
+  const styles = StyleSheet.create({
+    header: {
+      marginTop: 5,
+      marginHorizontal: 5,
+      //paddingTop: getStatusBarHeight(),  
+    },
+     screenContainer: {
+      flex: 1,
+      backgroundColor: Colors.background
+    },  
+    container: {
+      flex: 1,
+      flexDirection: "row"
+    },
+    leftContainer: {
+      flex: 0.65,
+     // backgroundColor: Color(Colors.overlayColor).alpha(0.2).string(),
+      backgroundColor: Colors.surface,
+      borderRightWidth: 1    
+    },
+    rightContainer: {
+      flex: 0.35,  
+      backgroundColor: Colors.surface
+    },
+     productsList: {
+      // spacing = paddingHorizontal + ActionProductCardHorizontal margin = 12 + 4 = 16
+      //paddingHorizontal: 2,
+      paddingBottom: 16
+    },
+     sideButton:{
+      marginTop: 4,
+      borderWidth: 1
+    },
+    sideButtonTablet:{
+      marginTop: 8,
+      borderWidth: 1
+    },
+    categoriesContainer: {
+      paddingBottom: 2,   
+     backgroundColor: Colors.secondaryColor
+    },
+    cardEmpty: {
+      flex: 1,
+      marginBottom: 0,
+      marginHorizontal: 4,
+      paddingHorizontal: 4,
+      borderRadius: 8,
+      alignItems: 'center',
+      justifyContent: 'center',
+      ...shadowDefault,
+    },
+    textEmpty: {
+      textAlign: 'center',
+      marginTop: 30,
+    },
+    newVersion: {
+      backgroundColor: Colors.tertiaryColor ,    //'#ccd'
+      fontSize: 14,
+      color: Colors.onSecondaryColor,  //'#333'
+      textAlign: 'center',
+      paddingVertical: 2, 
+      marginBottom: 8,   
+    },
+    demoMode: {
+      backgroundColor: Colors.accentColor ,    //'#ccd'
+      fontSize: 14,
+      color: Colors.onAccentColor,  //'#333'
+      textAlign: 'center',
+      paddingVertical: 2, 
+      marginBottom: 8,   
+    },
+    sectionsList: {
+      paddingTop: 4,
+      paddingRight: 16,
+      paddingLeft: 8
+    },
+    cardImg: { borderRadius: 4 },
+    card: {
+      marginLeft: 8,
+      width: 104,
+      height: 42,
+      borderRadius: 4
+    },
+    cardContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center"
+    },
+    cardTitle: {
+      padding: 12,
+      fontWeight: "500",
+      fontSize: 16,
+      color: Colors.white,
+      textShadowColor: "rgba(0, 0, 0, 0.75)",
+      textShadowOffset: { width: -1, height: 1 },
+      textShadowRadius: 10
+    },
+    keyboardContainer: {
+      width: "100%",
+      flexDirection: "row"
+    },
+    keyboardRight: {
+      flexDirection: "row",
+      width: "40%",
+      flexWrap: "wrap",
+      justifyContent: "space-around",
+      paddingVertical: feathersStore.isTablet ? 8 : 4,
+      backgroundColor: Colors.itemBkgr,
+      paddingRight: feathersStore.isTablet ? 4 : 2
+    },
+    keyboardButton: {
+      width: "44%",
+      height: feathersStore.isTablet ? 82 : 48,
+      justifyContent: "flex-start",
+      alignItems: "flex-start",
+      backgroundColor: Colors.keyboardButton,
+      marginLeft: feathersStore.isTablet ? 8 : 4,
+      marginVertical: feathersStore.isTablet ? 8 : 4,
+      paddingLeft: feathersStore.isTablet ? 12 : 8,
+      paddingTop: feathersStore.isTablet ? 4 : 2 
+    },
+    greenButton: {
+      width: "44%",
+      height: feathersStore.isTablet ? 82 : 48,
+      justifyContent: "flex-start",
+      alignItems: "flex-start",
+      backgroundColor: Colors.greenButton,
+      marginLeft: feathersStore.isTablet ? 8 : 4,
+      marginVertical: feathersStore.isTablet ? 8 : 4,
+      paddingLeft: feathersStore.isTablet ? 12 : 8,
+      paddingTop: feathersStore.isTablet ? 4 : 2 
+    },
+    paginationButton: {
+      width: "44%",
+      height: feathersStore.isTablet ? 82 : 48,
+      justifyContent: "flex-start",
+      alignItems: "flex-start",
+      backgroundColor: Colors.itemBkgr,
+      marginLeft: feathersStore.isTablet ? 8 : 4,
+      marginVertical: feathersStore.isTablet ? 8 : 4,
+      paddingLeft: feathersStore.isTablet ? 12 : 8,
+      paddingTop: feathersStore.isTablet ? 4 : 2,
+      borderWidth: 1,
+      borderColor: Colors.symbolBlack
+    },
+    sectionButton:{
+      width: "44%",
+      height: feathersStore.isTablet ? 82 : 48,
+      justifyContent: "flex-start",
+      alignItems: "flex-start",
+      marginLeft: feathersStore.isTablet ? 8 : 4,
+      marginVertical: feathersStore.isTablet ? 8 : 4,
+      paddingLeft: feathersStore.isTablet ? 12 : 8,
+      paddingTop: feathersStore.isTablet ? 4 : 2 
+    },
+    number: {
+      fontWeight: "600",
+      fontSize: feathersStore.isTablet ? 28 : 16,
+      color: Colors.onAccentColor  
+    },
+    icon: {
+      marginTop: 4,
+      fontWeight: "600",
+    },
+    infoRow: {
+      flexDirection: "row",
+      width: "100%",
+      height: feathersStore.isTablet ? 82 : 48,
+      justifyContent: "space-between",
+      alignItems: "center",
+      backgroundColor: Colors.itemBkgr,
+      paddingHorizontal: 8 
+    },
+    priceCell: {
+      fontWeight: "800",
+      fontSize: feathersStore.isTablet ? 48 : 28,
+      color: Colors.keyboardButton  
+    },
+    leftInfoRowSection: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    invoiceTypeButton: {
+      flexDirection: "row",
+      width: feathersStore.isTablet ? 300 : 100,
+      height: feathersStore.isTablet ? 58 : 38,
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingVertical: 2,
+      backgroundColor: Colors.itemBkgr,
+      paddingHorizontal: 2 ,
+      borderWidth: 2,
+      borderRadius: 4,
+      borderColor: Colors.keyboardButton,
+      marginLeft: 4,
+    },
+    invoiceTypeText: {
+      fontWeight: "600",
+      width: "70%",
+      fontSize: feathersStore.isTablet ? 18 : 14,
+      color: Colors.keyboardButton
+    },
+    shiftButton: {
+      flexDirection: "row",
+      width: feathersStore.isTablet ? 80 : 50,
+      height: feathersStore.isTablet ? 58 : 38,
+      justifyContent: "center",
+      alignItems: "center",
+      paddingVertical: 2,
+      backgroundColor: Colors.itemBkgr,
+      paddingHorizontal: 2 ,
+      borderWidth: 2,
+      borderRadius: 4,
+      borderColor: Colors.keyboardButton,
+      marginLeft: feathersStore.isTablet ? 12 : 8,
+    },
+    clrText: {
+      fontWeight: "800",
+      fontSize: feathersStore.isTablet ? 24 : 18,
+      color: Colors.keyboardButton, 
+      marginLeft: feathersStore.isTablet ? 12 : 8,
+    }
+  });
+
   return ( 
     <>
       <View style={styles.screenContainer}>
@@ -1126,7 +1350,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
                
               />           
               <FakeButtonTablet
-                title={`${common.cashChange}`}
+                title={`${common.cashChangeC}`}
                 titleColor={Colors.onPrimaryColor}
                 color={Colors.primaryColor}
                 borderColor={Colors.onSurface}
@@ -1151,21 +1375,21 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
                 titleColor={Colors.onPrimaryColor}
                 color={Colors.primaryColor}
                 borderColor={Colors.onSurface}
-                buttonStyle={styles.sideButtonTablet} 
+                buttonStyle={styles.sideButton} 
               />
               <FakeButton
                 title={`${common.remainderCap}: ${unpaid?.toFixed(2) || 0}€`}
                 titleColor={Colors.onPrimaryColor}
                 color={Colors.primaryColor}
                 borderColor={Colors.onSurface}
-                buttonStyle={styles.sideButtonTablet} 
+                buttonStyle={styles.sideButton} 
               />          
               <FakeButton
                 title={`${common.cashC}`}
                 titleColor={Colors.onPrimaryColor}
                 color={Colors.primaryColor}
                 borderColor={Colors.onSurface}
-                buttonStyle={styles.sideButtonTablet} 
+                buttonStyle={styles.sideButton} 
                 input={cashToPay}          
                 textInput={true}
                 editable={false}
@@ -1175,18 +1399,18 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
                 titleColor={Colors.onPrimaryColor}
                 color={enterPrice ? Colors.cashDisabled : Colors.primaryColor}
                 borderColor={Colors.onSurface}
-                buttonStyle={styles.sideButtonTablet} 
+                buttonStyle={styles.sideButton} 
                 input={cash}
                 textInput={true}
                 editable={false} 
                
               />           
               <FakeButton
-                title={`${common.cashChange}`}
+                title={`${common.cashChangeC}`}
                 titleColor={Colors.onPrimaryColor}
                 color={Colors.primaryColor}
                 borderColor={Colors.onSurface}
-                buttonStyle={styles.sideButtonTablet} 
+                buttonStyle={styles.sideButton} 
                 input={change}           
                 textInput={true}
                 editable={false}
@@ -1197,30 +1421,15 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
                 titleColor={Colors.onPrimaryColor}
                 color={Colors.keyboardButton}
                 borderColor={Colors.onSurface}
-                buttonStyle={styles.sideButtonTablet}  
-              />    
-              {
-                feathersStore?.myPos &&
-                <>  
-                
-                  <Button
-                    onPress={payMyPos}           
-                    title={`${common.myPos}`}
-                    titleColor={Colors.onPrimaryColor}
-                    color={Colors.selectionNew}
-                    borderColor={Colors.onSurface}
-                    buttonStyle={styles.sideButton} 
-                    disabled={!(cashToPay > 0)} 
-                  />         
-                </>            
-              }             
+                buttonStyle={styles.sideButton}  
+              />       
               </>
             }
             </ScrollView>
           </View>
        
         </View>      
-          { feathersStore.isTablet ?    
+         
             <>  
               <View style={styles.infoRow}>
                 <View style={styles.leftInfoRowSection}>
@@ -1228,8 +1437,10 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
                     onPress={openInvoiceTypeModal} 
                     style={styles.invoiceTypeButton}
                   >
-                    <Text style={styles.invoiceTypeText}>{findInvoiceType().invoiceTypeName}</Text>
-                    <Icon name={chevronDownIcon} size={32} color={Colors.keyboardButton} />
+                    <Text style={styles.invoiceTypeText}>
+                      {feathersStore?.isTablet ? findInvoiceType().invoiceTypeName : findInvoiceType().invoiceTypeNumber}
+                    </Text>
+                    <Icon name={chevronDownIcon} size={feathersStore?.isTablet ? 32 : 20} color={Colors.keyboardButton} />
                   </TouchableOpacity> 
                   <TouchableOpacity 
                     onPress={toggleEnterPrice} 
@@ -1247,11 +1458,18 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
                   <Text style={styles.priceCell}>{`${price}€`}</Text>
                 </View>
               </View>       
-              <View style={styles.keyboardContainer}>         
-                <NumericKeyboardTablet 
-                  onPress={setCharacterInput} 
-                  pressBackspace={setBackspace}
-                /> 
+              <View style={styles.keyboardContainer}>      
+              { feathersStore.isTablet ?  
+                  <NumericKeyboardTablet 
+                    onPress={setCharacterInput} 
+                    pressBackspace={setBackspace}
+                  /> 
+                  :
+                  <NumericKeyboard 
+                    onPress={setCharacterInput} 
+                    pressBackspace={setBackspace}
+                  />
+                } 
                 <View style={styles.keyboardRight}>
                   {sectionsShowing?.map(( item, index ) =>
                     <TouchableOpacity 
@@ -1270,7 +1488,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
                     <Text style={styles.icon}>
                       <Icon 
                         name={arrowBackCircle} 
-                        size={32} 
+                        size={feathersStore?.isTablet ? 32 : 22} 
                         color={backIndex > 0 ? Colors.symbolBlack : Colors.paginationDisabled} />
                     </Text>
                   </TouchableOpacity>
@@ -1282,7 +1500,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
                     <Text style={styles.icon}>
                       <Icon 
                         name={arrowForwardCircle} 
-                        size={32} 
+                        size={feathersStore?.isTablet ? 32 : 22} 
                         color={forwardIndex < realm_sections.length - 1 ? Colors.symbolBlack : Colors.paginationDisabled} 
                       />
                     </Text>
@@ -1293,7 +1511,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
                     disabled={!(cashToPay > 0) || feathersStore?.demoMode}
                   >
                     <Text style={styles.icon}>
-                      <Icon name={checkIconCircle} size={32} color={Colors.onAccentColor} />
+                      <Icon name={checkIconCircle} size={feathersStore?.isTablet ? 32 : 22} color={Colors.onAccentColor} />
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity 
@@ -1305,23 +1523,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
                   </TouchableOpacity>                
                 </View>
               </View> 
-            </>
-           :
-            <View >
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                alwaysBounceHorizontal={false}
-                contentContainerStyle={styles.sectionsList}      
-              >
-                {realm_sections?.map(( item, index ) => renderSectionItem(item, index))}
-              </ScrollView> 
-              <NumericKeyboard 
-                onPress={setCharacterInput} 
-                pressBackspace={setBackspace}
-              />
-            </View>
-        }
+            </>          
        
       </View>
       <CancelItemModal
@@ -1366,228 +1568,6 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
           
 }
 
-const styles = StyleSheet.create({
-  header: {
-    marginTop: 5,
-    marginHorizontal: 5,
-    //paddingTop: getStatusBarHeight(),  
-  },
-   screenContainer: {
-    flex: 1,
-    backgroundColor: Colors.background
-  },  
-  container: {
-    flex: 1,
-    flexDirection: "row"
-  },
-  leftContainer: {
-    flex: 0.65,
-   // backgroundColor: Color(Colors.overlayColor).alpha(0.2).string(),
-    backgroundColor: Colors.surface,
-    borderRightWidth: 1    
-  },
-  rightContainer: {
-    flex: 0.35,  
-    backgroundColor: Colors.surface
-  },
-   productsList: {
-    // spacing = paddingHorizontal + ActionProductCardHorizontal margin = 12 + 4 = 16
-    //paddingHorizontal: 2,
-    paddingBottom: 16
-  },
-   sideButton:{
-    marginTop: 4,
-    borderWidth: 1
-  },
-  sideButtonTablet:{
-    marginTop: 8,
-    borderWidth: 1
-  },
-  categoriesContainer: {
-    paddingBottom: 2,   
-   backgroundColor: Colors.secondaryColor
-  },
-  cardEmpty: {
-    flex: 1,
-    marginBottom: 0,
-    marginHorizontal: 4,
-    paddingHorizontal: 4,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...shadowDefault,
-  },
-  textEmpty: {
-    textAlign: 'center',
-    marginTop: 30,
-  },
-  newVersion: {
-    backgroundColor: Colors.tertiaryColor ,    //'#ccd'
-    fontSize: 14,
-    color: Colors.onSecondaryColor,  //'#333'
-    textAlign: 'center',
-    paddingVertical: 2, 
-    marginBottom: 8,   
-  },
-  demoMode: {
-    backgroundColor: Colors.accentColor ,    //'#ccd'
-    fontSize: 14,
-    color: Colors.onAccentColor,  //'#333'
-    textAlign: 'center',
-    paddingVertical: 2, 
-    marginBottom: 8,   
-  },
-  sectionsList: {
-    paddingTop: 4,
-    paddingRight: 16,
-    paddingLeft: 8
-  },
-  cardImg: { borderRadius: 4 },
-  card: {
-    marginLeft: 8,
-    width: 104,
-    height: 42,
-    borderRadius: 4
-  },
-  cardContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center"
-  },
-  cardTitle: {
-    padding: 12,
-    fontWeight: "500",
-    fontSize: 16,
-    color: Colors.white,
-    textShadowColor: "rgba(0, 0, 0, 0.75)",
-    textShadowOffset: { width: -1, height: 1 },
-    textShadowRadius: 10
-  },
-  keyboardContainer: {
-    width: "100%",
-    flexDirection: "row"
-  },
-  keyboardRight: {
-    flexDirection: "row",
-    width: "40%",
-    flexWrap: "wrap",
-    justifyContent: "space-around",
-    paddingVertical: 8,
-    backgroundColor: Colors.itemBkgr,
-    paddingRight: 4
-  },
-  keyboardButton: {
-    width: "44%",
-    height: 82,
-    justifyContent: "flex-start",
-    alignItems: "flex-start",
-    backgroundColor: Colors.keyboardButton,
-    marginLeft: 8,
-    marginVertical: 8,
-    paddingLeft: 12,
-    paddingTop: 4 
-  },
-  greenButton: {
-    width: "44%",
-    height: 82,
-    justifyContent: "flex-start",
-    alignItems: "flex-start",
-    backgroundColor: Colors.greenButton,
-    marginLeft: 8,
-    marginVertical: 8,
-    paddingLeft: 12,
-    paddingTop: 4 
-  },
-  paginationButton: {
-    width: "44%",
-    height: 82,
-    justifyContent: "flex-start",
-    alignItems: "flex-start",
-    backgroundColor: Colors.itemBkgr,
-    marginLeft: 8,
-    marginVertical: 8,
-    paddingLeft: 12,
-    paddingTop: 4,
-    borderWidth: 1,
-    borderColor: Colors.symbolBlack
-  },
-  sectionButton:{
-    width: "44%",
-    height: 82,
-    justifyContent: "flex-start",
-    alignItems: "flex-start",
-    marginLeft: 8,
-    marginVertical: 8,
-    paddingLeft: 12,
-    paddingTop: 4 
-  },
-  number: {
-    fontWeight: "600",
-    fontSize: 28,
-    color: Colors.onAccentColor  
-  },
-  icon: {
-    marginTop: 4,
-    fontWeight: "600",
-  },
-  infoRow: {
-    flexDirection: "row",
-    width: "100%",
-    height: 82,
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: Colors.itemBkgr,
-    paddingHorizontal: 8 
-  },
-  priceCell: {
-    fontWeight: "800",
-    fontSize: 48,
-    color: Colors.keyboardButton  
-  },
-  leftInfoRowSection: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  invoiceTypeButton: {
-    flexDirection: "row",
-    width: 300,
-    height: 58,
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 2,
-    backgroundColor: Colors.itemBkgr,
-    paddingHorizontal: 2 ,
-    borderWidth: 2,
-    borderRadius: 4,
-    borderColor: Colors.keyboardButton,
-    marginLeft: 4,
-  },
-  invoiceTypeText: {
-    fontWeight: "600",
-    width: "90%",
-    fontSize: 18,
-    color: Colors.keyboardButton
-  },
-  shiftButton: {
-    flexDirection: "row",
-    width: 80,
-    height: 58,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: 2,
-    backgroundColor: Colors.itemBkgr,
-    paddingHorizontal: 2 ,
-    borderWidth: 2,
-    borderRadius: 4,
-    borderColor: Colors.keyboardButton,
-    marginLeft: 12,
-  },
-  clrText: {
-    fontWeight: "800",
-    fontSize: 24,
-    color: Colors.keyboardButton, 
-    marginLeft: 12
-  }
-});
+
 
 export default inject('feathersStore')(observer(HomeScreen));
