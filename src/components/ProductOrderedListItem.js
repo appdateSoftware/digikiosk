@@ -54,13 +54,13 @@ const ProductOrderedListItem = ({
             </Text>
             <Text
               style={{...styles.input, ...styles.price}}
-              >{price} €</Text>             
+              >{price}€</Text>             
           </View> 
           <View style={styles.subTitleContainer}>          
             {(!paid) ? 
               <Pressable  onPress={_onPressDelete} borderless disabled={toBePaid}>
                 <View style={[styles.iconContainer, styles.deleteIcon]}>
-                  <Icon name={DELETE_ICON} size={20} color={Colors.onPrimaryColor} />
+                  <Icon name={DELETE_ICON} size={22} color={Colors.error} />
                 </View>
               
               </Pressable>
@@ -76,11 +76,11 @@ const styles = StyleSheet.create({
   container: {
     marginHorizontal: 2, 
     marginTop: 2,
-    padding:2, 
+    padding:4, 
     borderWidth: 1,
-    borderColor: Colors.onSurface,
+    borderColor: Colors.keyboardButton,
     borderRadius: 4,
-    backgroundColor: Colors.surface
+    backgroundColor: Colors.itemBkgr
   },
   paidBackground: {
     backgroundColor: Colors.secondaryColor
@@ -107,15 +107,15 @@ const styles = StyleSheet.create({
   },
   title: {
     flex: 1,
-    fontWeight: "500",
-    fontSize: 16,
-    color: Colors.primaryText,
+    fontWeight: "800",
+    fontSize: 18,
+    color: Colors.keyboardButton,
     letterSpacing: 0.15
   }, 
   price: {
-    fontWeight: "500",
-    fontSize: 16,
-    color: Colors.primaryText,
+    fontWeight: "800",
+    fontSize: 18,
+    color: Colors.keyboardButton,
     letterSpacing: 0.15
   }, 
   subTitleContainer: {
@@ -130,10 +130,9 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: Colors.secondaryColor
   },
-  deleteIcon: {
-    backgroundColor: Colors.error
+  deleteIcon: {    
+    backgroundColor: Colors.itemBkgr
   },
   input:{    
     margin: 1,

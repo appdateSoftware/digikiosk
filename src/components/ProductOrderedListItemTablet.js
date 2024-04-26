@@ -60,7 +60,7 @@ const ProductOrderedListItemTablet = ({
             {(!paid) ? 
               <Pressable  onPress={_onPressDelete} borderless disabled={toBePaid}>
                 <View style={[styles.iconContainer, styles.deleteIcon]}>
-                  <Icon name={DELETE_ICON} size={20} color={Colors.onPrimaryColor} />
+                  <Icon name={DELETE_ICON} size={24} color={Colors.error} />
                 </View>
               
               </Pressable>
@@ -131,10 +131,9 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: Colors.secondaryColor
   },
   deleteIcon: {
-    backgroundColor: Colors.error
+    backgroundColor: Colors.itemBkgr
   },
   input:{    
     margin: 1,

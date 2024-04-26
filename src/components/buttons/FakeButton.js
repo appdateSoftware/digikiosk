@@ -20,7 +20,7 @@ import Layout from '../../theme/layout';
 // Button Config
 const BUTTON_BORDER_RADIUS = 4;
 const BUTTON_HEIGHT = 48;
-const BUTTON_WIDTH = '100%';
+const BUTTON_WIDTH = '98%';
 const BUTTON_HEIGHT_SM = 40;
 const BUTTON_WIDTH_SM = Layout.SCREEN_WIDTH / 2;
 
@@ -29,13 +29,15 @@ const BUTTON_WIDTH_SM = Layout.SCREEN_WIDTH / 2;
 const styles = StyleSheet.create({  
   container: {  
     justifyContent: "center",
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    marginHorizontal: "1%",
     backgroundColor: Colors.primaryColor,
     borderRadius: BUTTON_BORDER_RADIUS
   },
   rowContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center"
   },
   defaultContainer: {
     width: BUTTON_WIDTH,
@@ -67,7 +69,9 @@ const styles = StyleSheet.create({
     borderRadius: BUTTON_HEIGHT / 2
   },
   title: {
-    color: Colors.onPrimaryColor
+    color: Colors.onPrimaryColor,
+    fontSize: 14,
+    marginLeft: 2
   },
   outlinedTitle: {
     color: Colors.primaryColor
@@ -77,6 +81,7 @@ const styles = StyleSheet.create({
     width: "40%",
     margin: 2,
     borderWidth: 1,
+    color: Colors.keyboardButton,
     padding: 2,
     backgroundColor: Colors.surface,
     fontSize: 16,

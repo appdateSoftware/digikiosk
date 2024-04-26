@@ -439,7 +439,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   ), []);
 
   const payMyPos = async() => {       
-    let index = realm_users.findIndex(user => user.name === feathersStore.loggedInUser.name);
+    let index = realm_users.findIndex(user => user.nameEnglish === feathersStore.loggedInUser.nameEnglish);
     if(index < 0)index = 1; 
     const code = index.toString().padStart(4, "0");
     await makeMyPosPayment(+cashToPay, +tip, code, "myPos-Order");
@@ -1145,107 +1145,64 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
               />    
               </>
               :
-              <>              
-              <Button
-                title={`${price}€`}
-              //  disabled={issuingReceipt || total <= 0}
-                onPress={pricePressed}
-                titleColor={Colors.onTertiaryColor}
-                color={Colors.black}
-                borderColor={Colors.onSurface}
-                buttonStyle={styles.sideButton} 
-                textRight={true}
-                biggerFont={true}
-              />
+              <>   
               <FakeButton
-                title={`${common.total}: ${total.toFixed(2) || 0}€`}
+                title={`${common.totalCap}: ${total.toFixed(2) || 0}€`}
                 titleColor={Colors.onPrimaryColor}
                 color={Colors.primaryColor}
                 borderColor={Colors.onSurface}
-                buttonStyle={styles.sideButton} 
+                buttonStyle={styles.sideButtonTablet} 
               />
               <FakeButton
-                title={`${common.remainder}: ${unpaid?.toFixed(2) || 0}€`}
+                title={`${common.remainderCap}: ${unpaid?.toFixed(2) || 0}€`}
                 titleColor={Colors.onPrimaryColor}
                 color={Colors.primaryColor}
                 borderColor={Colors.onSurface}
-                buttonStyle={styles.sideButton} 
+                buttonStyle={styles.sideButtonTablet} 
               />          
               <FakeButton
-                title={`${common.cashSmall}`}
+                title={`${common.cashC}`}
                 titleColor={Colors.onPrimaryColor}
                 color={Colors.primaryColor}
                 borderColor={Colors.onSurface}
-                buttonStyle={styles.sideButton} 
+                buttonStyle={styles.sideButtonTablet} 
                 input={cashToPay}          
                 textInput={true}
                 editable={false}
               />         
-              <ButtonWithField
-                title={`${common.received}`}
+              <FakeButton
+                title={`${common.receivedC}`}
                 titleColor={Colors.onPrimaryColor}
-                color={Colors.black}
+                color={enterPrice ? Colors.cashDisabled : Colors.primaryColor}
                 borderColor={Colors.onSurface}
-                buttonStyle={styles.sideButton} 
+                buttonStyle={styles.sideButtonTablet} 
                 input={cash}
                 textInput={true}
-                editable={false}  
-                onPress={receivedPressed}
-                disabled={false}
+                editable={false} 
+               
               />           
               <FakeButton
                 title={`${common.cashChange}`}
                 titleColor={Colors.onPrimaryColor}
                 color={Colors.primaryColor}
                 borderColor={Colors.onSurface}
-                buttonStyle={styles.sideButton} 
+                buttonStyle={styles.sideButtonTablet} 
                 input={change}           
                 textInput={true}
                 editable={false}
-              />        
-              <Button
-                onPress={issueReceipt("CASH")}           
-                title={<Icon name={checkIcon} size={32} color={Colors.onSecondaryColor}></Icon>}
-                titleColor={Colors.onSecondaryColor}
-                color={Colors.secondaryColor}
-                borderColor={Colors.onSurface}
-                buttonStyle={styles.sideButton}
-                disabled={!(cashToPay > 0) || feathersStore?.demoMode}
-                showActivityIndicator={issuingReceipt}
-              /> 
+              />     
               <Button
                 onPress={selectAll}           
                 title={`${common.payAll}`}
                 titleColor={Colors.onPrimaryColor}
-                color={Colors.primaryColor}
+                color={Colors.keyboardButton}
                 borderColor={Colors.onSurface}
-                buttonStyle={styles.sideButton}  
-              /> 
-              <Button
-                onPress={issueReceipt("VISA")}           
-                title={"VISA"}
-                titleColor={Colors.onPrimaryColor}
-                color={Colors.selectionNew}
-                borderColor={Colors.onSurface}
-                buttonStyle={styles.sideButton}  
-                disabled={!(cashToPay > 0) || feathersStore?.demoMode}
-                showActivityIndicator={issuingReceipt}
-              /> 
+                buttonStyle={styles.sideButtonTablet}  
+              />    
               {
                 feathersStore?.myPos &&
-                <>   
-                  <FakeButton
-                    title={`${common.tip}`}
-                    titleColor={Colors.onPrimaryColor}
-                    color={Colors.primaryColor}
-                    borderColor={Colors.onSurface}
-                    buttonStyle={{marginTop: 4}} 
-                    input={tip}   
-                    inputMethod={onChangeTip}       
-                    textInput={true}
-                    editable={true}
-                    inputStyle={styles.inputStyle}
-                  /> 
+                <>  
+                
                   <Button
                     onPress={payMyPos}           
                     title={`${common.myPos}`}
@@ -1256,15 +1213,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
                     disabled={!(cashToPay > 0)} 
                   />         
                 </>            
-              }
-              <Button
-                onPress={openInvoiceTypeModal}           
-                title={findInvoiceType().invoiceTypeNumber}
-                titleColor={Colors.onTertiaryColor}
-                color={Colors.tertiaryColor}
-                borderColor={Colors.onSurface}
-                buttonStyle={styles.sideButton}  
-              /> 
+              }             
               </>
             }
             </ScrollView>
