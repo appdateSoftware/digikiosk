@@ -457,7 +457,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       const transactionResult = await MyPosModule.makeMyPosPayment(amount, tippingModeEnabled, tip, waiter, table);
       if (transactionResult.slice(-1) === "0" ) {
         // Transaction is successful      
-          await payItems("Visa");       
+          await issueReceiptFn("VISA")      
           console.log("SUCCESS: ", transactionResult);
       }else{
         console.log("ERROR: ", transactionResult);      
@@ -468,19 +468,24 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       setMyPosError(true);
       setMyPosErrorMessage(error.toString());
     }
-  }  
-
-  const onChangeTip = text => {
-    setTip(text);
   }
 
-  const issueReceipt = (paymentMethod) => async() => { 
+  const visaPayment = async() => {
+    if(feathersStore?.myPos)await payMyPos();
+    else await issueReceiptFn("VISA")
+  }
+
+  const issueReceiptFn = async(paymentMethod) => { 
     feathersStore.setPaymentMethod(paymentMethod);
     if(["tpy", "tda", "pt"].includes(feathersStore.invoiceType)){
       setInvoiceDataModal(true);
     }else{
       await _issueReceipt(paymentMethod);
     }
+  }
+
+  const issueReceipt = (paymentMethod) => async() => { 
+    await issueReceiptFn(paymentMethod);
   }
 
   const _issueReceipt = async() => { 
@@ -1515,7 +1520,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity 
-                    onPress={issueReceipt("VISA")} 
+                    onPress={visaPayment} 
                     style={styles.greenButton}
                     disabled={!(cashToPay > 0) || feathersStore?.demoMode}
                   >

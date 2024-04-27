@@ -85,8 +85,9 @@ const ChangeUserModal = ({
           }
         }
       })    
-      setPasswordError(false)
-      feathersStore.setUser(realm_users[+ind])
+      setPasswordError(false);
+      feathersStore.setUser(realm_users[+ind]);
+      cancelButton();
     }else{
       setPasswordError(true)
     }    

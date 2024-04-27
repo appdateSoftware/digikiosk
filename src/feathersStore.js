@@ -35,7 +35,7 @@ class FeathersStore{
   isTablet = true;
   myPos = false;
  
-  currentVersion = "1.0.4";
+  currentVersion = "1.0.5";
 
   constructor(){
     makeObservable(this,  {     

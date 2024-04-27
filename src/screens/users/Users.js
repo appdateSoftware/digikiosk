@@ -70,6 +70,7 @@ const rolesArray = [{
 
 // DeliveryUserA Component
 const User = ({  
+  admin,
   editUser,
   deleteUser, 
   name,
@@ -84,24 +85,25 @@ const User = ({
           <Subtitle1 style={styles.userText}>
             {`${name} ${role}`} 
           </Subtitle1>
-          <Subtitle2>Password: {`${password}`}</Subtitle2>
+          {admin && <Subtitle2>Password: {`${password}`}</Subtitle2>}
         </View>
       </View>
-
-      <View style={styles.buttonsContainer}> 
-        <TouchableItem style={styles.end} borderless  onPress={editUser}>
-          <View style={styles.iconContainer}>
-            <Icon name={editIcon} size={21} color={Colors.secondaryText}/>                       
-          </View>
-        </TouchableItem>          
-        {itemIndex > 0 &&
-        <TouchableItem style={styles.end} borderless  onPress={deleteUser}>
-          <View style={styles.iconContainer}>
-            <Icon name={trashIcon} size={21} color={Colors.secondaryColor}/>                       
-          </View>
-        </TouchableItem> 
-        } 
-      </View>
+      {admin &&
+        <View style={styles.buttonsContainer}> 
+          <TouchableItem style={styles.end} borderless  onPress={editUser}>
+            <View style={styles.iconContainer}>
+              <Icon name={editIcon} size={21} color={Colors.secondaryText}/>                       
+            </View>
+          </TouchableItem>          
+          {itemIndex > 0 &&
+          <TouchableItem style={styles.end} borderless  onPress={deleteUser}>
+            <View style={styles.iconContainer}>
+              <Icon name={trashIcon} size={21} color={Colors.secondaryColor}/>                       
+            </View>
+          </TouchableItem> 
+          } 
+        </View>
+      }
     </View>
 
 );
@@ -161,6 +163,7 @@ const Users =({navigation, feathersStore}) => {
   const renderUserItem = ({ item, index }) => (
     <User
       key={item._id}
+      admin={feathersStore.user?.role === 6}
       editUser={editUser(item)}
       deleteUser={openDeleteModal(item)}     
       name={item?.name || ""}
@@ -200,17 +203,20 @@ const Users =({navigation, feathersStore}) => {
             contentContainerStyle={styles.userList}
           />        
           <View style={styles.vSpacer}></View> 
-          <View style={styles.saveButton}>                       
-            <ContainedButton
-              onPress={addButtonPressed}
-              color={Colors.primaryColor}
-              socialIconName="plus"
-              iconColor={Colors.onPrimaryColor} 
-              title={common.addUser}
-              titleColor={Colors.onPrimaryColor} 
-              titleStyle={styles.buttonTitle}            
-            /> 
-          </View>    
+          {feathersStore.user?.role === 6 &&
+            <View style={styles.saveButton}>                       
+              <ContainedButton
+                onPress={addButtonPressed}
+                color={Colors.primaryColor}
+                socialIconName="plus"
+                iconColor={Colors.onPrimaryColor} 
+                title={common.addUser}
+                titleColor={Colors.onPrimaryColor} 
+                titleStyle={styles.buttonTitle}            
+              /> 
+            </View>    
+          }
+     
         </View> 
         <ActivityIndicatorModal
           message={common.wait}
