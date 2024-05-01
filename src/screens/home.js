@@ -9,6 +9,7 @@ import {
   Alert,
   NativeModules,
   Linking,
+  NativeEventEmitter,
   TouchableOpacity
 } from 'react-native';
 import NumericKeyboard from '../components/NumericKeyboard';
@@ -27,7 +28,6 @@ import Button from "../components/buttons/Button";
 import ButtonTablet from "../components/buttons/ButtonTablet";
 import FakeButton from "../components/buttons/FakeButton";
 import FakeButtonTablet from "../components/buttons/FakeButtonTablet";
-import ButtonWithField from "../components/buttons/ButtonWithField";
 import Icon from "../components/Icon";
 import cloneDeep from 'lodash/cloneDeep';
 import CancelItemModal from "../components/modals/CancelItemModal";
@@ -38,6 +38,8 @@ import {pickLanguageWord} from '../utils/pickLanguageWord.js';
 import { AppSchema } from "../services/receipt-service";
 import ErrorModal from "../components/modals/ErrorModal";
 import InfoModal from "../components/modals/InfoModal";
+import BleManager from 'react-native-ble-manager';
+import { Buffer } from 'buffer';
 
 import { inject, observer } from "mobx-react";
 
@@ -54,6 +56,10 @@ const upArrow = "caret-up";
 const DEFAULT_EMAIL = "defaultUser@gmail.com";
 
 const {MyPosModule} = NativeModules;
+
+const BLE_NAME ="Printer001"
+const BleManagerModule = NativeModules.BleManager;
+const BleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 
 const HomeScreen = ({navigation, route, feathersStore}) => { 
 
@@ -87,10 +93,131 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   const [myPosError, setMyPosError] = useState(false);
   const [myPosErrorMessage, setMyPosErrorMessage] = useState("");
   const [tip, setTip] = useState("0");
+  const [isScanning, setIsScanning] = useState(false);
+
+  const peripherals = new Map()
+ const [connectedDevices, setConnectedDevices] = useState([]);
 
   useEffect( () => { //Check for updates  
     checkForUpdates();
   }, []);
+
+  useEffect(() => {
+    let stopListener = BleManagerEmitter.addListener(
+    'BleManagerStopScan',
+      () => {
+        setIsScanning(false);
+        console.log('Scan is stopped');
+      },
+    );
+    startScan();
+  }, []);
+
+  const startScan = () => {
+    if (!isScanning) {
+      BleManager.scan([], 5, true)
+        .then(() => {
+          console.log('Scanning...');
+          setIsScanning(true);    
+          handleGetConnectedDevices();         
+        })
+        .catch(error => {
+          console.error(error);
+        });
+    }
+  };
+
+  const writeToBLE = () => {
+    const buffer = Buffer.from([1, 2, 3]);
+    BleManager.writeWithoutResponse(
+      "DC:0D:30:63:D9:B6",
+    //  "49535343-fe7d-4ae5-8fa9-9fafd205e455",
+    //  "18f0",
+      "e7810a71-73ae-499d-8c15-faa9aef0c3f2",
+    //  "49535343-8841-43f4-a8d4-ecbe34729bb3",
+    //  "2af1",
+      "bef8d6c9-9c21-4c9e-b632-bd58c1009f9f",
+      // encode & extract raw `number[]`.
+      // Each number should be in the 0-255 range as it is converted from a valid byte.
+      buffer.toJSON().data
+    )
+      .then(() => {
+        // Success code
+        console.log("Write: " + buffer.toJSON().data);
+      })
+      .catch((error) => {
+        // Failure code
+        console.log(error);
+      });
+
+  }
+
+  const readFromBLE = () => {
+    BleManager.read(
+      "DC:0D:30:63:D9:B6",
+    //  "49535343-fe7d-4ae5-8fa9-9fafd205e455",
+    //  "18f0",
+      "1800",
+    //  "49535343-8841-43f4-a8d4-ecbe34729bb3",
+    //  "2af1",
+      "2a00",
+     
+    )
+      .then((data) => {
+        // Success code
+        console.log("Read: ", data);
+      })
+      .catch((error) => {
+        // Failure code
+        console.log(error);
+      });
+
+  }
+
+  const connectToPrinter = (id) => {       
+        console.log("VOO", id);
+        BleManager.connect(id)
+        .then((resp) => {
+         console.log(resp)
+         retrieveServices(id);
+         writeToBLE();
+       // readFromBLE();
+        })
+        .catch((err) => {
+          console.log("failed connecting to the device", err)
+        })    
+
+  
+  }
+
+  const retrieveServices = (id) => { 
+      BleManager.retrieveServices(id).then(
+      (peripheralInfo) => {
+        // Success code 
+        console.log("Peripheral info:", peripheralInfo);
+      }
+    ) .catch(error => {
+      console.error("retrieveServices: ",error);
+    });
+  }
+
+  const handleGetConnectedDevices = () => {
+    BleManager.getBondedPeripherals([]).then(results => {
+      if (results.length === 0) {
+        console.log('No connected bluetooth devices');
+      } else {
+        for (let i = 0; i < results.length; i++) {
+          let peripheral = results[i];
+          peripheral.connected = true;
+          peripherals.set(peripheral.id, peripheral);
+          setConnectedDevices(Array.from(peripherals.values()));
+          console.log(peripheral);    
+          if (peripheral?.name == BLE_NAME)connectToPrinter(peripheral.id);
+
+        }
+      }
+    });
+  };
 
   useEffect( () => { //Check for updates
     let _sectionsShowing = [];

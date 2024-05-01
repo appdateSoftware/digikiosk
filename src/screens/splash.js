@@ -1,5 +1,12 @@
 import React, {useCallback, useEffect, useState} from 'react';
-import { View, StyleSheet, Text, ActivityIndicator} from 'react-native';
+import { 
+  View, 
+  StyleSheet, 
+  Text, 
+  ActivityIndicator,
+  Platform,
+  PermissionsAndroid,
+} from 'react-native';
 import { inject, observer } from "mobx-react";
 import { useFocusEffect } from '@react-navigation/native';
 import Colors from "../theme/colors";
@@ -7,6 +14,7 @@ import ErrorModal from "../components/modals/ErrorModal";
 import { getUniqueId } from 'react-native-device-info';
 import {useRealm, useQuery} from '@realm/react';
 import {useWindowDimensions} from 'react-native';
+import BleManager from 'react-native-ble-manager';
 
 const DEFAULT_EMAIL = "defaultUser@gmail.com";
 
@@ -21,6 +29,8 @@ const SplashScreen = ({navigation, feathersStore}) => {
   
   const [errorModal, setErrorModal] = useState(false) ;
   const [uniqueId, setUniqueId] = useState(false) ;
+  const [permissionsOK, setPermissionsOK] = useState(false) ;
+
 
 
   useFocusEffect(
@@ -32,6 +42,56 @@ const SplashScreen = ({navigation, feathersStore}) => {
       )   
     }, [])
   );
+
+  useEffect(() => {
+    // turn on bluetooth if it is not on
+    BleManager.enableBluetooth().then(() => {
+      console.log('Bluetooth is turned on!');
+    });
+    BleManager.start({showAlert: false}).then(() => {
+      console.log('BleManager initialized');
+    });
+
+    if (Platform.Version >= 23) {
+      PermissionsAndroid.check(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+      ).then(result => {
+        if (result) {
+          console.log('Permission is OK');
+        } else {
+          PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          ).then(result => {
+            if (result) {
+              console.log('User accept');
+            } else {
+              console.log('User refuse');
+            }
+          });
+        }
+      });
+    }
+
+    PermissionsAndroid.check(
+      PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+    ).then(result => {
+      if (result) {
+        console.log('Permission is OK');
+      } else {
+        PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+        ).then(result => {
+          if (result) {
+            console.log('User accept');
+            setPermissionsOK(true)
+          } else {
+            console.log('User refuse');
+          }
+        });
+      }
+    });
+
+  }, []);
 
   useEffect(() => {
     let lang = "el"
