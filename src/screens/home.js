@@ -39,7 +39,6 @@ import { AppSchema } from "../services/receipt-service";
 import ErrorModal from "../components/modals/ErrorModal";
 import InfoModal from "../components/modals/InfoModal";
 import BleManager from 'react-native-ble-manager';
-import { Buffer } from 'buffer';
 
 import { inject, observer } from "mobx-react";
 
@@ -128,7 +127,30 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   };
 
   const writeToBLE = () => {
-    const buffer = Buffer.from([1, 2, 3]);
+    const make = "zywellBLE";
+    const req =`
+      <?xml version="1.0" encoding="UTF-8"?>
+      <document>
+      <set-cp/>
+        <align mode="center">
+          <bold>
+            <text-line size="1:0">TEST 2 <set-symbol-cp>€</set-symbol-cp></text-line>
+          </bold>
+        </align>
+        <align mode="left">
+          <text-line size="0:0">\u03b1 DUCEROAD duceroad<set-symbol-cp>\u2021</set-symbol-cp></text-line>  
+          <x-position>100</x-position><text>Move 100</text>
+          <bold><text-line size="0:0">αβγ</text-line></bold>
+          <text-line size="0:0">abcdefghijklmnopqrstuvwxyz</text-line>     
+          <text>αβγδεζηθικλμνξοπρστυφχψωΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ</text>
+        <text>αβγδεζηθικλμνξοπρστυφχψωΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ</text>
+        </align>        
+        <line-feed />        
+        <paper-cut />
+      </document>
+    `
+    const buffer = EscPos.getBufferFromXML(req, make);
+
     BleManager.writeWithoutResponse(
       "DC:0D:30:63:D9:B6",
     //  "49535343-fe7d-4ae5-8fa9-9fafd205e455",
@@ -143,7 +165,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     )
       .then(() => {
         // Success code
-        console.log("Write: " + buffer.toJSON().data);
+        console.log("Write: " , buffer.toJSON().data);
       })
       .catch((error) => {
         // Failure code
@@ -181,7 +203,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
          console.log(resp)
          retrieveServices(id);
          writeToBLE();
-       // readFromBLE();
+        readFromBLE();
         })
         .catch((err) => {
           console.log("failed connecting to the device", err)
