@@ -13,11 +13,6 @@ const BLE_NAME ="Printer001"
 const BleManagerModule = NativeModules.BleManager;
 const BleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 
-const PrintService =({navigation, feathersStore}) => {
-
-}
-
-export default inject('feathersStore')(observer(PrintService));
 
 export const readFromBLE = async() => {
   try{
@@ -36,7 +31,7 @@ export const readFromBLE = async() => {
     console.log(error);
   };
 
-}
+}   
 
 export const writeToBLE = async(req) => {
   const make = "zywellBLE";
@@ -87,11 +82,12 @@ export const writeToBLE = async(req) => {
 
 }
 
-export const connectToPrinter = async(id) => {   
+const connectToPrinter = async(id) => {   
   try{
     const resp = await BleManager.connect(id);
-    feathersStore.setBleDisconnected(false);
-    retrieveServices(id);
+    feathersStore.setBleDisconnected(false);    
+    const peripheralInfo = await BleManager.retrieveServices(id);
+    return peripheralInfo;
   }catch(err){
     feathersStore.setBleDisconnected(true);
     console.log("failed connecting to the device", err)
@@ -99,30 +95,14 @@ export const connectToPrinter = async(id) => {
   }  
 }
 
-const retrieveServices = async(id) => { 
-  try{
-    peripheralInfo = await BleManager.retrieveServices(id)
-      // Success code 
-      console.log("Peripheral info:", peripheralInfo);
-    
-  }catch(error){
-    console.error("retrieveServices: ",error);
-    throw(err);
-  };
-}
-/*
-var Store = inject('feathersStore')(observer((props) => {
-  console.log("Props:", props)
-}));
-*/
 export const handleGetConnectedDevices = async() => {
   try{
      const results = await BleManager.getBondedPeripherals([])
     if (results.length === 0) {
       console.log('No connected bluetooth devices');
+      feathersStore.setBleDisconnected(true);
     } else {
       for (let i = 0; i < results.length; i++) {     
-        console.log(results[i]);
         if (results[i]?.name == BLE_NAME){
           feathersStore.setBleId(results[i].id);
           connectToPrinter(results[i].id);
@@ -134,9 +114,5 @@ export const handleGetConnectedDevices = async() => {
     throw(err);
   }; 
 };
-
-
-
-
 
 

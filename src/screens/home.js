@@ -39,7 +39,7 @@ import { AppSchema } from "../services/receipt-service";
 import ErrorModal from "../components/modals/ErrorModal";
 import InfoModal from "../components/modals/InfoModal";
 import BleManager from 'react-native-ble-manager';
-import { connectToPrinter, handleGetConnectedDevices, writeToBLE } from "../services/print-service.js";
+import { handleGetConnectedDevices, writeToBLE } from "../services/print-service.js";
 
 import { inject, observer } from "mobx-react";
 
@@ -94,6 +94,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   const [myPosErrorMessage, setMyPosErrorMessage] = useState("");
   const [tip, setTip] = useState("0");
   const [isScanning, setIsScanning] = useState(false);
+  const [bleReq, setBleReq] = useState(null);
 
  
   useEffect( () => { //Check for updates  
@@ -103,14 +104,15 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   useEffect(() => {
     let stopListener = BleManagerEmitter.addListener(
     'BleManagerStopScan',
-      (status) => {
-        setIsScanning(false);
+      async (status) => {
         let reason = "";
-        switch(status){
+        switch(status.status){
           case 10: reason = "Timed out";
           break;
         }
-     //   console.log('Scan is stopped:', status, reason);
+        await handleGetConnectedDevices();        
+        setIsScanning(false);
+        console.log('Scan is stopped: ', status, reason);
       },
     );
     let disconnectListener = BleManagerEmitter.addListener(
@@ -130,19 +132,32 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     startScan();
   }, []);
 
-  const startScan = () => {
-    if (!isScanning) {
-      BleManager.scan([], 5, true)
-        .then(() => {
-          console.log('Scanning...');
-          setIsScanning(true);    
-          handleGetConnectedDevices();         
-        })
-        .catch(error => {
-          console.error(error);
-        });
-    }
-  };   
+  const startScan = async() => {
+    try{
+      setIsScanning(true);
+      await BleManager.scan([], 5, true);      
+      console.log('Scanning...');
+    }catch(error){
+      setIsScanning(false);
+      console.error(error);
+    };
+  }
+
+  useEffect(() => {
+    const asyncFn = async() => {
+      if(bleReq && !isScanning){
+        if(feathersStore.bleDisconnected){  
+          setIssuingReceipt(false);
+          setErrorModal(true);
+        }else  {
+          setErrorModal(false);
+          await writeToBLE(bleReq);
+          setBleReq(null);
+        }
+      };     
+    }    
+    asyncFn();
+  }, [bleReq, isScanning, feathersStore.bleDisconnected])
 
   useEffect( () => { //Check for updates
     let _sectionsShowing = [];
@@ -699,11 +714,8 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     
     if(feathersStore.loggedInUser.ble){
       if(feathersStore.bleDisconnected){        
-        await connectToPrinter(feathersStore.bleId);
-        if(feathersStore.bleDisconnected){  
-          setIssuingReceipt(false);
-          setErrorModal(true);
-        }else  await writeToBLE(req);
+        await startScan();
+        setBleReq(req)     
       }else{
         await writeToBLE(req);
       }
