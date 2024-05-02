@@ -34,6 +34,8 @@ class FeathersStore{
   demoMode = true;
   isTablet = true;
   myPos = false;
+  bleId = "";
+  bleDisconnected = true;
  
   currentVersion = "1.0.5";
 
@@ -51,6 +53,8 @@ class FeathersStore{
       demoMode: observable,
       isTablet: observable,
       myPos: observable,
+      bleId: observable,
+      bleDisconnected: observable,
       setIsAuthenticated: action,
       setUser: action,
       setObservables: action,
@@ -62,7 +66,9 @@ class FeathersStore{
       setNewVersion: action,
       setDemoMode: action,
       setIsTablet: action,
-      setMyPos: action
+      setMyPos: action,
+      setBleId: action,
+      setBleDisconnected: action
     })
   } 
   
@@ -108,6 +114,14 @@ class FeathersStore{
 
   setMyPos = value => {
     this.myPos = value;
+  }
+
+  setBleId = value => {
+    this.bleId = value;
+  }
+
+  setBleDisconnected = value => {
+    this.bleDisconnected = value;
   }
 
 

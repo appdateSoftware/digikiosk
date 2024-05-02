@@ -39,6 +39,7 @@ import { AppSchema } from "../services/receipt-service";
 import ErrorModal from "../components/modals/ErrorModal";
 import InfoModal from "../components/modals/InfoModal";
 import BleManager from 'react-native-ble-manager';
+import { connectToPrinter, handleGetConnectedDevices, writeToBLE } from "../services/print-service.js";
 
 import { inject, observer } from "mobx-react";
 
@@ -94,9 +95,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   const [tip, setTip] = useState("0");
   const [isScanning, setIsScanning] = useState(false);
 
-  const peripherals = new Map()
- const [connectedDevices, setConnectedDevices] = useState([]);
-
+ 
   useEffect( () => { //Check for updates  
     checkForUpdates();
   }, []);
@@ -104,11 +103,30 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   useEffect(() => {
     let stopListener = BleManagerEmitter.addListener(
     'BleManagerStopScan',
-      () => {
+      (status) => {
         setIsScanning(false);
-        console.log('Scan is stopped');
+        let reason = "";
+        switch(status){
+          case 10: reason = "Timed out";
+          break;
+        }
+     //   console.log('Scan is stopped:', status, reason);
       },
     );
+    let disconnectListener = BleManagerEmitter.addListener(
+      'BleManagerDisconnectPeripheral',
+        (status) => {
+          console.log('BleManagerDisconnectPeripheral:', status);
+
+          if(status?.peripheral == feathersStore.bleId)  {
+            feathersStore.setBleDisconnected(true);
+            setErrorModal(true);
+          }          
+        },
+      );   
+    let stateListener = BleManagerEmitter.addListener("BleManagerDidUpdateState", (state) => {
+        console.log("State:", state)
+      });
     startScan();
   }, []);
 
@@ -124,122 +142,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
           console.error(error);
         });
     }
-  };
-
-  const writeToBLE = () => {
-    const make = "zywellBLE";
-    const req =`
-      <?xml version="1.0" encoding="UTF-8"?>
-      <document>
-      <set-cp/>
-        <align mode="center">
-          <bold>
-            <text-line size="1:0">TEST 2 <set-symbol-cp>€</set-symbol-cp></text-line>
-          </bold>
-        </align>
-        <align mode="left">
-          <text-line size="0:0">\u03b1 DUCEROAD duceroad<set-symbol-cp>\u2021</set-symbol-cp></text-line>  
-          <x-position>100</x-position><text>Move 100</text>
-          <bold><text-line size="0:0">αβγ</text-line></bold>
-          <text-line size="0:0">abcdefghijklmnopqrstuvwxyz</text-line>     
-          <text>αβγδεζηθικλμνξοπρστυφχψωΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ</text>
-        <text>αβγδεζηθικλμνξοπρστυφχψωΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ</text>
-        </align>        
-        <line-feed />        
-        <paper-cut />
-      </document>
-    `
-    const buffer = EscPos.getBufferFromXML(req, make);
-
-    BleManager.writeWithoutResponse(
-      "DC:0D:30:63:D9:B6",
-    //  "49535343-fe7d-4ae5-8fa9-9fafd205e455",
-    //  "18f0",
-      "e7810a71-73ae-499d-8c15-faa9aef0c3f2",
-    //  "49535343-8841-43f4-a8d4-ecbe34729bb3",
-    //  "2af1",
-      "bef8d6c9-9c21-4c9e-b632-bd58c1009f9f",
-      // encode & extract raw `number[]`.
-      // Each number should be in the 0-255 range as it is converted from a valid byte.
-      buffer.toJSON().data
-    )
-      .then(() => {
-        // Success code
-        console.log("Write: " , buffer.toJSON().data);
-      })
-      .catch((error) => {
-        // Failure code
-        console.log(error);
-      });
-
-  }
-
-  const readFromBLE = () => {
-    BleManager.read(
-      "DC:0D:30:63:D9:B6",
-    //  "49535343-fe7d-4ae5-8fa9-9fafd205e455",
-    //  "18f0",
-      "1800",
-    //  "49535343-8841-43f4-a8d4-ecbe34729bb3",
-    //  "2af1",
-      "2a00",
-     
-    )
-      .then((data) => {
-        // Success code
-        console.log("Read: ", data);
-      })
-      .catch((error) => {
-        // Failure code
-        console.log(error);
-      });
-
-  }
-
-  const connectToPrinter = (id) => {       
-        console.log("VOO", id);
-        BleManager.connect(id)
-        .then((resp) => {
-         console.log(resp)
-         retrieveServices(id);
-         writeToBLE();
-        readFromBLE();
-        })
-        .catch((err) => {
-          console.log("failed connecting to the device", err)
-        })    
-
-  
-  }
-
-  const retrieveServices = (id) => { 
-      BleManager.retrieveServices(id).then(
-      (peripheralInfo) => {
-        // Success code 
-        console.log("Peripheral info:", peripheralInfo);
-      }
-    ) .catch(error => {
-      console.error("retrieveServices: ",error);
-    });
-  }
-
-  const handleGetConnectedDevices = () => {
-    BleManager.getBondedPeripherals([]).then(results => {
-      if (results.length === 0) {
-        console.log('No connected bluetooth devices');
-      } else {
-        for (let i = 0; i < results.length; i++) {
-          let peripheral = results[i];
-          peripheral.connected = true;
-          peripherals.set(peripheral.id, peripheral);
-          setConnectedDevices(Array.from(peripherals.values()));
-          console.log(peripheral);    
-          if (peripheral?.name == BLE_NAME)connectToPrinter(peripheral.id);
-
-        }
-      }
-    });
-  };
+  };   
 
   useEffect( () => { //Check for updates
     let _sectionsShowing = [];
@@ -659,18 +562,18 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       '<align mode="left">' +    
       '<text-line>Ανάλυση ΦΠΑ</text-line>' + 
       `<text-line>Συντελεστής` + 
-      '<x-position>245</x-position><text>ΦΠΑ%</text>' +
-      '<x-position>350</x-position><text>Αξία ΦΠΑ</text>' +
-      '<x-position>455</x-position><text>Καθ. Αξία</text-line>' +
+      `<x-position>${feathersStore.loggedInUser.ble ? '141' : '245'}</x-position><text>ΦΠΑ%</text>` +
+      `<x-position>${feathersStore.loggedInUser.ble ? '194' : '350'}</x-position><text>ΦΠΑ</text>` +
+      `<x-position>${feathersStore.loggedInUser.ble ? '286' : '455'}</x-position><text>Κ. Αξία</text-line>` +
       '</align>';          
       
     for (let item of unReceiptedItems){
       itemsList = itemsList + 
         '<align mode="left">' +
           `<text-line>${item.name}` + 
-          `<x-position>245</x-position><text>${item.vatLabel}</text>` +
-          `<x-position>350</x-position><text>${parse_fix(item.underlyingValue)}</text>` +
-          `<x-position>455</x-position><text>${parse_fix(item.product_totalPrice)}<set-symbol-cp>€</set-symbol-cp></text-line>` +
+          `<x-position>${feathersStore.loggedInUser.ble ? '141' : '245'}</x-position><text>${item.vatLabel}</text>` +
+          `<x-position>${feathersStore.loggedInUser.ble ? '194' : '350'}</x-position><text>${parse_fix(item.underlyingValue)}</text>` +
+          `<x-position>${feathersStore.loggedInUser.ble ? '286' : '455'}</x-position><text>${parse_fix(item.product_totalPrice)}<set-symbol-cp>${feathersStore.loggedInUser.ble ? '' : '€'}</set-symbol-cp></text-line>` +
         '</align>';          
     }
     
@@ -700,9 +603,9 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
         vatAnalysis = vatAnalysis +
         '<align mode="left">' +
           `<text-line>Κατ. ΦΠΑ: ${vat.id}` + 
-          `<x-position>245</x-position><text>${getVat(vat.id)}</text>` +
-          `<x-position>350</x-position><text>${parse_fix(receipt[`vat${vat.id}`].vatAmount)}</text>` +
-          `<x-position>455</x-position><text>${parse_fix(receipt[`vat${vat.id}`].underlyingValue)}</text-line>` +
+          `<x-position>${feathersStore.loggedInUser.ble ? '141' : '245'}</x-position><text>${getVat(vat.id)}</text>` +
+          `<x-position>${feathersStore.loggedInUser.ble ? '194' : '350'}</x-position><text>${parse_fix(receipt[`vat${vat.id}`].vatAmount)}</text>` +
+          `<x-position>${feathersStore.loggedInUser.ble ? '286' : '455'}</x-position><text>${parse_fix(receipt[`vat${vat.id}`].underlyingValue)}</text-line>` +
         '</align>'; 
         totalNetPrice = +totalNetPrice + +receipt[`vat${vat.id}`].underlyingValue;
       }
@@ -742,7 +645,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       '</align>' +
        (companyData?.afm ? 
         '<align mode="center">' +
-        `<text-line>----------------------------------------------</text-line>` +                
+        `<text-line>${'-------------------------------' + (feathersStore.loggedInUser.ble ? '' :'---------------')}</text-line>` +                
         '</align>' +
         '<align mode="left">' +
         `<text-line>Στοιχεία πελάτη: ${companyData.legalName}</text-line>` +
@@ -750,36 +653,36 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
         '</align>'
       : "")  +
       '<align mode="center">' +
-      `<text-line>----------------------------------------------</text-line>` +    
+      `<text-line>${'-------------------------------' + (feathersStore.loggedInUser.ble ? '' :'---------------')}</text-line>` +                
       '</align>' +            
           itemsList + 
       '<line-feed />' +         
       '<align mode="center">' +
-      `<text-line>----------------------------------------------</text-line>` +
+      `<text-line>${'-------------------------------' + (feathersStore.loggedInUser.ble ? '' :'---------------')}</text-line>` +                
       '</align>' +
         vatAnalysisHeader +
         vatAnalysis +
       '<align mode="left">' +
       `<text-line>Σύνολο:` + 
-      `<x-position>350</x-position><text>${parse_fix(receiptTotal - receipt.totalNetPrice)}</text>` +
-      `<x-position>455</x-position><text>${parse_fix(receipt.totalNetPrice)}</text-line>` +
+      `<x-position>${feathersStore.loggedInUser.ble ? '194' : '350'}</x-position><text>${parse_fix(receiptTotal - receipt.totalNetPrice)}</text>` +
+      `<x-position>${feathersStore.loggedInUser.ble ? '286' : '455'}</x-position><text>${parse_fix(receipt.totalNetPrice)}</text-line>` +
       '</align>' +   
       '<align mode="center">' +
-      `<text-line>----------------------------------------------</text-line>` +
+      `<text-line>${'-------------------------------' + (feathersStore.loggedInUser.ble ? '' :'---------------')}</text-line>` +                
       '</align>' +
       '<align mode="left">' +
       `<text-line>${paymentMethod === "VISA" ? "ΚΑΡΤΑ" : "ΜΕΤΡΗΤΑ"}` + 
-      `<x-position>455</x-position><text>${parse_fix(paymentMethod === "VISA" ? receiptTotal : cash)}</text-line>` +
+      `<x-position>${feathersStore.loggedInUser.ble ? '286' : '455'}</x-position><text>${parse_fix(paymentMethod === "VISA" ? receiptTotal : cash)}</text-line>` +
       '</align>' +
       '<align mode="center">' +
-      `<text-line>----------------------------------------------</text-line>` +
+      `<text-line>${'-------------------------------' + (feathersStore.loggedInUser.ble ? '' :'---------------')}</text-line>` +                
       '</align>' +
       '<align mode="left">' +  
       `<text-line>Σύνολο:` + 
-      `<x-position>455</x-position><text>${parse_fix(receiptTotal)}<set-symbol-cp>€</set-symbol-cp></text></text-line>` +  
+      `<x-position>${feathersStore.loggedInUser.ble ? '286' : '455'}</x-position><text>${parse_fix(receiptTotal)}<set-symbol-cp>${feathersStore.loggedInUser.ble ? '' : '€'}</set-symbol-cp></text></text-line>` +  
       (paymentMethod === "CASH" ?
       `<text-line>Ρέστα:` + 
-      `<x-position>455</x-position><text>${parse_fix(change)}<set-symbol-cp>€</set-symbol-cp></text></text-line>`
+      `<x-position>${feathersStore.loggedInUser.ble ? '286' : '455'}</x-position><text>${parse_fix(change)}<set-symbol-cp>${feathersStore.loggedInUser.ble ? '' : '€'}</set-symbol-cp></text></text-line>`
       : "") +  
       '<line-feed/>' +         
       '<line-feed/>' +    
@@ -794,7 +697,18 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       '<paper-cut />' +
     '</document>' ;
     
-    await printLocally(req);
+    if(feathersStore.loggedInUser.ble){
+      if(feathersStore.bleDisconnected){        
+        await connectToPrinter(feathersStore.bleId);
+        if(feathersStore.bleDisconnected){  
+          setIssuingReceipt(false);
+          setErrorModal(true);
+        }else  await writeToBLE(req);
+      }else{
+        await writeToBLE(req);
+      }
+      
+    }else await printLocally(req);
     Object.assign(receipt, {footer: response.footer, req});
     
     //--------> Persist in Realm
@@ -1060,8 +974,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
         setIssuingReceipt(false);
         return;
     }   
-  } 
-
+  }
   const printLocally = (req) => {
 
       const PORT = 9100;
