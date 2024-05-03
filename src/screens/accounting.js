@@ -10,6 +10,8 @@ import {
   SafeAreaView,
   StatusBar,
   StyleSheet,
+  NativeModules,
+  NativeEventEmitter,
   View,
   Text,
   ScrollView
@@ -35,16 +37,17 @@ import ErrorModal from "../components/modals/ErrorModal";
 
 import Colors from "../theme/colors";
 
-//import mobx
 import { inject, observer } from "mobx-react";
 
-// Translations
 import _useTranslate from '../hooks/_useTranslate';
 
-// DeliverySectionA Config
+import BleManager from 'react-native-ble-manager';
+import { handleGetConnectedDevices, writeToBLE } from "../services/print-service.js";
+
 const printIcon = "print-outline";
 
-// DeliverySectionA Component
+const BleManagerModule = NativeModules.BleManager;
+const BleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 
 const AccountingScreen =({feathersStore}) => {
 
@@ -63,6 +66,8 @@ const AccountingScreen =({feathersStore}) => {
   const [filteredReceipts, setFilteredReceipts] = useState([]) ;
   const [vats, setVats] = useState([]) ;
   const [errorModal, setErrorModal] = useState(false) ;  
+  const [isScanning, setIsScanning] = useState(false);
+  const [bleReq, setBleReq] = useState(null);
   
   const Line = ({  
     cell1,
@@ -87,6 +92,76 @@ const AccountingScreen =({feathersStore}) => {
       </View>
   
   );
+
+  //-----------> BLE Printer
+
+  useEffect(() => {
+    if(feathersStore?.loggedInUser?.ble){
+      let stopListener = BleManagerEmitter.addListener(
+      'BleManagerStopScan',
+        async (status) => {
+          let reason = "";
+          switch(status.status){
+            case 10: reason = "Timed out";
+            break;
+          }
+          await handleGetConnectedDevices();        
+          setIsScanning(false);
+          console.log('Scan is stopped: ', status, reason);
+        },
+      );
+      let disconnectListener = BleManagerEmitter.addListener(
+        'BleManagerDisconnectPeripheral',
+          (status) => {
+            console.log('BleManagerDisconnectPeripheral:', status);
+
+            if(status?.peripheral == feathersStore.bleId)  {
+              feathersStore.setBleDisconnected(true);
+              setErrorModal(true);
+            }          
+          },
+        );   
+      let stateListener = BleManagerEmitter.addListener("BleManagerDidUpdateState", (state) => {
+          console.log("State:", state)
+        });
+      startScan();
+    }
+    return () => {
+      BleManagerEmitter.removeAllListeners("BleManagerStopScan");
+      BleManagerEmitter.removeAllListeners("BleManagerDisconnectPeripheral");
+    };
+  }, [feathersStore?.loggedInUser]);
+
+  const startScan = async() => {
+    try{
+      setIsScanning(true);
+      await BleManager.scan([], 5, true);      
+      console.log('Scanning...');
+    }catch(error){
+      setIsScanning(false);
+      console.error(error);
+    };
+  }
+
+  useEffect(() => {
+    const asyncFn = async() => {
+      if(bleReq && !isScanning){
+        if(feathersStore.bleDisconnected){  
+          setIndicatorModal(false);
+          setErrorModal(true);
+        }else  {
+          setErrorModal(false);
+          await writeToBLE(bleReq);
+          setIndicatorModal(false);
+          setBleReq(null);
+        }
+      };     
+    }    
+    asyncFn();
+  }, [bleReq, isScanning, feathersStore.bleDisconnected])  
+
+
+  //<----------  BLE Printer
 
   useEffect(() => {
     setFrom(DateTime.now().startOf("month").toISODate());
@@ -356,24 +431,24 @@ const AccountingScreen =({feathersStore}) => {
         `<text-line>${common.sales} ${item.label}%</text-line>` +
         '</align>' +
         '<align mode="left">' +
-        `<text-line><x-position>245</x-position><text>${common.retail}</text>` +
-        `<x-position>350</x-position><text>${common.wholesales}</text>` +
-        `<x-position>455</x-position><text>${common.totalCap}</text></text-line>` +
+        `<text-line><x-position>${feathersStore.loggedInUser.ble ? '92' : '245'}</x-position><text>${common.retail}</text>` +
+        `<x-position>${feathersStore.loggedInUser.ble ? '196' : '350'}</x-position><text>${feathersStore.loggedInUser.ble ?  common.wholesalesTrunc : common.wholesales}</text>` +
+        `<x-position>${feathersStore.loggedInUser.ble ? '288' : '455'}</x-position><text>${common.totalCap}</text></text-line>` +
         `<text-line>${common.net}` + 
-        `<x-position>245</x-position><text>${parse_fix(findRetailNet(item.id))}</text>` +
-        `<x-position>350</x-position><text>${parse_fix(findWholeSalesNet(item.id))}</text>` +
-        `<x-position>455</x-position><text>${parse_fix(findTotalNet(item.id))}</text></text-line>` +
+        `<x-position>${feathersStore.loggedInUser.ble ? '92' : '245'}</x-position><text>${parse_fix(findRetailNet(item.id))}</text>` +
+        `<x-position>${feathersStore.loggedInUser.ble ? '196' : '350'}</x-position><text>${parse_fix(findWholeSalesNet(item.id))}</text>` +
+        `<x-position>${feathersStore.loggedInUser.ble ? '288' : '455'}</x-position><text>${parse_fix(findTotalNet(item.id))}</text></text-line>` +
         `<text-line>${common.vat} ${item.label}%` + 
-        `<x-position>245</x-position><text>${parse_fix(findRetailVat(item.id))}</text>` +
-        `<x-position>350</x-position><text>${parse_fix(findWholeSalesVat(item.id))}</text>` +
-        `<x-position>455</x-position><text>${parse_fix(findTotalVat(item.id))}</text></text-line>` +
+        `<x-position>${feathersStore.loggedInUser.ble ? '92' : '245'}</x-position><text>${parse_fix(findRetailVat(item.id))}</text>` +
+        `<x-position>${feathersStore.loggedInUser.ble ? '196' : '350'}</x-position><text>${parse_fix(findWholeSalesVat(item.id))}</text>` +
+        `<x-position>${feathersStore.loggedInUser.ble ? '288' : '455'}</x-position><text>${parse_fix(findTotalVat(item.id))}</text></text-line>` +
         `<text-line>${common.gross}` + 
-        `<x-position>245</x-position><text>${parse_fix(+findRetailNet(item.id) + +findRetailVat(item.id))}</text>` +
-        `<x-position>350</x-position><text>${parse_fix(+findWholeSalesNet(item.id) + +findWholeSalesVat(item.id))}</text>` +
-        `<x-position>455</x-position><text>${parse_fix(+findTotalNet(item.id) + +findTotalVat(item.id))}</text></text-line>` +
+        `<x-position>${feathersStore.loggedInUser.ble ? '92' : '245'}</x-position><text>${parse_fix(+findRetailNet(item.id) + +findRetailVat(item.id))}</text>` +
+        `<x-position>${feathersStore.loggedInUser.ble ? '196' : '350'}</x-position><text>${parse_fix(+findWholeSalesNet(item.id) + +findWholeSalesVat(item.id))}</text>` +
+        `<x-position>${feathersStore.loggedInUser.ble ? '288' : '455'}</x-position><text>${parse_fix(+findTotalNet(item.id) + +findTotalVat(item.id))}</text></text-line>` +
         '</align>' +
         '<align mode="center">' +    
-        `<text-line>----------------------------------------------</text-line>` +    
+        `<text-line>${'-------------------------------' + (feathersStore.loggedInUser.ble ? '' :'---------------')}</text-line>` +                
         '</align>'
       )     
     }; 
@@ -395,53 +470,61 @@ const AccountingScreen =({feathersStore}) => {
       `<text-line>${common.totalSales}%</text-line>` +
       '</align>' +
       '<align mode="left">' +
-      `<text-line><x-position>245</x-position><text>${common.retail}</text>` +
-      `<x-position>350</x-position><text>${common.wholesales}</text>` +
-      `<x-position>455</x-position><text>${common.totalCap}</text></text-line>` +
-      `<text-line>${common.quantityC}` + 
-      `<x-position>245</x-position><text>${findRetailQuantity() > 0 ? findRetailQuantity() : "0"}</text>` +
-      `<x-position>350</x-position><text>${findWholeSalesQuantity() > 0 ? findWholeSalesQuantity() : "0"}</text>` +
-      `<x-position>455</x-position><text>${findTotalQuantity() > 0 ? findTotalQuantity() : "0"}</text></text-line>` +
+      `<text-line><x-position>${feathersStore.loggedInUser.ble ? '92' : '245'}</x-position><text>${common.retail}</text>` +
+      `<x-position>${feathersStore.loggedInUser.ble ? '196' : '350'}</x-position><text>${feathersStore.loggedInUser.ble ?  common.wholesalesTrunc : common.wholesales}</text>` +
+      `<x-position>${feathersStore.loggedInUser.ble ? '288' : '455'}</x-position><text>${common.totalCap}</text></text-line>` +
+      `<text-line>${feathersStore.loggedInUser.ble ? common.quantityCTrunc : common.quantityC}` + 
+      `<x-position>${feathersStore.loggedInUser.ble ? '92' : '245'}</x-position><text>${findRetailQuantity() > 0 ? findRetailQuantity() : "0"}</text>` +
+      `<x-position>${feathersStore.loggedInUser.ble ? '196' : '350'}</x-position><text>${findWholeSalesQuantity() > 0 ? findWholeSalesQuantity() : "0"}</text>` +
+      `<x-position>${feathersStore.loggedInUser.ble ? '288' : '455'}</x-position><text>${findTotalQuantity() > 0 ? findTotalQuantity() : "0"}</text></text-line>` +
       `<text-line>${common.gross}` + 
-      `<x-position>245</x-position><text>${parse_fix(+findTotalRetailNet() + +findTotalRetailVat())}</text>` +
-      `<x-position>350</x-position><text>${parse_fix(+findTotalWholeSalesNet() + +findTotalWholeSalesVat())}</text>` +
-      `<x-position>455</x-position><text>${parse_fix(+findTotalAllNet() + +findTotalAllVat())}</text></text-line>` +
-      `<text-line>${common.debit}` + 
-      `<x-position>245</x-position><text>${parse_fix(+findTotalRetailDebitNet() + +findTotalRetailDebitVat())}</text>` +
-      `<x-position>350</x-position><text>${parse_fix(+findTotalWholeSalesDebitNet() + +findTotalWholeSalesDebitVat())}</text>` +
-      `<x-position>455</x-position><text>${parse_fix(+findTotalAllDebitNet() + +findTotalAllDebitVat())}</text></text-line>` +
+      `<x-position>${feathersStore.loggedInUser.ble ? '92' : '245'}</x-position><text>${parse_fix(+findTotalRetailNet() + +findTotalRetailVat())}</text>` +
+      `<x-position>${feathersStore.loggedInUser.ble ? '196' : '350'}</x-position><text>${parse_fix(+findTotalWholeSalesNet() + +findTotalWholeSalesVat())}</text>` +
+      `<x-position>${feathersStore.loggedInUser.ble ? '288' : '455'}</x-position><text>${parse_fix(+findTotalAllNet() + +findTotalAllVat())}</text></text-line>` +
+      `<text-line>${feathersStore.loggedInUser.ble ? common.debitTrunc : common.debit}` + 
+      `<x-position>${feathersStore.loggedInUser.ble ? '92' : '245'}</x-position><text>${parse_fix(+findTotalRetailDebitNet() + +findTotalRetailDebitVat())}</text>` +
+      `<x-position>${feathersStore.loggedInUser.ble ? '196' : '350'}</x-position><text>${parse_fix(+findTotalWholeSalesDebitNet() + +findTotalWholeSalesDebitVat())}</text>` +
+      `<x-position>${feathersStore.loggedInUser.ble ? '288' : '455'}</x-position><text>${parse_fix(+findTotalAllDebitNet() + +findTotalAllDebitVat())}</text></text-line>` +
       `<text-line>${common.net}` + 
-      `<x-position>245</x-position><text>${parse_fix(findTotalRetailNet() - findTotalRetailDebitNet())}</text>` +
-      `<x-position>350</x-position><text>${parse_fix(findTotalWholeSalesNet() - findTotalWholeSalesDebitNet())}</text>` +
-      `<x-position>455</x-position><text>${parse_fix(findTotalAllNet() - findTotalAllDebitVat())}</text></text-line>` +
+      `<x-position>${feathersStore.loggedInUser.ble ? '92' : '245'}</x-position><text>${parse_fix(findTotalRetailNet() - findTotalRetailDebitNet())}</text>` +
+      `<x-position>${feathersStore.loggedInUser.ble ? '196' : '350'}</x-position><text>${parse_fix(findTotalWholeSalesNet() - findTotalWholeSalesDebitNet())}</text>` +
+      `<x-position>${feathersStore.loggedInUser.ble ? '288' : '455'}</x-position><text>${parse_fix(findTotalAllNet() - findTotalAllDebitVat())}</text></text-line>` +
       `<text-line>${common.vat}` + 
-      `<x-position>245</x-position><text>${parse_fix(findTotalRetailVat() - findTotalRetailDebitVat())}</text>` +
-      `<x-position>350</x-position><text>${parse_fix(findTotalWholeSalesVat() - findTotalWholeSalesDebitVat())}</text>` +
-      `<x-position>455</x-position><text>${parse_fix(findTotalAllVat() - findTotalAllDebitVat())}</text></text-line>` +
+      `<x-position>${feathersStore.loggedInUser.ble ? '92' : '245'}</x-position><text>${parse_fix(findTotalRetailVat() - findTotalRetailDebitVat())}</text>` +
+      `<x-position>${feathersStore.loggedInUser.ble ? '196' : '350'}</x-position><text>${parse_fix(findTotalWholeSalesVat() - findTotalWholeSalesDebitVat())}</text>` +
+      `<x-position>${feathersStore.loggedInUser.ble ? '288' : '455'}</x-position><text>${parse_fix(findTotalAllVat() - findTotalAllDebitVat())}</text></text-line>` +
       '</align>' +
       '<align mode="center">' +    
-      `<text-line>----------------------------------------------</text-line>` +    
+      `<text-line>${'-------------------------------' + (feathersStore.loggedInUser.ble ? '' :'---------------')}</text-line>` +                
       '</align>' +
       '<align mode="left">' +
       `<text-line>${common.totalCap}` + 
-      `<x-position>245</x-position><text>${parse_fix(+findTotalRetailNet() + +findTotalRetailVat() - findTotalRetailDebitNet() - findTotalRetailDebitVat())}</text>` +
-      `<x-position>350</x-position><text>${parse_fix(+findTotalWholeSalesNet() + +findTotalWholeSalesVat() - findTotalWholeSalesDebitNet() - findTotalWholeSalesDebitVat())}</text>` +
-      `<x-position>455</x-position><text>${parse_fix(+findTotalAllNet() + +findTotalAllVat() - findTotalAllDebitNet() - findTotalAllDebitVat())}</text></text-line>` +
+      `<x-position>${feathersStore.loggedInUser.ble ? '92' : '245'}</x-position><text>${parse_fix(+findTotalRetailNet() + +findTotalRetailVat() - findTotalRetailDebitNet() - findTotalRetailDebitVat())}</text>` +
+      `<x-position>${feathersStore.loggedInUser.ble ? '196' : '350'}</x-position><text>${parse_fix(+findTotalWholeSalesNet() + +findTotalWholeSalesVat() - findTotalWholeSalesDebitNet() - findTotalWholeSalesDebitVat())}</text>` +
+      `<x-position>${feathersStore.loggedInUser.ble ? '288' : '455'}</x-position><text>${parse_fix(+findTotalAllNet() + +findTotalAllVat() - findTotalAllDebitNet() - findTotalAllDebitVat())}</text></text-line>` +
       `<text-line>${common.average}` + 
-      `<x-position>245</x-position><text>${parse_fix(findRetailAverage())}</text>` +
-      `<x-position>350</x-position><text>${parse_fix(findWholeSalesAverage())}</text>` +
-      `<x-position>455</x-position><text>${parse_fix(findTotalAverage())}</text></text-line>` +
+      `<x-position>${feathersStore.loggedInUser.ble ? '92' : '245'}</x-position><text>${parse_fix(findRetailAverage())}</text>` +
+      `<x-position>${feathersStore.loggedInUser.ble ? '196' : '350'}</x-position><text>${parse_fix(findWholeSalesAverage())}</text>` +
+      `<x-position>${feathersStore.loggedInUser.ble ? '288' : '455'}</x-position><text>${parse_fix(findTotalAverage())}</text></text-line>` +
       '</align>' +      
       '<line-feed />' +
       '<align mode="center">' +
-      `<text-line>------------------------------------------</text-line>` +
+      `<text-line>${'-------------------------------' + (feathersStore.loggedInUser.ble ? '' :'---------------')}</text-line>` +                
       '<feed unit="24"/>' +
       '</align>' +
       '<line-feed />' +
       '<paper-cut />' +
     '</document>' ;
 
-    await printLocally(req);
+    if(feathersStore.loggedInUser?.ble){
+      if(feathersStore.bleDisconnected){        
+        await startScan();
+        setBleReq(req)     
+      }else{
+        await writeToBLE(req);
+        setIndicatorModal(false);
+      }      
+    }else await printLocally(req);
   }
 
   const printLocally = (req) => {

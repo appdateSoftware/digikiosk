@@ -29,8 +29,6 @@ const SplashScreen = ({navigation, feathersStore}) => {
   
   const [errorModal, setErrorModal] = useState(false) ;
   const [uniqueId, setUniqueId] = useState(false) ;
-  const [permissionsOK, setPermissionsOK] = useState(false) ;
-
 
 
   useFocusEffect(
@@ -43,55 +41,20 @@ const SplashScreen = ({navigation, feathersStore}) => {
     }, [])
   );
 
-  useEffect(() => {
-    // turn on bluetooth if it is not on
-    BleManager.enableBluetooth().then(() => {
-      console.log('Bluetooth is turned on!');
-    });
-    BleManager.start({showAlert: false}).then(() => {
-      console.log('BleManager initialized');
-    });
-
-    if (Platform.Version >= 23) {
-      PermissionsAndroid.check(
+  const startBLE = async() => {
+    if(feathersStore?.loggedInUser?.ble){      
+      await BleManager.enableBluetooth();
+      await BleManager.start({showAlert: false});
+      console.log("BLE started" );
+      const results = await PermissionsAndroid.requestMultiple([
+        PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
+        PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+        PermissionsAndroid.PERMISSIONS.BLUETOOTH_ADVERTISE,
         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-      ).then(result => {
-        if (result) {
-          console.log('Permission is OK');
-        } else {
-          PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-          ).then(result => {
-            if (result) {
-              console.log('User accept');
-            } else {
-              console.log('User refuse');
-            }
-          });
-        }
-      });
-    }
-
-    PermissionsAndroid.check(
-      PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
-    ).then(result => {
-      if (result) {
-        console.log('Permission is OK');
-      } else {
-        PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
-        ).then(result => {
-          if (result) {
-            console.log('User accept');
-            setPermissionsOK(true)
-          } else {
-            console.log('User refuse');
-          }
-        });
-      }
-    });
-
-  }, []);
+        PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION
+      ]);      
+    }    
+  }
 
   useEffect(() => {
     let lang = "el"
@@ -162,8 +125,11 @@ const SplashScreen = ({navigation, feathersStore}) => {
   }, [width])
 
   useEffect(() => {
-    if(feathersStore.isAuthenticated)
-      navigation.navigate('HomeNavigator', {screen: "Home"});  
+    const asyncFn = async() => {
+      await startBLE();
+      navigation.navigate('HomeNavigator', {screen: "Home"}); 
+    }
+    if(feathersStore.isAuthenticated)asyncFn();
   }, [feathersStore?.isAuthenticated])
  
   const load = async () => {

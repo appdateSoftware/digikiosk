@@ -57,7 +57,6 @@ const DEFAULT_EMAIL = "defaultUser@gmail.com";
 
 const {MyPosModule} = NativeModules;
 
-const BLE_NAME ="Printer001"
 const BleManagerModule = NativeModules.BleManager;
 const BleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 
@@ -102,35 +101,41 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   }, []);
 
   useEffect(() => {
-    let stopListener = BleManagerEmitter.addListener(
-    'BleManagerStopScan',
-      async (status) => {
-        let reason = "";
-        switch(status.status){
-          case 10: reason = "Timed out";
-          break;
-        }
-        await handleGetConnectedDevices();        
-        setIsScanning(false);
-        console.log('Scan is stopped: ', status, reason);
-      },
-    );
-    let disconnectListener = BleManagerEmitter.addListener(
-      'BleManagerDisconnectPeripheral',
-        (status) => {
-          console.log('BleManagerDisconnectPeripheral:', status);
-
-          if(status?.peripheral == feathersStore.bleId)  {
-            feathersStore.setBleDisconnected(true);
-            setErrorModal(true);
-          }          
+    if(feathersStore?.loggedInUser?.ble){
+      let stopListener = BleManagerEmitter.addListener(
+      'BleManagerStopScan',
+        async (status) => {
+          let reason = "";
+          switch(status.status){
+            case 10: reason = "Timed out";
+            break;
+          }
+          await handleGetConnectedDevices();        
+          setIsScanning(false);
+          console.log('Scan is stopped: ', status, reason);
         },
-      );   
-    let stateListener = BleManagerEmitter.addListener("BleManagerDidUpdateState", (state) => {
-        console.log("State:", state)
-      });
-    startScan();
-  }, []);
+      );
+      let disconnectListener = BleManagerEmitter.addListener(
+        'BleManagerDisconnectPeripheral',
+          (status) => {
+            console.log('BleManagerDisconnectPeripheral:', status);
+
+            if(status?.peripheral == feathersStore.bleId)  {
+              feathersStore.setBleDisconnected(true);
+              setErrorModal(true);
+            }          
+          },
+        );   
+      let stateListener = BleManagerEmitter.addListener("BleManagerDidUpdateState", (state) => {
+          console.log("State:", state)
+        });
+      startScan();
+    }
+    return () => {
+      BleManagerEmitter.removeAllListeners("BleManagerStopScan");
+      BleManagerEmitter.removeAllListeners("BleManagerDisconnectPeripheral");
+    };
+  }, [feathersStore?.loggedInUser]);
 
   const startScan = async() => {
     try{
@@ -712,14 +717,13 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       '<paper-cut />' +
     '</document>' ;
     
-    if(feathersStore.loggedInUser.ble){
+    if(feathersStore.loggedInUser?.ble){
       if(feathersStore.bleDisconnected){        
         await startScan();
         setBleReq(req)     
       }else{
         await writeToBLE(req);
-      }
-      
+      }      
     }else await printLocally(req);
     Object.assign(receipt, {footer: response.footer, req});
     

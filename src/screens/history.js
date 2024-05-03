@@ -11,6 +11,8 @@ import {
   SafeAreaView,
   StatusBar,
   StyleSheet,
+  NativeModules,
+  NativeEventEmitter,
   View,
   Image
 } from "react-native";
@@ -45,9 +47,15 @@ import { inject, observer } from "mobx-react";
 // Translations
 import _useTranslate from '../hooks/_useTranslate';
 
+import BleManager from 'react-native-ble-manager';
+import { handleGetConnectedDevices, writeToBLE } from "../services/print-service.js";
+
 // DeliverySectionA Config
 const printIcon = "print-outline";
 const trashIcon = "trash-outline";
+
+const BleManagerModule = NativeModules.BleManager;
+const BleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 
 // DeliverySectionA
 const HistoryScreen =({feathersStore}) => {
@@ -114,6 +122,76 @@ const HistoryScreen =({feathersStore}) => {
   const [filteredReceipts, setFilteredReceipts] = useState([]) ;
   const [errorModal, setErrorModal] = useState(false) ;   
   const [issuingReceipt, setIssuingReceipt] = useState(false) ;  
+  const [isScanning, setIsScanning] = useState(false);
+  const [bleReq, setBleReq] = useState(null);
+
+  //------------->   BLE printer
+
+  useEffect(() => {  
+    if(feathersStore?.loggedInUser?.ble){
+      let stopListener = BleManagerEmitter.addListener(
+      'BleManagerStopScan',
+        async (status) => {
+          let reason = "";
+          switch(status.status){
+            case 10: reason = "Timed out";
+            break;
+          }
+          await handleGetConnectedDevices();        
+          setIsScanning(false);
+          console.log('Scan is stopped: ', status, reason);
+        },
+      );
+      let disconnectListener = BleManagerEmitter.addListener(
+        'BleManagerDisconnectPeripheral',
+          (status) => {
+            console.log('BleManagerDisconnectPeripheral:', status);
+
+            if(status?.peripheral == feathersStore.bleId)  {
+              feathersStore.setBleDisconnected(true);
+              setErrorModal(true);
+            }          
+          },
+        );   
+      let stateListener = BleManagerEmitter.addListener("BleManagerDidUpdateState", (state) => {
+          console.log("State:", state)
+        });
+      startScan();
+    }
+    return () => {
+      BleManagerEmitter.removeAllListeners("BleManagerStopScan");
+      BleManagerEmitter.removeAllListeners("BleManagerDisconnectPeripheral");
+    };
+  }, [feathersStore?.loggedInUser]);
+
+  const startScan = async() => {
+    try{
+      setIsScanning(true);
+      await BleManager.scan([], 5, true);      
+      console.log('Scanning...');
+    }catch(error){
+      setIsScanning(false);
+      console.error(error);
+    };
+  }
+
+  useEffect(() => {
+    const asyncFn = async() => {
+      if(bleReq && !isScanning){
+        if(feathersStore.bleDisconnected){  
+          setIndicatorModal(false);
+          setErrorModal(true);
+        }else  {
+          setErrorModal(false);
+          await writeToBLE(bleReq);
+          setBleReq(null);
+        }
+      };     
+    }    
+    asyncFn();
+  }, [bleReq, isScanning, feathersStore.bleDisconnected])
+
+  //<----------BLE Printer
 
   useEffect(() => {
     setInvoiceTypes(AppSchema.invoiceTypes);
@@ -129,9 +207,15 @@ const HistoryScreen =({feathersStore}) => {
 
   const printThermal = req => async() =>{
     setIndicatorModal(true);   
-    await printLocally(req);
-    setIndicatorModal(false);   
-
+    if(feathersStore.loggedInUser?.ble){
+      if(feathersStore.bleDisconnected){        
+        await startScan();
+        setBleReq(req)     
+      }else{
+        await writeToBLE(req);
+      }      
+    }else await printLocally(req);    
+    setIndicatorModal(false);
   }
 
   const createPDF = () => item => async() => {
@@ -315,18 +399,18 @@ const issueReceipt = async(oldReceipt) => {
     '<align mode="left">' +    
     '<text-line>Ανάλυση ΦΠΑ</text-line>' + 
     `<text-line>Συντελεστής` + 
-    '<x-position>245</x-position><text>ΦΠΑ%</text>' +
-    '<x-position>350</x-position><text>Αξία ΦΠΑ</text>' +
-    '<x-position>455</x-position><text>Καθ. Αξία</text-line>' +
+    `<x-position>${feathersStore.loggedInUser.ble ? '141' : '245'}</x-position><text>ΦΠΑ%</text>` +
+    `<x-position>${feathersStore.loggedInUser.ble ? '194' : '350'}</x-position><text>ΦΠΑ</text>` +
+    `<x-position>${feathersStore.loggedInUser.ble ? '286' : '455'}</x-position><text>Κ. Αξία</text-line>` +
     '</align>';          
     
   for (let item of unReceiptedItems){
     itemsList = itemsList + 
       '<align mode="left">' +
         `<text-line>${item.name}` + 
-        `<x-position>245</x-position><text>${item.vatLabel}</text>` +
-        `<x-position>350</x-position><text>${parse_fix(item.underlyingValue)}</text>` +
-        `<x-position>455</x-position><text>${parse_fix(item.product_totalPrice)}<set-symbol-cp>€</set-symbol-cp></text-line>` +
+        `<x-position>${feathersStore.loggedInUser.ble ? '141' : '245'}</x-position><text>${item.vatLabel}</text>` +
+        `<x-position>${feathersStore.loggedInUser.ble ? '194' : '350'}</x-position><text>${parse_fix(item.underlyingValue)}</text>` +
+        `<x-position>${feathersStore.loggedInUser.ble ? '286' : '455'}</x-position><text>${parse_fix(item.product_totalPrice)}<set-symbol-cp>€</set-symbol-cp></text-line>` +
       '</align>';          
   }  
 
@@ -352,9 +436,9 @@ const issueReceipt = async(oldReceipt) => {
       vatAnalysis = vatAnalysis +
       '<align mode="left">' +
         `<text-line>Κατ. ΦΠΑ: ${vat.id}` + 
-        `<x-position>245</x-position><text>${getVat(vat.id)}</text>` +
-        `<x-position>350</x-position><text>${parse_fix(receipt[`vat${vat.id}`].vatAmount)}</text>` +
-        `<x-position>455</x-position><text>${parse_fix(receipt[`vat${vat.id}`].underlyingValue)}</text-line>` +
+        `<x-position>${feathersStore.loggedInUser.ble ? '141' : '245'}</x-position><text>${getVat(vat.id)}</text>` +
+        `<x-position>${feathersStore.loggedInUser.ble ? '194' : '350'}</x-position><text>${parse_fix(receipt[`vat${vat.id}`].vatAmount)}</text>` +
+        `<x-position>${feathersStore.loggedInUser.ble ? '286' : '455'}</x-position><text>${parse_fix(receipt[`vat${vat.id}`].underlyingValue)}</text-line>` +
       '</align>'; 
     }
   }
@@ -393,7 +477,7 @@ const issueReceipt = async(oldReceipt) => {
     '</align>' +
      (companyData?.afm ? 
       '<align mode="center">' +
-      `<text-line>----------------------------------------------</text-line>` +                
+      `<text-line>${'-------------------------------' + (feathersStore.loggedInUser.ble ? '' :'---------------')}</text-line>` +                
       '</align>' +
       '<align mode="left">' +
       `<text-line>Στοιχεία πελάτη: ${companyData.legalName}</text-line>` +
@@ -401,26 +485,26 @@ const issueReceipt = async(oldReceipt) => {
       '</align>'
     : "")  +
     '<align mode="center">' +
-    `<text-line>----------------------------------------------</text-line>` +    
+    `<text-line>${'-------------------------------' + (feathersStore.loggedInUser.ble ? '' :'---------------')}</text-line>` +                
     '</align>' +            
         itemsList + 
     '<line-feed />' +         
     '<align mode="center">' +
-    `<text-line>----------------------------------------------</text-line>` +
+    `<text-line>${'-------------------------------' + (feathersStore.loggedInUser.ble ? '' :'---------------')}</text-line>` +                
     '</align>' +
       vatAnalysisHeader +
       vatAnalysis +
     '<align mode="left">' +
     `<text-line>Σύνολο:` + 
-    `<x-position>350</x-position><text>${parse_fix(receipt.receiptTotal - receipt.totalNetPrice)}</text>` +
-    `<x-position>455</x-position><text>${parse_fix(receipt.totalNetPrice)}</text-line>` +
+    `<x-position>${feathersStore.loggedInUser.ble ? '194' : '350'}</x-position><text>${parse_fix(receipt.receiptTotal - receipt.totalNetPrice)}</text>` +
+    `<x-position>${feathersStore.loggedInUser.ble ? '286' : '455'}</x-position><text>${parse_fix(receipt.totalNetPrice)}</text-line>` +
     '</align>' +   
     '<align mode="center">' +
-    `<text-line>----------------------------------------------</text-line>` +
+    `<text-line>${'-------------------------------' + (feathersStore.loggedInUser.ble ? '' :'---------------')}</text-line>` +                
     '</align>' +    
     '<align mode="left">' +  
     `<text-line>Σύνολο:` + 
-    `<x-position>455</x-position><text>${parse_fix(receipt.receiptTotal)}<set-symbol-cp>€</set-symbol-cp></text></text-line>` +   
+    `<x-position>${feathersStore.loggedInUser.ble ? '286' : '455'}</x-position><text>${parse_fix(receipt.receiptTotal)}<set-symbol-cp>€</set-symbol-cp></text></text-line>` +   
     '<line-feed/>' +         
     '<line-feed/>' +    
     `<text-line>${response?.footer}</text-line>` +
@@ -434,7 +518,14 @@ const issueReceipt = async(oldReceipt) => {
     '<paper-cut />' +
   '</document>' ;
   
-  await printLocally(req);
+  if(feathersStore.loggedInUser?.ble){
+    if(feathersStore.bleDisconnected){        
+      await startScan();
+      setBleReq(req)     
+    }else{
+      await writeToBLE(req);
+    }      
+  }else await printLocally(req);  
   Object.assign(receipt, {footer: response.footer, req});
   
   //--------> Persist in Realm
