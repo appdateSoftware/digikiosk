@@ -180,10 +180,13 @@ const HistoryScreen =({feathersStore}) => {
       if(bleReq && !isScanning){
         if(feathersStore.bleDisconnected){  
           setIndicatorModal(false);
+          setIssuingReceipt(false);
           setErrorModal(true);
         }else  {
           setErrorModal(false);
           await writeToBLE(bleReq);
+          setIndicatorModal(false);
+          setIssuingReceipt(false);
           setBleReq(null);
         }
       };     
@@ -524,6 +527,7 @@ const issueReceipt = async(oldReceipt) => {
       setBleReq(req)     
     }else{
       await writeToBLE(req);
+      setIssuingReceipt(false);
     }      
   }else await printLocally(req);  
   Object.assign(receipt, {footer: response.footer, req});
