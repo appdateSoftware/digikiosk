@@ -527,20 +527,91 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     try{    
       const tippingModeEnabled = +tip > 0 ? true : false;
       const transactionResult = await MyPosModule.makeMyPosPayment(amount, tippingModeEnabled, tip, waiter, table);
-      if (transactionResult.slice(-1) === "0" ) {
-        // Transaction is successful      
-          await issueReceiptFn("VISA")      
-          console.log("SUCCESS: ", transactionResult);
+      if(transactionResult.myResponse.slice(-1) === "0") {        
+        // Transaction is successful     
+        if(feathersStore.loggedInUser?.ble)await printVisaReceipt(transactionResult, amount, tip); 
+        await issueReceiptFn("VISA")      
       }else{
         console.log("ERROR: ", transactionResult);      
         setMyPosError(true);
-        setMyPosErrorMessage(transactionResult);
+        setMyPosErrorMessage(transactionResult.myResponse);
       }
     }catch(error){
       setMyPosError(true);
       setMyPosErrorMessage(error.toString());
     }
   }
+
+  
+  const printVisaReceipt = async(response, amount, tip) => {
+
+    /* RESPONSE EXAMPLE
+   const response = {
+      "CVM": "P", 
+      "STAN": null, 
+      "TID": "90477302", 
+      "TSI": null, 
+      "TVR": null, 
+      "application_name": "Visa DEBIT", 
+      "card_brand": "PAYWAVE", 
+      "card_entry_mode": "ENTRY_MODE_CONTACTLESS_MCHIP", 
+      "cardholder_name": "", 
+      "date_time": "240514200202", 
+      "myResponse": "Payment transaction has completed. Result: 0", 
+      "rrn": "413517637866", 
+      "signature_required": false, 
+      "status_text": "TRANSACTION_SUCCESS", 
+      "transaction_approved": true
+    }
+    */
+
+    const date =  response.date_time.substring(4,6) + "/" + 
+                  response.date_time.substring(2,4) + "/20" +
+                  response.date_time.substring(0,2);
+
+    const time = response.date_time.substring(6,8) + ":" + 
+                  response.date_time.substring(8,10) + ":" +
+                  response.date_time.substring(10,12);
+    
+    req =  
+    '<?xml version="1.0" encoding="UTF-8"?>' +
+    '<document>' +
+      '<set-cp/>' +
+      '<align mode="center">' +
+        constructCompanyTitleMyPos() +             
+      '<line-feed />' +
+      '<bold>' +  
+        `<text-line>${date} ${time}</text-line>` +                           
+        `<text-line>ΑΓΟΡΑ-SALE: </text-line>` +     
+        `<text-line>${parse_fix(+amount + +tip)} EUR</text-line>` +                 
+      '</bold>' +
+      '<line-feed />' + 
+        `<text-line>${response.application_name}</text-line>` + 
+        `<text-line>${response.card_entry_mode}</text-line>` +
+        `<text-line>${response.signature_required ? 'Signature required' : 'No Signature Required'}</text-line>` +
+        '<line-feed />' +
+        `<text-line>${response.transaction_approved ? 'Transaction approved' : 'Transaction not approved'}</text-line>` +
+      '</align>' +
+      '<line-feed />' +
+      '<align mode="left">' +
+        `<text-line>TID: ${response.TID}</text-line>` + 
+        `<text-line>RRN: ${response.rrn}</text-line>` + 
+      '</align>' +
+      '<align mode="center">' +                 
+      `<text-line>${feathersStore.loggedInUser?.name}</text-line>` +
+      '</align>' +
+      '<line-feed />' +                     
+      '<paper-cut />' +
+    '</document>' ;
+
+    if(feathersStore.bleDisconnected){        
+      await startScan();
+      setBleReq(req)     
+    }else{
+      await writeToBLE(req);
+    } 
+
+  } 
 
   const visaPayment = async() => {
     if(feathersStore?.myPos)await payMyPos();
@@ -623,7 +694,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
         vatAnalysis = vatAnalysis +
         '<align mode="left">' +
           `<text-line>Κατ. ΦΠΑ: ${vat.id}` + 
-          `<x-position>${feathersStore.loggedInUser.ble ? '141' : '245'}</x-position><text>${getVat(vat.id)}</text>` +
+          `<x-position>${feathersStore.loggedInUser?.ble ? '141' : '245'}</x-position><text>${getVat(vat.id)}</text>` +
           `<x-position>${feathersStore.loggedInUser.ble ? '194' : '350'}</x-position><text>${parse_fix(receipt[`vat${vat.id}`].vatAmount)}</text>` +
           `<x-position>${feathersStore.loggedInUser.ble ? '286' : '455'}</x-position><text>${parse_fix(receipt[`vat${vat.id}`].underlyingValue)}</text-line>` +
         '</align>'; 
@@ -754,6 +825,21 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       '<line-feed />' +
       `<bold><text-line>${realm_company[0]?.legalName || realm_company[0].name}</text-line></bold>` +
       '<line-feed />' +
+      '<bold>' +
+        `<text-line>${realm_company[0].postalAddress} ${realm_company[0].postalAddressNo} ${realm_company[0].postalAreaDescription} ${realm_company[0].postalZipCode}</text-line>` + 
+        `<text-line>ΑΦΜ: ${realm_company[0].afm} ΔΟΥ ${realm_company[0].doyDescription}</text-line>` +
+        `<text-line>${realm_company[0].firmActDescription}</text-line>` +
+        (realm_company[0].companyPhone ? `<text-line>ΤΗΛ: ${realm_company[0].companyPhone}</text-line>` : '') +
+        (realm_company[0].companyEmail ? `<text-line>E-mail: ${realm_company[0].companyEmail}</text-line>` : '') +
+      '</bold>'
+    )
+  }
+
+  const constructCompanyTitleMyPos = () => {
+    return(
+      `<bold><text-line size="1:1">MyPos</text-line></bold>` +
+      '<line-feed />' +
+      `<bold><text-line>${realm_company[0]?.legalName || realm_company[0].name}</text-line></bold>` +
       '<bold>' +
         `<text-line>${realm_company[0].postalAddress} ${realm_company[0].postalAddressNo} ${realm_company[0].postalAreaDescription} ${realm_company[0].postalZipCode}</text-line>` + 
         `<text-line>ΑΦΜ: ${realm_company[0].afm} ΔΟΥ ${realm_company[0].doyDescription}</text-line>` +

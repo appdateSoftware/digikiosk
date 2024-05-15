@@ -8,6 +8,10 @@ import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ActivityEventListener;
 import com.facebook.react.bridge.BaseActivityEventListener;
 import com.facebook.react.bridge.Promise;
+import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.ReadableNativeMap;
+import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.WritableNativeMap;
 import com.mypos.glasssdk.Currency;
 import com.mypos.glasssdk.MyPOSAPI;
 import com.mypos.glasssdk.MyPOSPayment;
@@ -33,6 +37,7 @@ public class MyPosModule extends ReactContextBaseJavaModule {
             if ((requestCode == 1) || (requestCode == VOID_REQUEST_CODE) || (requestCode == 2)) {
                 System.out.println(data);
                 // The transaction was processed, handle the response
+                WritableMap returnMap = new WritableNativeMap();
                 if (resultCode == Activity.RESULT_OK) {
                     // Something went wrong in the Payment core app and the result couldn't be returned properly
                     if ( data == null) {
@@ -43,29 +48,54 @@ public class MyPosModule extends ReactContextBaseJavaModule {
                     // TODO: handle each transaction response accordingly
                     if (transactionResult == TransactionProcessingResult.TRANSACTION_SUCCESS) {
                         // Transaction is successful
-                        mPosPromise.resolve("Payment transaction has completed. Result: " + transactionResult);
+                        returnMap.putString("myResponse", "Payment transaction has completed. Result: " + transactionResult);
+                        returnMap.putString("rrn", data.getStringExtra("rrn"));
+                        returnMap.putString("cardholder_name", data.getStringExtra("cardholder_name"));
+                        returnMap.putString("date_time", data.getStringExtra("date_time"));
+                        returnMap.putString("status_text", data.getStringExtra("status_text"));
+                        returnMap.putString("card_brand", data.getStringExtra("card_brand"));
+                        returnMap.putString("card_entry_mode", data.getStringExtra("card_entry_mode"));
+                        returnMap.putBoolean("signature_required", data.getBooleanExtra("signature_required", false));
+                        returnMap.putString("TSI", data.getStringExtra("TSI"));
+                        returnMap.putString("TVR", data.getStringExtra("TVR"));
+                        returnMap.putString("STAN", data.getStringExtra("STAN"));
+                        returnMap.putString("CVM", data.getStringExtra("CVM"));
+                        returnMap.putString("application_name", data.getStringExtra("application_name"));
+                        returnMap.putBoolean("transaction_approved", data.getBooleanExtra("transaction_approved", true));
+                        returnMap.putString("TID", data.getStringExtra("TID"));
+                        mPosPromise.resolve(returnMap);
                     }else if(transactionResult == TransactionProcessingResult.TRANSACTION_FAILED){
-                        mPosPromise.resolve("Payment transaction failed. Result: " + transactionResult);
+                        returnMap.putString("myResponse", "Payment transaction failed. Result: " + transactionResult);
+                        mPosPromise.resolve(returnMap);
                     }else if(transactionResult == TransactionProcessingResult.TRANSACTION_CANCELED){
-                        mPosPromise.resolve("Payment transaction canceled. Result: " + transactionResult);
+                        returnMap.putString("myResponse", "Payment transaction canceled. Result: " + transactionResult);
+                        mPosPromise.resolve(returnMap);
                     }else if(transactionResult == TransactionProcessingResult.TRANSACTION_DECLINED){
-                        mPosPromise.resolve("Payment transaction declined. Result: " + transactionResult);
+                        returnMap.putString("myResponse", "Payment transaction declined. Result: " + transactionResult);
+                        mPosPromise.resolve(returnMap);
                     }else if(transactionResult == TransactionProcessingResult.INVALID_AMOUNT){
-                        mPosPromise.resolve("Payment transaction has Invalid Amount. Result: " + transactionResult);
+                        returnMap.putString("myResponse", "Payment transaction has Invalid Amount. Result: " + transactionResult);
+                        mPosPromise.resolve(returnMap);
                     }else if(transactionResult == TransactionProcessingResult.DEVICE_NOT_ACTIVATED){
-                        mPosPromise.resolve("The device is not activated. Result: " + transactionResult);
+                        returnMap.putString("myResponse", "The device is not activated. Result: " + transactionResult);
+                        mPosPromise.resolve(returnMap);
                     }else if(transactionResult == TransactionProcessingResult.INVALID_CURRENCY){
-                        mPosPromise.resolve("Payment transaction failed due to Invalid Currency. Result: " + transactionResult);
+                        returnMap.putString("myResponse", "Payment transaction failed due to Invalid Currency. Result: " + transactionResult);
+                        mPosPromise.resolve(returnMap);
                     }else if(transactionResult == TransactionProcessingResult.NO_DATA_FOUND){
-                        mPosPromise.resolve("Payment transaction cancelled. No data found. Result: " + transactionResult);
+                        returnMap.putString("myResponse", "Payment transaction cancelled. No data found. Result: " + transactionResult);
+                        mPosPromise.resolve(returnMap);
                     }else if(transactionResult == TransactionProcessingResult.COMMUNICATION_ERROR){
-                        mPosPromise.resolve("Payment transaction cancelled. Communication error. Result: " + transactionResult);
+                        returnMap.putString("myResponse", "Payment transaction cancelled. Communication error. Result: " + transactionResult);
+                        mPosPromise.resolve(returnMap);
                     }else if(transactionResult == TransactionProcessingResult.INVALID_E_RECEIPT_CREDENTIAL){
-                        mPosPromise.resolve("Failed. Invalid e Receipt credential. Result: " + transactionResult);
+                        returnMap.putString("myResponse", "Failed. Invalid e Receipt credential. Result: " + transactionResult);
+                        mPosPromise.resolve(returnMap);
                     }
                 } else {
                     // The user canceled the transaction
-                    mPosPromise.resolve("Transaction canceled");
+                    returnMap.putString("myResponse", "Transaction canceled");
+                    mPosPromise.resolve(returnMap);
                 }
             }
 
@@ -176,3 +206,4 @@ public class MyPosModule extends ReactContextBaseJavaModule {
     }
 
 }
+
