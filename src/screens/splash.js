@@ -41,20 +41,27 @@ const SplashScreen = ({navigation, feathersStore}) => {
     }, [])
   );
 
+  const checkPermssions = async() => {
+    const results = await PermissionsAndroid.requestMultiple([
+      PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
+      PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+      PermissionsAndroid.PERMISSIONS.BLUETOOTH_ADVERTISE,
+      PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+      PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION
+    ]);
+  }
+
   const startBLE = async() => {
     if(feathersStore?.loggedInUser?.ble){      
       await BleManager.enableBluetooth();
       await BleManager.start({showAlert: false});
-      console.log("BLE started" );
-      const results = await PermissionsAndroid.requestMultiple([
-        PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
-        PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
-        PermissionsAndroid.PERMISSIONS.BLUETOOTH_ADVERTISE,
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-        PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION
-      ]);      
+      console.log("BLE started" );           
     }    
   }
+
+  useEffect(() => {
+    checkPermssions();
+  }, []); 
 
   useEffect(() => {
     let lang = "el"
@@ -126,8 +133,13 @@ const SplashScreen = ({navigation, feathersStore}) => {
 
   useEffect(() => {
     const asyncFn = async() => {
-      await startBLE();
-      navigation.navigate('HomeNavigator', {screen: "Home"}); 
+      try{
+        await startBLE();
+        navigation.navigate('HomeNavigator', {screen: "Home"}); 
+      }catch(error){
+        console.log("BLE error", error);
+        navigation.navigate('HomeNavigator', {screen: "Home"}); 
+      }    
     }
     if(feathersStore.isAuthenticated)asyncFn();
   }, [feathersStore?.isAuthenticated])
