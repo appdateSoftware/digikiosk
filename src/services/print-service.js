@@ -1,5 +1,4 @@
 import React, { useState, useCallback, useLayoutEffect } from "react";
-import {useRealm, useQuery} from '@realm/react';
 import BleManager from 'react-native-ble-manager';
 import { 
   NativeModules,
@@ -12,7 +11,6 @@ import feathersStore from "../feathersStore";
 const BLE_NAME ="Printer001"
 const BleManagerModule = NativeModules.BleManager;
 const BleManagerEmitter = new NativeEventEmitter(BleManagerModule);
-
 
 export const readFromBLE = async() => {
   try{
@@ -33,7 +31,7 @@ export const readFromBLE = async() => {
 
 }   
 
-export const writeToBLE = async(req) => {
+export const writeToBLE = async(req, printerIp) => {
   const make = "zywellBLE";
   
   //TEST
@@ -63,7 +61,8 @@ export const writeToBLE = async(req) => {
   //    BleManager.writeWithoutResponse(
     await BleManager.write(
 
-      "DC:0D:30:63:D9:B6",
+     // "DC:0D:30:63:D9:B6",
+     `${printerIp.trim()}`,
     //  "49535343-fe7d-4ae5-8fa9-9fafd205e455",
     //  "18f0",
       "e7810a71-73ae-499d-8c15-faa9aef0c3f2",

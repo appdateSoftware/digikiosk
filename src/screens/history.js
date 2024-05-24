@@ -184,7 +184,7 @@ const HistoryScreen =({feathersStore}) => {
           setErrorModal(true);
         }else  {
           setErrorModal(false);
-          await writeToBLE(bleReq);
+          await writeToBLE(bleReq, realm_company[0].printerIp);
           setIndicatorModal(false);
           setIssuingReceipt(false);
           setBleReq(null);
@@ -215,7 +215,7 @@ const HistoryScreen =({feathersStore}) => {
         await startScan();
         setBleReq(req)     
       }else{
-        await writeToBLE(req);
+        await writeToBLE(req, realm_company[0].printerIp);
       }      
     }else await printLocally(req);    
     setIndicatorModal(false);
@@ -526,7 +526,7 @@ const issueReceipt = async(oldReceipt) => {
       await startScan();
       setBleReq(req)     
     }else{
-      await writeToBLE(req);
+      await writeToBLE(req, realm_company[0].printerIp);
       setIssuingReceipt(false);
     }      
   }else await printLocally(req);  

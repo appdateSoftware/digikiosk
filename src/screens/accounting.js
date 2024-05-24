@@ -151,7 +151,7 @@ const AccountingScreen =({feathersStore}) => {
           setErrorModal(true);
         }else  {
           setErrorModal(false);
-          await writeToBLE(bleReq);
+          await writeToBLE(bleReq, realm_company[0].printerIp);
           setIndicatorModal(false);
           setBleReq(null);
         }
@@ -521,7 +521,7 @@ const AccountingScreen =({feathersStore}) => {
         await startScan();
         setBleReq(req)     
       }else{
-        await writeToBLE(req);
+        await writeToBLE(req, realm_company[0].printerIp);
         setIndicatorModal(false);
       }      
     }else await printLocally(req);

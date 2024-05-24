@@ -156,7 +156,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
           setErrorModal(true);
         }else  {
           setErrorModal(false);
-          await writeToBLE(bleReq);
+          await writeToBLE(bleReq, realm_company[0].printerIp);
           setBleReq(null);
         }
       };     
@@ -608,7 +608,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       await startScan();
       setBleReq(req)     
     }else{
-      await writeToBLE(req);
+      await writeToBLE(req, realm_company[0].printerIp);
     } 
 
   } 
@@ -772,6 +772,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       `<text-line>Σύνολο:` + 
       `<x-position>${feathersStore.loggedInUser.ble ? '286' : '455'}</x-position><text>${parse_fix(receiptTotal)}<set-symbol-cp>${feathersStore.loggedInUser.ble ? '' : '€'}</set-symbol-cp></text></text-line>` +  
       (paymentMethod === "CASH" ?
+      '<open-cash-drawer/>' +
       `<text-line>Ρέστα:` + 
       `<x-position>${feathersStore.loggedInUser.ble ? '286' : '455'}</x-position><text>${parse_fix(change)}<set-symbol-cp>${feathersStore.loggedInUser.ble ? '' : '€'}</set-symbol-cp></text></text-line>`
       : "") +  
@@ -793,7 +794,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
         await startScan();
         setBleReq(req)     
       }else{
-        await writeToBLE(req);
+        await writeToBLE(req, realm_company[0].printerIp);
       }      
     }else await printLocally(req);
     Object.assign(receipt, {footer: response.footer, req});
