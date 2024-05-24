@@ -776,17 +776,15 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       `<text-line>Ρέστα:` + 
       `<x-position>${feathersStore.loggedInUser.ble ? '286' : '455'}</x-position><text>${parse_fix(change)}<set-symbol-cp>${feathersStore.loggedInUser.ble ? '' : '€'}</set-symbol-cp></text></text-line>`
       : "") +  
-      '<line-feed/>' +         
+      '<line-feed/>' +   
+      '</align>' +  
+      '<align mode="center">' +   
+        `<qrcode ecl="M" size="4">${response?.qrcode}</qrcode>` +    
+      '</align>' +         
       '<line-feed/>' +    
       `<text-line>${response?.footer}</text-line>` +
-      '<line-feed/>' +
-      '</align>' +     
-      '<align mode="center">' +   
-        `<qrcode ecl="M" size="4">${response?.qrcode}</qrcode>` +        
-      '<line-feed />' +  
-      '</align>' +    
-      '<line-feed />' +                     
-      '<paper-cut />' +
+      '<line-feed/>' +                       
+      (feathersStore.loggedInUser?.ble ? '' : '<paper-cut/>') +
     '</document>' ;
     
     if(feathersStore.loggedInUser?.ble){
