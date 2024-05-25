@@ -207,24 +207,29 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   useEffect(
     () =>
       navigation.addListener('beforeRemove', (e) => {     
-
+        
         // Prevent default behavior of leaving the screen
-        e.preventDefault();       
-        Alert.alert(
-          `${common.exitAppTitle}`,
-          `${common.exitAppText}`,
-          [
-            { text: `${common.noText}`, style: 'cancel', onPress: () => {} },
-            {
-              text: `${common.yesText}`,
-              style: 'destructive',              
-              onPress: () => BackHandler.exitApp(),
-            },
-          ]
-        );
+        if(!feathersStore.demoModeToggled){
+          e.preventDefault();       
+          Alert.alert(
+            `${common.exitAppTitle}`,
+            `${common.exitAppText}`,
+            [
+              { text: `${common.noText}`, style: 'cancel', onPress: () => {} },
+              {
+                text: `${common.yesText}`,
+                style: 'destructive',              
+                onPress: () => BackHandler.exitApp(),
+              },
+            ]
+          );
+        }else{
+          feathersStore.setDemoModeToggled(false);
+        }
       }),
     [navigation, common]
   );
+  
 
   const checkForUpdates = async() => {
     const versionPath = 'https://sites.appdate.gr/versions.json';

@@ -32,12 +32,13 @@ class FeathersStore{
   masterLanguage = "el";
   loggedInUser = {};
   demoMode = true;
+  demoModeToggled = false;
   isTablet = true;
   myPos = false;
   bleId = "";
   bleDisconnected = true;
  
-  currentVersion = "1.0.5";
+  currentVersion = "1.0.6";
 
   constructor(){
     makeObservable(this,  {     
@@ -51,6 +52,7 @@ class FeathersStore{
       loggedInUser: observable,
       currentVersion: observable,
       demoMode: observable,
+      demoModeToggled: observable,
       isTablet: observable,
       myPos: observable,
       bleId: observable,
@@ -65,6 +67,7 @@ class FeathersStore{
       setInvoiceType: action, 
       setNewVersion: action,
       setDemoMode: action,
+      setDemoModeToggled: action,
       setIsTablet: action,
       setMyPos: action,
       setBleId: action,
@@ -94,6 +97,10 @@ class FeathersStore{
 
   setDemoMode = value => {
     this.demoMode = value;
+  }
+
+  setDemoModeToggled = value => {
+    this.demoModeToggled = value;
   }
 
   setIsTablet = value => {

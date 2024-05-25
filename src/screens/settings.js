@@ -202,12 +202,13 @@ const SettingsA = ({navigation, feathersStore}) => {
     }
   }
 
-  const toggleDemoMode = value => {
+  const toggleDemoMode = async(value) => {
     realm.write(()=>{
       realm.objects('Demo')[0].val = value     
     })
     feathersStore.setDemoMode(value);
-    feathersStore.logout();
+    feathersStore.setDemoModeToggled(true);
+    await feathersStore.logout();
     navigation.navigate("SplashScreen");
   }
 

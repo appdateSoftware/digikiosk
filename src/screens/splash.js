@@ -124,7 +124,7 @@ const SplashScreen = ({navigation, feathersStore}) => {
 
   useEffect(() => {  
     load(); 
-  }, [realm])
+  }, [realm, feathersStore.demoMode])
 
   useEffect(() => {  
     if(width < 600)feathersStore.setIsTablet(false);

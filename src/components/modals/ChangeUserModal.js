@@ -52,7 +52,7 @@ const ChangeUserModal = ({
   const [passwordErrorText, setPasswordErrorText] = useState(false);
 
   useEffect(() => {
-    setUser(feathersStore.user.name)
+    setUser(feathersStore?.user?.name)
   }, []);
 
   useEffect(() => {
