@@ -60,7 +60,7 @@ const france = require("../assets/img/languages/france.png");
 const spain = require("../assets/img/languages/spain.png");
 const italy = require("../assets/img/languages/italy.png");
 
-const {MyPosModule} = NativeModules;
+const {MyPosModule, MyPosProModule} = NativeModules;
 
 // SettingsA Components
 const Setting = ({ icon, title, onPress, extraData, disabled }) => (
@@ -216,7 +216,12 @@ const SettingsA = ({navigation, feathersStore}) => {
     try{  
       if(refund > 0){
         setRefundModal(false);
-        const transactionResult = await MyPosModule.makeMyPosRefund(+refund);
+        const transactionResult = 
+        feathersStore.loggedInUser?.myPosPro 
+        ?
+          await MyPosProModule.makeMyPosRefund(+refund)
+        :
+          await MyPosModule.makeMyPosRefund(+refund);
         setRefund("0");
         if (transactionResult.slice(-1) === "0" ) {      
           console.log("SUCCESS: ", transactionResult);

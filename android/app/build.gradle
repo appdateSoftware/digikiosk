@@ -118,6 +118,8 @@ dependencies {
     implementation("com.facebook.react:flipper-integration")
 
     implementation 'com.mypos:glasssdk:1.0.5'
+    implementation 'com.mypos:mypossmartsdk:1.0.5'
+
 
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")

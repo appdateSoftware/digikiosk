@@ -55,7 +55,7 @@ const upArrow = "caret-up";
 
 const DEFAULT_EMAIL = "defaultUser@gmail.com";
 
-const {MyPosModule} = NativeModules;
+const {MyPosModule, MyPosProModule} = NativeModules;
 
 const BleManagerModule = NativeModules.BleManager;
 const BleManagerEmitter = new NativeEventEmitter(BleManagerModule);
@@ -531,11 +531,19 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     setTip("0");
     try{    
       const tippingModeEnabled = +tip > 0 ? true : false;
-      const transactionResult = await MyPosModule.makeMyPosPayment(amount, tippingModeEnabled, tip, waiter, table);
+      const transactionResult = 
+      feathersStore.loggedInUser?.myPosPro 
+      ? 
+        await MyPosProModule.makeMyPosPayment(amount, tippingModeEnabled, tip, waiter, table)
+      :     
+        await MyPosModule.makeMyPosPayment(amount, tippingModeEnabled, tip, waiter, table)
+      ;
       if(transactionResult.myResponse.slice(-1) === "0") {        
         // Transaction is successful     
         if(feathersStore.loggedInUser?.ble)await printVisaReceipt(transactionResult, amount, tip); 
-        await issueReceiptFn("VISA")      
+        if(feathersStore.loggedInUser?.myPosPro){
+          //print receipt in MyPosPro
+        }else await issueReceiptFn("VISA")      
       }else{
         console.log("ERROR: ", transactionResult);      
         setMyPosError(true);

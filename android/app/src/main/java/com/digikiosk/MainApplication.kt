@@ -21,6 +21,7 @@ class MainApplication : Application(), ReactApplication {
               // Packages that cannot be autolinked yet can be added manually here, for example:
               // add(MyReactNativePackage())
               add(MyPosPackage())
+              add(MyPosProPackage())
             }
 
         override fun getJSMainModuleName(): String = "index"
