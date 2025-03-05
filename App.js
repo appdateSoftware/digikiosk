@@ -97,7 +97,7 @@ const MainTab = () => {
         deleteRealmIfMigrationNeeded={true}
       >
         <NavigationContainer>
-          <Stack.Navigator initialRouteName= 'Splash'>    
+          <Stack.Navigator initialRouteName= 'SplashScreen'>    
             <Stack.Screen
               name='SplashScreen'
               component={ SplashScreen }
