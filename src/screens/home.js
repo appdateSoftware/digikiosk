@@ -1251,12 +1251,12 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   const styles = StyleSheet.create({
     header: {
       marginTop: 5,
-      marginHorizontal: 5,
-      //paddingTop: getStatusBarHeight(),  
+      marginHorizontal: 5  
     },
      screenContainer: {
       flex: 1,
-      backgroundColor: Colors.background
+      backgroundColor: Colors.background,
+      paddingTop: getStatusBarHeight(),
     },  
     container: {
       flex: 1,

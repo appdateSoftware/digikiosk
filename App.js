@@ -5,7 +5,7 @@
  * @flow
  */
 
-import React from "react";
+import React, {useEffect} from "react";
 import feathersStore from './src/feathersStore';
 import { Provider } from 'mobx-react';
 import { NavigationContainer } from '@react-navigation/native'; 
@@ -28,6 +28,7 @@ import Company from './src/screens/Company';
 import _useTranslate from './src/hooks/_useTranslate';
 
 import { LogBox } from 'react-native';
+import ImmersiveMode from 'react-native-immersive-mode';
  
 export default App = () => {
 
@@ -39,6 +40,11 @@ const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 const regex = /(<([^>]+)>)/gi;
 const MainTab = () => {
+
+  useEffect(() => {
+    ImmersiveMode.setBarMode('BottomSticky');
+  }, []);
+
   return (
     <Tab.Navigator tabBar={props => <TabBar {...props} />}>
       <Tab.Screen

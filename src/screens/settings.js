@@ -44,6 +44,7 @@ import { AppSchema } from "../services/receipt-service";
 import {useRealm} from '@realm/react';
 import InfoModal from "../components/modals/InfoModal";
 import InputModal from "../components/modals/InputModal";
+import {getStatusBarHeight} from 'react-native-status-bar-height';
 
 // SettingsA Config
 const DIVIDER_MARGIN_LEFT = 60;
@@ -451,7 +452,9 @@ const SettingsA = ({navigation, feathersStore}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background
+    backgroundColor: Colors.background,
+    paddingTop: getStatusBarHeight()
+    
   },
   contentContainerStyle: {
     paddingBottom: 16

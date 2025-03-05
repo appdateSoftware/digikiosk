@@ -6538,6 +6538,11 @@ react-native-device-info@^14.0.4:
   resolved "https://registry.npmjs.org/react-native-device-info/-/react-native-device-info-14.0.4.tgz"
   integrity sha512-NX0wMAknSDBeFnEnSFQ8kkAcQrFHrG4Cl0mVjoD+0++iaKrOupiGpBXqs8xR0SeJyPC5zpdPl4h/SaBGly6UxA==
 
+react-native-immersive-mode@^2.0.2:
+  version "2.0.2"
+  resolved "https://registry.npmjs.org/react-native-immersive-mode/-/react-native-immersive-mode-2.0.2.tgz"
+  integrity sha512-W4YBpf/seURr6pdt91bKWtlQhwoZYgQN1nllj/y+EkwKs5xbu/IiRxlCs/8ML7dyA8wbOFaXR24AC4HOrvxapw==
+
 react-native-safe-area-context@^5.3.0, "react-native-safe-area-context@>= 4.0.0":
   version "5.3.0"
   resolved "https://registry.npmjs.org/react-native-safe-area-context/-/react-native-safe-area-context-5.3.0.tgz"
@@ -6577,7 +6582,7 @@ react-native-vector-icons@^10.2.0:
     prop-types "^15.7.2"
     yargs "^16.1.1"
 
-react-native@*, "react-native@^0.0.0-0 || >=0.65 <1.0", react-native@^0.78.0, "react-native@>= 0.30.0", "react-native@>= 0.61.5", react-native@>=0.60.0, react-native@>=0.68, react-native@>=0.71.0:
+react-native@*, "react-native@^0.0.0-0 || >=0.65 <1.0", react-native@^0.78.0, "react-native@>= 0.30.0", "react-native@>= 0.61.5", react-native@>=0.60.0, react-native@>=0.60.5, react-native@>=0.68, react-native@>=0.71.0:
   version "0.78.0"
   resolved "https://registry.npmjs.org/react-native/-/react-native-0.78.0.tgz"
   integrity sha512-3PO4tNvCN6BdAKcoY70v1sLfxYCmDR4KS1VTY+kIBKy5Qznp27QNxL7zBQjvS6Jp91gc8N82QbysQrfBlwg9gQ==
