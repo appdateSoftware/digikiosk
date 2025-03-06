@@ -336,7 +336,7 @@ const SettingsA = ({navigation, feathersStore}) => {
           />
           <Divider type="inset" marginLeft={DIVIDER_MARGIN_LEFT} /> 
 
-          { feathersStore?.myPos &&   
+          { feathersStore?.nativePos && (feathersStore?.loggedInUser?.terminal?.make === "myPOS") &&   
             <>
               <Setting
                 onPress={openRefundModal}

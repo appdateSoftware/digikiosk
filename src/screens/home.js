@@ -82,7 +82,9 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   const [cancelModalVisible, setCancelModalVisible] = useState(false);
   const [indexToCancel, setIndexToCancel] = useState(null);
   const [enterPrice, setEnterPrice] = useState(true); 
-  const [loading, setLoading] = useState(true);
+  const [cashPaying, setCashPaying] = useState(false);
+  const [visaPaying, setVisaPaying] = useState(false);
+  const [nativePosPaying, setNativePosPaying] = useState(false);
   const [invoiceTypeModal, setInvoiceTypeModal] = useState(false);
   const [invoiceDataModal, setInvoiceDataModal] = useState(false);
   const [errorModal, setErrorModal] = useState(false) ;
@@ -91,7 +93,6 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   const [forwardIndex, setForwardIndex] = useState(0);
   const [myPosError, setMyPosError] = useState(false);
   const [myPosErrorMessage, setMyPosErrorMessage] = useState("");
-  const [tip, setTip] = useState("0");
   const [isScanning, setIsScanning] = useState(false);
   const [bleReq, setBleReq] = useState(null);
 
@@ -186,7 +187,8 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   }, [realm_sections, feathersStore?.isAuthenticated]);
 
   useEffect( () => { 
-    if(feathersStore.loggedInUser.email !== DEFAULT_EMAIL)feathersStore.setMyPos(feathersStore.loggedInUser?.MyPos || false);
+    if(feathersStore.loggedInUser.email !== DEFAULT_EMAIL){
+      feathersStore.setNativePos(feathersStore.loggedInUser?.terminal?.nativePos || false)};
   }, [feathersStore?.loggedInUser]);
 
   const sendBackup = async() => {
@@ -519,7 +521,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     let index = realm_users.findIndex(user => user.nameEnglish === feathersStore.loggedInUser.nameEnglish);
     if(index < 0)index = 1; 
     const code = index.toString().padStart(4, "0");
-    await makeMyPosPayment(+cashToPay, +tip, code, "myPos-Order");
+    await makeMyPosPayment(+cashToPay, code, "myPos-Order");
   }
 
   const closeMyPosErrorModal = () => {
@@ -527,23 +529,22 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     setMyPosErrorMessage("");
   }
 
-  const makeMyPosPayment = async(amount, tip, waiter, table) => {  
-    setTip("0");
+  const makeMyPosPayment = async(amount, waiter, table) => {  
     try{    
-      const tippingModeEnabled = +tip > 0 ? true : false;
+      const tippingModeEnabled = false;
       const transactionResult = 
-      feathersStore.loggedInUser?.myPosPro 
+      feathersStore.loggedInUser?.terminal?.type === "PRO"
       ? 
-        await MyPosProModule.makeMyPosPayment(amount, tippingModeEnabled, tip, waiter, table)
+        await MyPosProModule.makeMyPosPayment(amount, tippingModeEnabled, 0, waiter, table)
       :     
-        await MyPosModule.makeMyPosPayment(amount, tippingModeEnabled, tip, waiter, table)
+        await MyPosModule.makeMyPosPayment(amount, tippingModeEnabled, 0, waiter, table)
       ;
       if(transactionResult.myResponse.slice(-1) === "0") {        
         // Transaction is successful     
-        if(feathersStore.loggedInUser?.ble)await printVisaReceipt(transactionResult, amount, tip); 
+        if(feathersStore.loggedInUser?.ble)await printVisaReceipt(transactionResult, amount); 
         if(feathersStore.loggedInUser?.myPosPro){
           //print receipt in MyPosPro
-        }else await issueReceiptFn("VISA")      
+        }else await issueReceiptFn("VISA")     //TODO: Add payment object 
       }else{
         console.log("ERROR: ", transactionResult);      
         setMyPosError(true);
@@ -556,7 +557,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   }
 
   
-  const printVisaReceipt = async(response, amount, tip) => {
+  const printVisaReceipt = async(response, amount) => {
 
     /* RESPONSE EXAMPLE
    const response = {
@@ -596,7 +597,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       '<bold>' +  
         `<text-line>${date} ${time}</text-line>` +                           
         `<text-line>ΑΓΟΡΑ-SALE: </text-line>` +     
-        `<text-line>${parse_fix(+amount + +tip)} EUR</text-line>` +                 
+        `<text-line>${parse_fix(+amount)} EUR</text-line>` +                 
       '</bold>' +
       '<line-feed />' + 
         `<text-line>${response.application_name}</text-line>` + 
@@ -622,17 +623,95 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       setBleReq(req)     
     }else{
       await writeToBLE(req, realm_company[0].printerIp);
-    } 
-
+    }
   } 
 
+  const payVisa = async() => {
+    !feathersStore.nativePos && setPayingVisa(true);
+    try{
+      setPayingCash(false);
+      let paymentAmounts = calculatePaymentAmounts();      
+      Object.assign(paymentAmounts, {tip: 0});
+      try{
+        const response = await sendPayment(feathersStore.selectedTable.order.activeUid, paymentAmounts, feathersStore?.nativePos);
+          if(response && feathersStore?.nativePos){
+            if(feathersStore?.loggedInUser?.terminal?.make === "MYPOS")await payMyPos();
+            else await makeVivaNativePayment(Math.round(paymentAmounts.paidSum * 100).toString(), 
+              "0", response)
+          }else if(response?.sessionId){
+            paymentSessionIdRef.current = response?.sessionId;
+          }else{           
+            openMyDataErrorAlert();
+        }
+      }catch(error){
+        console.log(error)
+        openMyDataErrorAlert();
+      }           
+    }catch(error){
+      console.log(error);
+      setPayingVisa(false);
+    } 
+  }  
+
+  const calculatePaymentAmounts = () => {
+    let paidSum = 0;
+    let netPaidSum = 0;
+    let unReceiptedItems =  orderItems.filter(i => i?.toBePaid);      
+    unReceiptedItems?.forEach(listItem =>  {
+      paidSum += +listItem.product_totalPrice;
+      netPaidSum += +listItem.product_netPrice;
+    });    
+    const vatPaidSum = paidSum - netPaidSum;
+    return {paidSum, netPaidSum, vatPaidSum}
+  }
+
+  const checkStatus = async() => {
+    try{
+      const loggedInUser = feathersStore.user;   
+      let terminal = feathersStore.settings?.terminals.find(trm => trm.default);
+      if(loggedInUser?.terminal)terminal = loggedInUser.terminal;
+      setCheckingVisa(true);
+      const response = await feathersStore.getPaymentStatus(paymentSessionIdRef.current, terminal.make, terminal?.mellonApiKey);
+      setCheckingVisa(false);
+      if(response?.extraFields?.status === 200){        
+        setIsPayingVisa(false);
+        await issueReceiptFn("VISA", response);    
+      }
+    }catch(error){
+      console.log(error)
+      openVivaErrorAlert();
+      setIsPayingVisa(false);
+      setCheckingVisa(false);
+    }
+  }
+
+  const deletePaymentSession = async() => {
+    try{
+      const loggedInUser = feathersStore.user;   
+      let terminal = feathersStore.settings?.terminals.find(trm => trm.default);
+      if(loggedInUser?.terminal)terminal = loggedInUser.terminal;
+      if(terminal?.make !== "myPOS"){
+        const params = {cashRegisterId: terminal.terminalMerchantId}
+        await feathersStore.deletePaymentSession(paymentSessionIdRef.current, params);
+      }
+      setIsPayingVisa(false);
+      navigation.navigate('HomeNavigator', {"screen": "Tables"});
+    }catch(error){
+      console.log(error)
+      openVivaErrorAlert();
+      setIsPayingVisa(false);
+    }
+  }
+
   const visaPayment = async() => {
-    if(feathersStore?.myPos)await payMyPos();
+    if(feathersStore?.nativePos ){
+      if(feathersStore?.loggedInUser?.terminal?.make === "MYPOS")await payMyPos()
+
+    }
     else await issueReceiptFn("VISA")
   }
 
   const issueReceiptFn = async(paymentMethod) => { 
-    feathersStore.setPaymentMethod(paymentMethod);
     if(["tpy", "tda", "pt"].includes(feathersStore.invoiceType)){
       setInvoiceDataModal(true);
     }else{
@@ -640,12 +719,27 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     }
   }
 
-  const issueReceipt = (paymentMethod) => async() => { 
-    await issueReceiptFn(paymentMethod);
+  const cashPayment= async() => {   
+    setCashPaying(true); 
+    const payment = {
+      PaymentMethodType: "ΜΕΤΡΗΤΟΙΣ",
+      PaymentMethodTypeCode: 3,
+      "PaymentAmount": parseFloat(cashToPay).toFixed(2),
+      "PaymentNotes": "ΜΕΤΡΗΤΟΙΣ",
+      "signature": "",
+      "signatureAuthor": "111",
+      "transactionId": "",
+      "terminalId": "",
+      "tipAmount": "0"
+    }  
+    await issueReceipt("CASH", payment);   
+  } 
+
+  const issueReceipt = (paymentMethod, payment) => async() => { 
+    await issueReceiptFn(paymentMethod, payment);
   }
 
-  const _issueReceipt = async() => { 
-    const paymentMethod = feathersStore.paymentMethod;
+  const _issueReceipt = async(paymentMethod, payment) => { 
     const companyData = feathersStore.companyData;
     setIssuingReceipt(true);
     const date = new Date(); 
@@ -693,6 +787,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       createdAt: date.getTime(), 
       receiptItems: unReceiptedItems,
       paymentMethod,
+      payment,
       cash,
       change     
     };
@@ -877,6 +972,9 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     let details = [];
     let vatAnalysis = [];
 
+    let payment = cloneDeep(persistedReceipt?.payment);
+    delete payment?.extraFields; //===> delete extra fields
+
     persistedReceipt.receiptItems.forEach((item, index) => {
      
       let detailObject =
@@ -985,17 +1083,16 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
         "CompanyBranchCode": "",
         "CompanyPosId": ""         
       },       
-      "Payment": 
-    //    "TotalPieces": persistedReceipt.totalPieces,
+      "Payment": payment?.length > 0 ? payment :
         [
           {
             "PaymentMethodType": "ΜΕΤΡΗΤΟΙΣ",
             "PaymentMethodTypeCode": 3,
-            "PaymentAmount": persistedReceipt.receiptTotal,
+            "PaymentAmount": +parse_fix(persistedReceipt.receiptTotal),
             "PaymentNotes": "ΜΕΤΡΗΤΟΙΣ"
           }
-        ]
-      ,    
+        ]            
+      ,   
       "lstLineItem": details,    
       "Summary": {
         "totalNetValue": totalNetAmount,
@@ -1186,14 +1283,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
         return;
       });   
     });    
-  };  
-
- const renderFooter = () => {
-    if (!loading) {
-      return null;
-    }
-    return <ActivityIndicator animating size="small" />;
-  };
+  }; 
 
   const logError = async(error, persistedReceipt) => {
     const payload = {
@@ -1469,6 +1559,18 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       fontSize: feathersStore.isTablet ? 24 : 18,
       color: Colors.keyboardButton, 
       marginLeft: feathersStore.isTablet ? 12 : 8,
+    },
+    buttonContainer:{
+      position: "relative"
+    },
+    activityInd: {
+      position : "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      alignItems: 'center',
+      justifyContent: 'center'
     }
   });
 
@@ -1687,21 +1789,22 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity 
-                    onPress={issueReceipt("CASH")} 
+                    onPress={cashPayment} 
                     style={styles.greenButton}
-                    disabled={!(cashToPay > 0) || feathersStore?.demoMode}
+                    disabled={!(cashToPay > 0) || feathersStore?.demoMode || cashPaying || visaPaying || nativePosPaying }
                   >
                     <Text style={styles.icon}>
                       <Icon name={checkIconCircle} size={feathersStore?.isTablet ? 32 : 22} color={Colors.onAccentColor} />
                     </Text>
-                  </TouchableOpacity>
+                  </TouchableOpacity>                 
                   <TouchableOpacity 
-                    onPress={visaPayment} 
+                    onPress={payVisa} 
                     style={styles.greenButton}
-                    disabled={!(cashToPay > 0) || feathersStore?.demoMode}
+                    disabled={!(cashToPay > 0) || feathersStore?.demoMode || cashPaying || visaPaying || nativePosPaying}
                   >
                     <Text style={styles.number}>VISA</Text>
-                  </TouchableOpacity>                
+                  </TouchableOpacity>  
+                               
                 </View>
               </View> 
             </>          

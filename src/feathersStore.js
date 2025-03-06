@@ -28,7 +28,6 @@ class FeathersStore{
   companyData = {};
   language = "el";
   invoiceType ="alp";
-  paymentMethod = "CASH";
   masterLanguage = "el";
   loggedInUser = {};
   demoMode = true;
@@ -48,13 +47,12 @@ class FeathersStore{
       companyData: observable,
       language: observable,    
       invoiceType: observable,      
-      paymentMethod: observable,    
       loggedInUser: observable,
       currentVersion: observable,
       demoMode: observable,
       demoModeToggled: observable,
       isTablet: observable,
-      myPos: observable,
+      nativePos: observable,
       bleId: observable,
       bleDisconnected: observable,
       setIsAuthenticated: action,
@@ -63,13 +61,12 @@ class FeathersStore{
       setCompanyData: action,
       setLoggedInUser: action,
       setLanguage: action, 
-      setPaymentMethod: action,  
       setInvoiceType: action, 
       setNewVersion: action,
       setDemoMode: action,
       setDemoModeToggled: action,
       setIsTablet: action,
-      setMyPos: action,
+      setNativePos: action,
       setBleId: action,
       setBleDisconnected: action
     })
@@ -105,11 +102,7 @@ class FeathersStore{
 
   setIsTablet = value => {
     this.isTablet = value;
-  }
-
-  setPaymentMethod = value => {
-    this.paymentMethod = value;
-  }
+  }  
 
   setInvoiceType = value => {
     this.invoiceType = value;
@@ -119,8 +112,8 @@ class FeathersStore{
     this.newVersion = val;
   }
 
-  setMyPos = value => {
-    this.myPos = value;
+  setNativePos = value => {
+    this.nativePos = value;
   }
 
   setBleId = value => {
