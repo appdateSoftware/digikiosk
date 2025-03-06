@@ -214,7 +214,27 @@ class FeathersStore{
       return await this.app
         .service('mydata')
         .create(payload); 
-    }    
+    }  
+    
+    postToMyDataPayment = async(payload, params, terminal = 'Viva') => {      
+      return await this.app
+        .service(terminal === 'myPOS' ? 'mellon' : 'pos')
+        .create(payload, {query: params}); 
+    }
+
+    async getPaymentStatus(sessionId, terminal = 'Viva', mellonApiKey = null){ 
+      let params = {};
+      if(mellonApiKey)Object.assign(params, {mellonApiKey})        
+      return await this.app
+        .service(terminal === 'myPOS' ? 'mellon' : 'pos')
+        .get(sessionId, {query: params}); 
+    }
+  
+    async deletePaymentSession(sessionId, params){      
+      return await this.app
+        .service('pos')
+        .remove(sessionId, {query: params}); 
+    }
 
     patchUser = async(payload) => {      
       return await this.app

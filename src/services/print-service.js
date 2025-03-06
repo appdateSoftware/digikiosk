@@ -114,4 +114,56 @@ export const handleGetConnectedDevices = async() => {
   }; 
 };
 
+export const sendPayment = async(uid, paymentAmounts, native = false) => {
+  const timeStamp = DateTime.now().toFormat('yyyyMMddHHmmss');
+  const UIDcreationdate = DateTime.now().toFormat('yyyy-MM-dd');
+  const terminal = feathersStore.loggedInUser.terminal;   
+
+  const payment = {
+    UIDIssuervatnumber: feathersStore.loggedInUser.afm, //Company vatNumber
+    UIDcreationdate,      // "2024-06-11",
+    UIDbranchid: "0", //Company branchNumber
+    "UIDinvoicetype": "",
+    "UIDinvoiceseries": "", //INVOICETYPE SERIES
+    UIDinvoicenumber: "", //INVOICETYPE NEXTNUMBconstER
+    uid,        //: "123456789012345678111", // not required if the above UID fields are supplied
+    mark: "", //optional
+    timeStamp,    //"20240916120000" required //greek local time in YYYYMMDDhhmmss
+    "amount": Math.round(paymentAmounts.paidSum * 100),
+    "netAmount": Math.round(paymentAmounts.netPaidSum * 100),
+    "vatAmount": Math.round(paymentAmounts.vatPaidSum * 100),   
+    "totalAmount": terminal.make === 'MYPOS' ? Math.round(paymentAmounts.paidSum * 100) : Math.round(paymentAmounts.vatPaidSum * 100),
+    "terminalId": terminal.TID,
+    paymentGateway:  terminal.make === 'MYPOS' ? "1" : "2",
+    order: {
+      tip: 0, 
+      sourceCode: terminal.sourceCode,
+      mellonApiKey: terminal?.mellonApiKey || null,
+      terminalMerchantId: terminal.terminalMerchantId,
+      native
+    }
+  }  
+
+ // console.log(payment)
+ 
+  try{  
+
+    const sessionId = uuidv4();
+    const response = await feathersStore.postToMyDataPayment(payment, {sessionId, branch}, terminal?.make || "");
+    if(response && native)return response;
+    if(response?.sessionId){
+      return response
+    }else{
+      console.log(response);
+      await logError(response, payment, "Pay.js", "398");
+      return;
+    }
+  }catch(error){
+    console.log(error);
+    await logError(error, payment, "Pay.js", "398");
+    return;
+  }   
+    
+}
+
 

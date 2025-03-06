@@ -38,8 +38,10 @@ import {pickLanguageWord} from '../utils/pickLanguageWord.js';
 import { AppSchema } from "../services/receipt-service";
 import ErrorModal from "../components/modals/ErrorModal";
 import InfoModal from "../components/modals/InfoModal";
+import PayingModal from "../components/modals/PayingModal";
+
 import BleManager from 'react-native-ble-manager';
-import { handleGetConnectedDevices, writeToBLE } from "../services/print-service.js";
+import { handleGetConnectedDevices, writeToBLE, sendPayment } from "../services/print-service.js";
 
 import { inject, observer } from "mobx-react";
 
@@ -95,7 +97,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   const [myPosErrorMessage, setMyPosErrorMessage] = useState("");
   const [isScanning, setIsScanning] = useState(false);
   const [bleReq, setBleReq] = useState(null);
-
+  const [checkingVisa, setCheckingVisa] = useState(false);
  
   useEffect( () => { //Check for updates  
     checkForUpdates();
@@ -627,9 +629,9 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   } 
 
   const payVisa = async() => {
-    !feathersStore.nativePos && setPayingVisa(true);
+    !feathersStore.nativePos && setVisaPaying(true);
     try{
-      setPayingCash(false);
+      setCashPaying(false);
       let paymentAmounts = calculatePaymentAmounts();      
       Object.assign(paymentAmounts, {tip: 0});
       try{
@@ -649,7 +651,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       }           
     }catch(error){
       console.log(error);
-      setPayingVisa(false);
+      setVisaPaying(false);
     } 
   }  
 
@@ -667,57 +669,36 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
 
   const checkStatus = async() => {
     try{
-      const loggedInUser = feathersStore.user;   
-      let terminal = feathersStore.settings?.terminals.find(trm => trm.default);
-      if(loggedInUser?.terminal)terminal = loggedInUser.terminal;
+      const terminal = feathersStore.loggedInUser.terminal;
       setCheckingVisa(true);
       const response = await feathersStore.getPaymentStatus(paymentSessionIdRef.current, terminal.make, terminal?.mellonApiKey);
       setCheckingVisa(false);
       if(response?.extraFields?.status === 200){        
-        setIsPayingVisa(false);
+        setVisaPaying(false);
         await issueReceiptFn("VISA", response);    
       }
     }catch(error){
       console.log(error)
       openVivaErrorAlert();
-      setIsPayingVisa(false);
+      setVisaPaying(false);
       setCheckingVisa(false);
     }
   }
 
   const deletePaymentSession = async() => {
     try{
-      const loggedInUser = feathersStore.user;   
-      let terminal = feathersStore.settings?.terminals.find(trm => trm.default);
-      if(loggedInUser?.terminal)terminal = loggedInUser.terminal;
-      if(terminal?.make !== "myPOS"){
+      const terminal = feathersStore.loggedInUser.terminal;
+      if(terminal?.make !== "MYPOS"){
         const params = {cashRegisterId: terminal.terminalMerchantId}
         await feathersStore.deletePaymentSession(paymentSessionIdRef.current, params);
       }
-      setIsPayingVisa(false);
-      navigation.navigate('HomeNavigator', {"screen": "Tables"});
+      setVisaPaying(false);
     }catch(error){
       console.log(error)
       openVivaErrorAlert();
-      setIsPayingVisa(false);
+      setVisaPaying(false);
     }
-  }
-
-  const visaPayment = async() => {
-    if(feathersStore?.nativePos ){
-      if(feathersStore?.loggedInUser?.terminal?.make === "MYPOS")await payMyPos()
-
-    }
-    else await issueReceiptFn("VISA")
-  }
-
-  const issueReceiptFn = async(paymentMethod) => { 
-    if(["tpy", "tda", "pt"].includes(feathersStore.invoiceType)){
-      setInvoiceDataModal(true);
-    }else{
-      await _issueReceipt(paymentMethod);
-    }
-  }
+  } 
 
   const cashPayment= async() => {   
     setCashPaying(true); 
@@ -732,11 +713,15 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       "terminalId": "",
       "tipAmount": "0"
     }  
-    await issueReceipt("CASH", payment);   
-  } 
+    await issueReceiptFn("CASH", payment);   
+  }  
 
-  const issueReceipt = (paymentMethod, payment) => async() => { 
-    await issueReceiptFn(paymentMethod, payment);
+   const issueReceiptFn = async(paymentMethod, payment) => { 
+    if(["tpy", "tda", "pt"].includes(feathersStore.invoiceType)){
+      setInvoiceDataModal(true);
+    }else{
+      await _issueReceipt(paymentMethod, payment);
+    }
   }
 
   const _issueReceipt = async(paymentMethod, payment) => { 
@@ -1847,6 +1832,12 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
         onButtonPress= {closeMyPosErrorModal}
         visible = {myPosError}
       /> 
+      <PayingModal
+        checkButton={checkStatus}
+        deleteButton={deletePaymentSession}  
+        visible = {visaPaying}
+        checking={checkingVisa}
+      />
     </>
   );
           
