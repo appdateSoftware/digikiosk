@@ -191,7 +191,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
 
   useEffect( () => { 
     if(feathersStore.loggedInUser.email !== DEFAULT_EMAIL){
-      feathersStore.setNativePos(feathersStore.loggedInUser?.terminal?.nativePos || false)};
+      feathersStore.setNativePos(feathersStore.loggedInUser?.terminal?.embedded || false)};
   }, [feathersStore?.loggedInUser]);
 
   const sendBackup = async() => {
@@ -657,33 +657,30 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     } 
   }  
 
-  const makeVivaNativePayment = async(amount, tip, payload) => {  
+  const makeVivaNativePayment = async(amount, payload) => {  
     
     const clientTransactionId = uuidv4();
     try{          
-      let index = adminsRef.current?.findIndex(user => user.username === feathersStore.user.username);
-      const suffix = index.toString();
-
+     
       //ISV START
 
       let _isvAmount = 0;
-      if(feathersStore.settings?.ISV_amount > 0){
+      if(feathersStore.loggedInUser?.ISV_amount > 0){
         let coef = feathersStore.settings?.ISV_amount / 10000;            
         _isvAmount = Math.round(amount * coef);
         if(_isvAmount < 2)_isvAmount = 2;
       }
 
-      const isv = feathersStore.settings?.ISV_ENABLED ? "ISV_ENABLED" : "OFF";
       const isvAmount = _isvAmount > 0 ? _isvAmount.toString() : "OFF";
-      const clientId = feathersStore.settings?.ISV_clientId || "OFF";
-      const clientSecret = feathersStore.settings?.ISV_clientSecret || "OFF";
-      const merchantSourceCode = feathersStore.settings?.ISV_merchantSourceCode?.toString() || "OFF";
+      const clientId = feathersStore.loggedInUser?.ISV_clientId || "OFF";
+      const clientSecret = feathersStore.loggedInUser?.ISV_clientSecret || "OFF";
+      const merchantSourceCode = feathersStore.loggedInUser?.ISV_merchantSourceCode?.toString() || "OFF";
 
       //ISV END
 
       const response = await VivaModule.makeVivaNativePayment(
-        amount, clientTransactionId, tip, payload.inputFormatted, payload.signature, suffix,
-        isv, isvAmount, clientId, clientSecret, merchantSourceCode);
+        amount, clientTransactionId, payload.inputFormatted, payload.signature,
+        isvAmount, clientId, clientSecret, merchantSourceCode);
       //Example response
    //  const response  =  "mycallbackscheme://result?aid=A0000000041010&status=success&message=Transaction successful&action=sale&clientTransactionId=a5d4865e-325a-4878-b3ff-7b20771b2712&amount=100&rrn=429212516667&verificationMethod=CONTACTLESS - NO CVM&cardType=Debit Mastercard&accountNumber=535143******2416&referenceNumber=516667&authorisationCode=516667&tid=16008825&orderCode=4292155155008825&transactionDate=2024-10-18T15:05:55.0790349+03:00&transactionId=9f497a95-1488-4647-ab17-de380696799d&paymentMethod=CARD_PRESENT&shortOrderCode=4292155155&aadeTransactionId=116429212516667516667"
         

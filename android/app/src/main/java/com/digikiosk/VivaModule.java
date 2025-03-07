@@ -174,8 +174,8 @@ public class VivaModule extends ReactContextBaseJavaModule implements LifecycleE
   
   @ReactMethod
   public void makeVivaNativePayment(String amount, String clientTransactionId,  
-  String tip, String signatureData, String signature, String isv,
-  String isvAmount, String clientId, String clientSecret, String merchantSourceCode, final  Promise promise) {
+  String signatureData, String signature, String isvAmount, String clientId, 
+  String clientSecret, String merchantSourceCode, final  Promise promise) {
 
     Activity currentActivity = getCurrentActivity();
 
@@ -187,7 +187,7 @@ public class VivaModule extends ReactContextBaseJavaModule implements LifecycleE
     /*
     for ( String str: aliases){
       if(!str.equals(suffix)){
-        ComponentName compName = new ComponentName(this.context, "com.bringfood_db_android.ReportActivity" + str);
+        ComponentName compName = new ComponentName(this.context, "com.digikiosk.ReportActivity" + str);
         pm.setComponentEnabledSetting(
           compName,
           PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
@@ -198,7 +198,7 @@ public class VivaModule extends ReactContextBaseJavaModule implements LifecycleE
      */
    //All aliases are by default disabled
 
-    ComponentName compName = new ComponentName(this.context, "com.bringfood_db_android.ReportActivity" + suffix);
+    ComponentName compName = new ComponentName(this.context, "com.digikiosk.ReportActivity");
     pm.setComponentEnabledSetting(
       compName,
       PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
@@ -213,13 +213,12 @@ public class VivaModule extends ReactContextBaseJavaModule implements LifecycleE
 
     vivaPromise = promise;
     
-    String config = "";
-    String noIsvConfig =   "vivapayclient://pay/v1"
-        + "?appId=com.bringfood_db_android"
+    String config =   "vivapayclient://pay/v1"
+        + "?appId=com.digikiosk"
         + "&action=sale"
         + "&clientTransactionId=" + clientTransactionId
         + "&amount=" + amount
-        + "&tipAmount=" + tip
+        + "&tipAmount=0"
         + "&show_receipt=true"
         + "&show_transaction_result=true"
         + "&show_rating=true"
@@ -229,23 +228,16 @@ public class VivaModule extends ReactContextBaseJavaModule implements LifecycleE
         + "&aadeProviderId=111"
         + "&aadeProviderSignatureData=" + signatureData
         + "&aadeProviderSignature=" + signature
-        + "&protocol=int_default";
-
-    if(new String(isv).equals(new String("ISV_ENABLED"))){
-      String isvConfig =  
-       "&ISV_amount=" + isvAmount
-      + "&ISV_clientId=" + clientId
-      + "&ISV_clientSecret=" + clientSecret
-      + "&ISV_sourceCode=Default"
-      + "&ISV_currencyCode=978"
-    //  + "&ISV_customerTrns=ItemDescription"
-    //  + "&ISV_clientTransactionId=12345678901234567890123456789012"
-    //  + "&ISV_merchantId=1234567890"
-      + "&ISV_merchantSourceCode=" + merchantSourceCode;
-      config = noIsvConfig + isvConfig;
-    }else{
-      config = noIsvConfig;
-    }
+        + "&protocol=int_default"
+        + "&ISV_amount=" + isvAmount
+        + "&ISV_clientId=" + clientId
+        + "&ISV_clientSecret=" + clientSecret
+        + "&ISV_sourceCode=Default"
+        + "&ISV_currencyCode=978"
+      //  + "&ISV_customerTrns=ItemDescription"
+      //  + "&ISV_clientTransactionId=12345678901234567890123456789012"
+      //  + "&ISV_merchantId=1234567890"
+        + "&ISV_merchantSourceCode=" + merchantSourceCode;     
      
     Intent payIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(
       config

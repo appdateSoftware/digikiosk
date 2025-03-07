@@ -36,6 +36,7 @@ class FeathersStore{
   myPos = false;
   bleId = "";
   bleDisconnected = true;
+  nativePos = false;
  
   currentVersion = "1.0.6";
 
