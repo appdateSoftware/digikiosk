@@ -32,9 +32,19 @@
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
       </activity>
-    </application>
-     <queries>
-	    <package android:name="com.mypos.top" />
-      <package android:name="com.mypos" />
-    </queries>
+      <activity
+        android:name=".ReportActivity"
+        android:label="@string/title_activity_report"
+        android:exported="true">
+        <intent-filter>
+            <action android:name="android.intent.action.VIEW" />
+            <action android:name=".ReportActivity" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data
+                android:host="result"
+                android:scheme="digicallbackscheme"/>
+        </intent-filter>
+      </activity>  
+    </application>    
 </manifest>

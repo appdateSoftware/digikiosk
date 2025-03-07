@@ -39,6 +39,7 @@ import { AppSchema } from "../services/receipt-service";
 import ErrorModal from "../components/modals/ErrorModal";
 import InfoModal from "../components/modals/InfoModal";
 import PayingModal from "../components/modals/PayingModal";
+import { v4 as uuidv4 } from 'uuid';
 
 import BleManager from 'react-native-ble-manager';
 import { handleGetConnectedDevices, writeToBLE, sendPayment } from "../services/print-service.js";
@@ -635,7 +636,8 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       let paymentAmounts = calculatePaymentAmounts();      
       Object.assign(paymentAmounts, {tip: 0});
       try{
-        const response = await sendPayment(feathersStore.selectedTable.order.activeUid, paymentAmounts, feathersStore?.nativePos);
+        const activeUid = uuidv4();
+        const response = await sendPayment(activeUid, paymentAmounts, feathersStore?.nativePos);
           if(response && feathersStore?.nativePos){
             if(feathersStore?.loggedInUser?.terminal?.make === "MYPOS")await payMyPos();
             else await makeVivaNativePayment(Math.round(paymentAmounts.paidSum * 100).toString(), 
@@ -654,6 +656,81 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       setVisaPaying(false);
     } 
   }  
+
+  const makeVivaNativePayment = async(amount, tip, payload) => {  
+    
+    const clientTransactionId = uuidv4();
+    try{          
+      let index = adminsRef.current?.findIndex(user => user.username === feathersStore.user.username);
+      const suffix = index.toString();
+
+      //ISV START
+
+      let _isvAmount = 0;
+      if(feathersStore.settings?.ISV_amount > 0){
+        let coef = feathersStore.settings?.ISV_amount / 10000;            
+        _isvAmount = Math.round(amount * coef);
+        if(_isvAmount < 2)_isvAmount = 2;
+      }
+
+      const isv = feathersStore.settings?.ISV_ENABLED ? "ISV_ENABLED" : "OFF";
+      const isvAmount = _isvAmount > 0 ? _isvAmount.toString() : "OFF";
+      const clientId = feathersStore.settings?.ISV_clientId || "OFF";
+      const clientSecret = feathersStore.settings?.ISV_clientSecret || "OFF";
+      const merchantSourceCode = feathersStore.settings?.ISV_merchantSourceCode?.toString() || "OFF";
+
+      //ISV END
+
+      const response = await VivaModule.makeVivaNativePayment(
+        amount, clientTransactionId, tip, payload.inputFormatted, payload.signature, suffix,
+        isv, isvAmount, clientId, clientSecret, merchantSourceCode);
+      //Example response
+   //  const response  =  "mycallbackscheme://result?aid=A0000000041010&status=success&message=Transaction successful&action=sale&clientTransactionId=a5d4865e-325a-4878-b3ff-7b20771b2712&amount=100&rrn=429212516667&verificationMethod=CONTACTLESS - NO CVM&cardType=Debit Mastercard&accountNumber=535143******2416&referenceNumber=516667&authorisationCode=516667&tid=16008825&orderCode=4292155155008825&transactionDate=2024-10-18T15:05:55.0790349+03:00&transactionId=9f497a95-1488-4647-ab17-de380696799d&paymentMethod=CARD_PRESENT&shortOrderCode=4292155155&aadeTransactionId=116429212516667516667"
+        
+      data = transformVivaResponse(response); 
+        
+      const payment = {
+        PaymentMethodType: "Card",
+        PaymentMethodTypeCode: "7",
+        PaymentAmount: data.amount / 100,
+        PaymentNotes: "Card",
+        signature: payload.signature,
+        signatureAuthor: "111",
+        transactionId: data.transactionId,
+        "terminalId": data.tid,
+        "tipAmount": data?.tipAmount ? data.tipAmount / 100 : 0,
+        //---> Extra fields
+        extraFields: {
+          status: data.status,
+          cashRegisterId: data.sourceTerminalId,
+          clientTransactionId: data.clientTransactionId,
+          rrn: data.rrn,
+          authorisationCode: data.authorisationCode,
+          message: data.message,
+          referenceNumber: data?.referenceNumber,
+          orderCode: data?.orderCode,
+          transactionDate: data?.transactionDate,
+          aadeTransactionId: data?.aadeTransactionId
+        }
+      }
+     
+      if(data?.status === "success") {     
+        await archiveOrder("Visa", payment);    
+        if(feathersStore.user?.receiptPrinter?.ble)await printVisaReceipt(data, amount, tip, true);
+        setIsPayingNative(false);
+        setSendingOrder(false);
+      }else{
+        console.log("ERROR: ", data);      
+        setMyPosError(true);
+        setMyPosErrorMessage(data.message);
+      }
+    }catch(error){
+      console.log("error:", error)
+      setMyPosError(true);
+      setMyPosErrorMessage(error.toString());
+    }
+  }
+
 
   const calculatePaymentAmounts = () => {
     let paidSum = 0;

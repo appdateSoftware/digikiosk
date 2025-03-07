@@ -21,8 +21,9 @@ class MainApplication : Application(), ReactApplication {
             PackageList(this).packages.apply {
               // Packages that cannot be autolinked yet can be added manually here, for example:
               // add(MyReactNativePackage())
-              add(MyPosPackage())
-              add(MyPosProPackage())
+            //  add(MyPosPackage())
+             // add(MyPosProPackage())
+              add(VivaPackage())
               add(RNImmersiveModePackage())
             }
 

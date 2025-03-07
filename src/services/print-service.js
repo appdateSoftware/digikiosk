@@ -149,7 +149,7 @@ export const sendPayment = async(uid, paymentAmounts, native = false) => {
   try{  
 
     const sessionId = uuidv4();
-    const response = await feathersStore.postToMyDataPayment(payment, {sessionId, branch}, terminal?.make || "");
+    const response = await feathersStore.postToMyDataPayment(payment, {sessionId}, terminal?.make || "");
     if(response && native)return response;
     if(response?.sessionId){
       return response
