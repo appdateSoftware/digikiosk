@@ -58,7 +58,7 @@ const upArrow = "caret-up";
 
 const DEFAULT_EMAIL = "defaultUser@gmail.com";
 
-const {MyPosModule, MyPosProModule} = NativeModules;
+const {VivaModule, MyPosModule, MyPosProModule} = NativeModules;
 
 const BleManagerModule = NativeModules.BleManager;
 const BleManagerEmitter = new NativeEventEmitter(BleManagerModule);
@@ -641,7 +641,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
           if(response && feathersStore?.nativePos){
             if(feathersStore?.loggedInUser?.terminal?.make === "MYPOS")await payMyPos();
             else await makeVivaNativePayment(Math.round(paymentAmounts.paidSum * 100).toString(), 
-              "0", response)
+             response)
           }else if(response?.sessionId){
             paymentSessionIdRef.current = response?.sessionId;
           }else{           
@@ -658,15 +658,14 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   }  
 
   const makeVivaNativePayment = async(amount, payload) => {  
-    
-    const clientTransactionId = uuidv4();
-    try{          
-     
-      //ISV START
+    setNativePosPaying(true)
+    try{              
+      
+      const clientTransactionId = uuidv4(); 
 
       let _isvAmount = 0;
       if(feathersStore.loggedInUser?.ISV_amount > 0){
-        let coef = feathersStore.settings?.ISV_amount / 10000;            
+        let coef = feathersStore.loggedInUser?.ISV_amount / 10000;            
         _isvAmount = Math.round(amount * coef);
         if(_isvAmount < 2)_isvAmount = 2;
       }
@@ -675,8 +674,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       const clientId = feathersStore.loggedInUser?.ISV_clientId || "OFF";
       const clientSecret = feathersStore.loggedInUser?.ISV_clientSecret || "OFF";
       const merchantSourceCode = feathersStore.loggedInUser?.ISV_merchantSourceCode?.toString() || "OFF";
-
-      //ISV END
+      
 
       const response = await VivaModule.makeVivaNativePayment(
         amount, clientTransactionId, payload.inputFormatted, payload.signature,
@@ -684,7 +682,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       //Example response
    //  const response  =  "mycallbackscheme://result?aid=A0000000041010&status=success&message=Transaction successful&action=sale&clientTransactionId=a5d4865e-325a-4878-b3ff-7b20771b2712&amount=100&rrn=429212516667&verificationMethod=CONTACTLESS - NO CVM&cardType=Debit Mastercard&accountNumber=535143******2416&referenceNumber=516667&authorisationCode=516667&tid=16008825&orderCode=4292155155008825&transactionDate=2024-10-18T15:05:55.0790349+03:00&transactionId=9f497a95-1488-4647-ab17-de380696799d&paymentMethod=CARD_PRESENT&shortOrderCode=4292155155&aadeTransactionId=116429212516667516667"
         
-      data = transformVivaResponse(response); 
+      let data = transformVivaResponse(response); 
         
       const payment = {
         PaymentMethodType: "Card",
@@ -712,20 +710,34 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       }
      
       if(data?.status === "success") {     
-        await archiveOrder("Visa", payment);    
-        if(feathersStore.user?.receiptPrinter?.ble)await printVisaReceipt(data, amount, tip, true);
-        setIsPayingNative(false);
-        setSendingOrder(false);
+        await issueReceiptFn("Visa", payment);    
+        if(feathersStore.loggedInUser?.ble)await printVisaReceipt(data, amount, tip, true);
+        setNativePosPaying(false);
       }else{
         console.log("ERROR: ", data);      
         setMyPosError(true);
         setMyPosErrorMessage(data.message);
+        setNativePosPaying(false);
       }
     }catch(error){
       console.log("error:", error)
       setMyPosError(true);
       setMyPosErrorMessage(error.toString());
+      setNativePosPaying(false);
     }
+  }
+
+  const transformVivaResponse = (data) => {
+    const dataArray = data.split('&');
+    let response = {};
+    const firstElementArr = dataArray[0].split("?");
+    const first = firstElementArr[1].split("=")
+    response[first[0].trim()] = first[1].trim();
+    for(let i = 1 ; i < dataArray.length ; i++){
+      const elementArr = dataArray[i].split('=');
+      response[elementArr[0].trim()] = elementArr[1].trim();
+    }   
+    return response
   }
 
 
@@ -735,7 +747,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     let unReceiptedItems =  orderItems.filter(i => i?.toBePaid);      
     unReceiptedItems?.forEach(listItem =>  {
       paidSum += +listItem.product_totalPrice;
-      netPaidSum += +listItem.product_netPrice;
+      netPaidSum += +listItem.underlyingValue;
     });    
     const vatPaidSum = paidSum - netPaidSum;
     return {paidSum, netPaidSum, vatPaidSum}

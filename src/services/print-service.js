@@ -7,6 +7,8 @@ import {
 import { inject, observer } from "mobx-react";
 import {EscPos} from '@tillpos/xml-escpos-helper';
 import feathersStore from "../feathersStore";
+import { DateTime } from "luxon";
+import { v4 as uuidv4 } from 'uuid';
 
 const BLE_NAME ="Printer001"
 const BleManagerModule = NativeModules.BleManager;
@@ -144,7 +146,7 @@ export const sendPayment = async(uid, paymentAmounts, native = false) => {
     }
   }  
 
- // console.log(payment)
+  console.log(payment)
  
   try{  
 
@@ -164,6 +166,18 @@ export const sendPayment = async(uid, paymentAmounts, native = false) => {
     return;
   }   
     
+}
+
+export const logError = async(error, persistedReceipt, file, line) => {
+  const payload = {
+    errorKind: "my_data",
+    origin: "Android PDA",
+    file: file,
+    line: line,
+    error,
+    persistedReceipt
+  }
+  await feathersStore.createLogEntry(payload)
 }
 
 

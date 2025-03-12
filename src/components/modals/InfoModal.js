@@ -50,7 +50,9 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     width: "100%"
-  }
+  },
+  
+
 });
 
 

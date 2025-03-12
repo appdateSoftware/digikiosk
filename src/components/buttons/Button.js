@@ -28,7 +28,7 @@ const BUTTON_WIDTH_SM = Layout.SCREEN_WIDTH / 2;
 const styles = StyleSheet.create({
   container: {
     justifyContent: 'center',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     marginHorizontal: "1%",
     backgroundColor: Colors.primaryColor,
     borderRadius: BUTTON_BORDER_RADIUS
@@ -65,7 +65,8 @@ const styles = StyleSheet.create({
   title: {
     color: Colors.onPrimaryColor,
     fontSize: 14,
-    marginLeft: 2
+    marginLeft: 2,
+  
   },
   outlinedTitle: {
     color: Colors.primaryColor

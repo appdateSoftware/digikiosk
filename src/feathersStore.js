@@ -33,7 +33,6 @@ class FeathersStore{
   demoMode = true;
   demoModeToggled = false;
   isTablet = true;
-  myPos = false;
   bleId = "";
   bleDisconnected = true;
   nativePos = false;
@@ -217,18 +216,18 @@ class FeathersStore{
         .create(payload); 
     }  
     
-    postToMyDataPayment = async(payload, params, terminal = 'Viva') => { 
+    postToMyDataPayment = async(payload, params, terminal = 'VIVA') => { 
       Object.assign(params, {userId: this.loggedInUser._id})     
       return await this.app
-        .service(terminal === 'myPOS' ? 'mellon' : 'pos')
+        .service(terminal === 'MYPOS' ? 'mellon' : 'pos')
         .create(payload, {query: params}); 
     }
 
-    async getPaymentStatus(sessionId, terminal = 'Viva', mellonApiKey = null){ 
+    async getPaymentStatus(sessionId, terminal = 'VIVA', mellonApiKey = null){ 
       let params = {userId: this.loggedInUser._id};
       if(mellonApiKey)Object.assign(params, {mellonApiKey})        
       return await this.app
-        .service(terminal === 'myPOS' ? 'mellon' : 'pos')
+        .service(terminal === 'MYPOS' ? 'mellon' : 'pos')
         .get(sessionId, {query: params}); 
     }
   
