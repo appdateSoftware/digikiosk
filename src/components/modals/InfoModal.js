@@ -51,6 +51,10 @@ const styles = StyleSheet.create({
   buttonContainer: {
     width: "100%"
   },
+  buttonStyle: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  }
   
 
 });
@@ -85,7 +89,8 @@ const InfoModal = ({
         )}
 
         <View style={styles.buttonContainer}>
-          <Button onPress={onButtonPress} title={buttonTitle} rounded />
+          <Button onPress={onButtonPress} title={buttonTitle} 
+            rounded buttonStyle={styles.buttonStyle} />
         </View>
       </View>
     </View>

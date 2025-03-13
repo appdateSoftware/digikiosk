@@ -99,6 +99,8 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   const [isScanning, setIsScanning] = useState(false);
   const [bleReq, setBleReq] = useState(null);
   const [checkingVisa, setCheckingVisa] = useState(false);
+
+  const paymentSessionIdRef = useRef("");
  
   useEffect( () => { //Check for updates  
     checkForUpdates();

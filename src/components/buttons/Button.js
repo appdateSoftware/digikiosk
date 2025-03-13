@@ -28,7 +28,7 @@ const BUTTON_WIDTH_SM = Layout.SCREEN_WIDTH / 2;
 const styles = StyleSheet.create({
   container: {
     justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginHorizontal: "1%",
     backgroundColor: Colors.primaryColor,
     borderRadius: BUTTON_BORDER_RADIUS
