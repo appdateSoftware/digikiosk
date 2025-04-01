@@ -39,11 +39,12 @@ LogBox.ignoreLogs(['new NativeEventEmitter']);
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 const regex = /(<([^>]+)>)/gi;
-const MainTab = () => {
 
-  useEffect(() => {
-    ImmersiveMode.setBarMode('BottomSticky');
-  }, []);
+useEffect(() => {
+  ImmersiveMode.setBarMode('BottomSticky');
+}, []);
+
+const MainTab = () => { 
 
   return (
     <Tab.Navigator tabBar={props => <TabBar {...props} />}>

@@ -24,6 +24,7 @@ class MainApplication : Application(), ReactApplication {
             //  add(MyPosPackage())
              // add(MyPosProPackage())
               add(VivaPackage())
+              add(CiontekPackage())
               add(RNImmersiveModePackage())
             }
 

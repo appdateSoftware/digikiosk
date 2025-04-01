@@ -71,6 +71,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   const realm_company = useQuery("Company");
   const realm_unprinted = useQuery('Unprinted');
   const realm_users = useQuery('User');
+  const realm_receipts = useQuery('Receipt');
 
   let common = useTranslate(feathersStore.language);
  
@@ -198,9 +199,13 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
 
   const sendBackup = async() => {
     if(realm_sections?.length > 0){ // Check if there is a backup
+      const from = DateTime.now().minus({ monyhs: 1 }).startOf("month").toMillis();
+      const to = DateTime.now().toMillis();
+      const filtered_receipts = realm_receipts.filtered('createdAt > $0 && createdAt < $1'
+        , from, to);
       const backup = {
         date: new Date().getTime(),
-        receipt: realm?.objects("Receipt"),
+        receipt: filtered_receipts,
         language: realm.objects("Language"),
         counter: realm_counter,
         user: realm.objects("User"),
