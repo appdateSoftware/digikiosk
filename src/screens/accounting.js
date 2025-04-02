@@ -17,14 +17,8 @@ import {
   ScrollView
 } from "react-native";
 import Divider from "../components/Divider";
-import {
-  Caption,
-  Subtitle1,
-  Subtitle2
-} from "../components/text/CustomText";
 import TouchableItem from "../components/TouchableItem";
 import ActivityIndicatorModal from "../components/modals/ActivityIndicatorModal";
-import DeleteModal from "../components/modals/DeleteModal";
 import {useRealm, useQuery } from '@realm/react';
 import { AppSchema } from "../services/receipt-service";
 import Icon from "../components/Icon";
@@ -55,6 +49,7 @@ const AccountingScreen =({feathersStore}) => {
   const realm_receipts = useQuery('Receipt');
   const realm_company = useQuery("Company");
   const realm_unprinted = useQuery('Unprinted');
+  const {CiontekModule} = NativeModules;
 
   let common = _useTranslate(feathersStore.language);
 
@@ -171,7 +166,7 @@ const AccountingScreen =({feathersStore}) => {
 
   useEffect(() => {
     const filtered = realm_receipts.filtered('createdAt > $0 && createdAt < $1'
-    , toTimeStamp(from), toTimeStamp(to));
+    , toTimeStampFrom(from), toTimeStampTo(to));
     setFilteredReceipts(filtered);
   }, [from, to])
 
@@ -418,13 +413,19 @@ const AccountingScreen =({feathersStore}) => {
     }else return "";  
   }
 
-  const toTimeStamp = isoDate => {
-    return DateTime.fromISO(isoDate).endOf('day').toMillis();
-  }
+   const toTimeStampFrom = isoDate => {
+      return DateTime.fromISO(isoDate).startOf('day').toMillis();
+    }
+  
+    const toTimeStampTo = isoDate => {
+      return DateTime.fromISO(isoDate).endOf('day').toMillis();
+    }
 
   const printThermal = async() =>{
     setIndicatorModal(true);
     let vatSections = "";
+    let vatSectionsArr = [];
+
     for (let item of vats?.filter(itm => findRetailNet(itm.id) > 0)){
       vatSections = vatSections + (              
         '<align mode="center">' + 
@@ -450,7 +451,15 @@ const AccountingScreen =({feathersStore}) => {
         '<align mode="center">' +    
         `<text-line>${'-------------------------------' + (feathersStore.loggedInUser.ble ? '' :'---------------')}</text-line>` +                
         '</align>'
-      )     
+      )   
+      
+      if(feathersStore.loggedInUser?.ciontek){    
+        vatSectionsArr.push(`${(common.retail).padStart(20)}${(common.wholesalesTrunc).padStart(6)}${(common.totalCap).padStart(7)}`);
+        vatSectionsArr.push(`${common.net}${(parse_fix(findRetailNet(item.id))).padStart(10)}${(parse_fix(findWholeSalesNet(item.id))).padStart(9)}${(parse_fix(findTotalNet(item.id))).padStart(10)}`);
+        vatSectionsArr.push(`${common.vat} ${item.label}%${(parse_fix(findRetailVat(item.id))).padStart(9)}${(parse_fix(findWholeSalesVat(item.id))).padStart(9)}${(parse_fix(findTotalVat(item.id))).padStart(10)}`);
+        vatSectionsArr.push(`${common.gross}${(parse_fix(+findRetailNet(item.id) + +findRetailVat(item.id))).padStart(12)}${(parse_fix(+findWholeSalesNet(item.id) + +findWholeSalesVat(item.id))).padStart(9)}${(parse_fix(+findTotalNet(item.id) + +findTotalVat(item.id))).padStart(10)}`);
+        vatSectionsArr.push('-----------------------------------------------');
+      }
     }; 
 
     const req =  
@@ -523,8 +532,34 @@ const AccountingScreen =({feathersStore}) => {
       }else{
         await writeToBLE(req, realm_company[0].printerIp);
         setIndicatorModal(false);
-      }      
+      }    
+    }else if(feathersStore.loggedInUser?.ciontek){
+      let titleArr=[];
+      let bodyArr=[];
+      titleArr.push(centerString('ΣΤΟΙΧΕΙΑ ΔΙΑΣΤΗΜΑΤΟΣ'));
+      titleArr.push(`ΑΠΟ:${from}  ΕΩΣ:${to}`);
+      titleArr.push(centerString('ΠΩΛΗΣΕΙΣ'));
+
+      bodyArr.push(centerString(`${common.totalSales}%`));
+      bodyArr.push(`${(common.retail).padStart(20)}${(common.wholesalesTrunc).padStart(6)}${(common.totalCap).padStart(7)}`);
+      bodyArr.push(`${common.quantityC}${(findRetailQuantity().toString()).padStart(9)}${(findWholeSalesQuantity().toString()).padStart(9)}${(findTotalQuantity().toString()).padStart(10)}`);
+      bodyArr.push(`${common.gross}${(parse_fix(+findTotalRetailNet() + +findTotalRetailVat())).padStart(12)}${(parse_fix(+findTotalWholeSalesNet() + +findTotalWholeSalesVat())).padStart(9)}${(parse_fix(+findTotalAllNet() + +findTotalAllVat())).padStart(10)}`);
+      bodyArr.push(`${common.debitTrunc}${(parse_fix(+findTotalRetailDebitNet() + +findTotalRetailDebitVat())).padStart(14)}${(parse_fix(+findTotalWholeSalesDebitNet() + +findTotalWholeSalesDebitVat())).padStart(9)}${(parse_fix(+findTotalAllDebitNet() + +findTotalAllDebitVat())).padStart(10)}`);
+      bodyArr.push(`${common.net}${(parse_fix(findTotalRetailNet() - findTotalRetailDebitNet())).padStart(10)}${(parse_fix(findTotalWholeSalesNet() - findTotalWholeSalesDebitNet())).padStart(9)}${(parse_fix(findTotalAllNet() - findTotalAllDebitVat())).padStart(10)}`);
+      bodyArr.push(`${common.vat}${(parse_fix(findTotalRetailVat() - findTotalRetailDebitVat())).padStart(16)}${(parse_fix(findTotalWholeSalesVat() - findTotalWholeSalesDebitVat())).padStart(9)}${(parse_fix(findTotalAllVat() - findTotalAllDebitVat())).padStart(11)}`);
+      bodyArr.push('-----------------------------------------------');
+      bodyArr.push(`${common.totalCap}${(parse_fix(+findTotalRetailNet() + +findTotalRetailVat() - findTotalRetailDebitNet() - findTotalRetailDebitVat())).padStart(10)}${(parse_fix(+findTotalWholeSalesNet() + +findTotalWholeSalesVat() - findTotalWholeSalesDebitNet() - findTotalWholeSalesDebitVat())).padStart(9)}${(parse_fix(+findTotalAllNet() + +findTotalAllVat() - findTotalAllDebitNet() - findTotalAllDebitVat())).padStart(10)}`);
+      bodyArr.push(`${common.average}${(parse_fix(findRetailAverage())).padStart(15)}${(parse_fix(findWholeSalesAverage())).padStart(9)}${(parse_fix(findTotalAverage())).padStart(10)}`);
+      bodyArr.push('-----------------------------------------------');      
+
+      await CiontekModule.printAccounting(titleArr, vatSectionsArr, bodyArr); 
+      setIndicatorModal(false);
     }else await printLocally(req);
+  }
+
+  const centerString = (str) => {
+    const suffix = (34 - str.length) / 2;
+    return str.padStart(+suffix + +str.length)
   }
 
   const printLocally = (req) => {

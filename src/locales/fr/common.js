@@ -325,5 +325,9 @@ refundMessage: "Veuillez entrer le montant à rembourser. On vous demandera de p
 refundPlaceholder: "Euro",
 refundButtonTitle: "Remboursement de myPos",
 newVersion: "Nouvelle version disponible",
-discount: "Rabais"
+discount: "Rabais",
+deleteTemp: "Voulez-vous vraiment supprimer le reçu temporaire?",
+temporary: "TEMPORAIRE",
+
+
 }

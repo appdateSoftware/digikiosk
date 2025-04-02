@@ -325,5 +325,9 @@ refundMessage: "Ingrese el monto a reembolsar. Se le pedirá que pase la tarjeta
 refundPlaceholder: "Euro",
 refundButtonTitle: "Reembolso de myPos",
 newVersion: "Nueva versión disponible",
-discount: "Descuento"
+discount: "Descuento",
+deleteTemp: "¿Está seguro de que desea eliminar el recibo temporal?",
+temporary: "TEMPORARIO",
+
+
 }

@@ -401,6 +401,9 @@ export const commonEN = {
   refundButtonTitle: "myPos Refund",
   newVersion: "New Version available",
   myDataError: "Error while trying to connect to MyData!",
-  discount: "Discount"
+  discount: "Discount",
+  deleteTemp: "Do you really want to delete this receipt",
+  temporary: "TEMPORARY",
+
 
 }

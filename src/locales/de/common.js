@@ -325,5 +325,8 @@ refundMessage: "Geben Sie bitte den Betrag für die Rückerstattung ein. Sie wer
 refundPlaceholder: "Euro",
 refundButtonTitle: "myPos Rückerstattung",
 newVersion: "Neue Version verfügbar",
-discount: "Rabatt"
+discount: "Rabatt",
+deleteTemp: "Möchten Sie den vorläufigen Beleg wirklich löschen ?", 
+temporary: "VORÜBERGEHEND",
+
 }

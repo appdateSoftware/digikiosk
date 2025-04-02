@@ -38,6 +38,7 @@ import {shadowDefault} from '../utils/shadow';
 import TcpSocket from 'react-native-tcp-socket';
 import {EscPos} from '@tillpos/xml-escpos-helper';
 import ErrorModal from "../components/modals/ErrorModal";
+import cloneDeep from 'lodash/cloneDeep';
 
 import Colors from "../theme/colors";
 
@@ -53,15 +54,20 @@ import { handleGetConnectedDevices, writeToBLE } from "../services/print-service
 // DeliverySectionA Config
 const printIcon = "print-outline";
 const trashIcon = "trash-outline";
+const tempIcon = "alert-outline";
 
 const BleManagerModule = NativeModules.BleManager;
 const BleManagerEmitter = new NativeEventEmitter(BleManagerModule);
+
+const {CiontekModule} = NativeModules;
+
 
 // DeliverySectionA
 const HistoryScreen =({feathersStore}) => {
 
   const Receipt = ({  
     debitModal, 
+    invoiceTypeNumber,
     receiptKind,
     numericId,
     receiptDate,
@@ -71,31 +77,39 @@ const HistoryScreen =({feathersStore}) => {
     paymentMethod,
     companyName,
     printThermal,
+    temporary
   }) => (
     
       <View style={[styles.receiptCard]}>
         <View style={styles.leftAddresContainer}>       
           <View style={styles.sectionInfo}>         
             <Subtitle1 style={styles.sectionText}>
-              {`${receiptKind} ${numericId}  ${totalCaption}: ${receiptTotal}€`}
+              {`${invoiceTypeNumber} ${numericId}  ${totalCaption}: ${receiptTotal}€`}
             </Subtitle1>
             <Subtitle2>{`${receiptDate} ${receiptTime} ${paymentMethod}`}</Subtitle2>
             {companyName?.length > 0 && <Subtitle2>{`${companyName}`}</Subtitle2>}
           </View>
         </View>
   
-        <View style={styles.buttonsContainer}> 
+        <View style={temporary ? styles.buttonsContainerTemp : styles.buttonsContainer}> 
+          {temporary &&
+            <View style={styles.iconContainer}>
+             <Icon name={tempIcon} size={feathersStore.isTablet ? 28 : 21} color={Colors.error}/>                       
+            </View>
+          }
           <TouchableItem style={styles.end} borderless  onPress={printThermal}>
             <View style={styles.iconContainer}>
               <Icon name={printIcon} size={feathersStore.isTablet ? 28 : 21} color={Colors.secondaryText}/>                       
             </View>
           </TouchableItem>          
-       
-          <TouchableItem style={styles.end} borderless  onPress={debitModal}>
-            <View style={styles.iconContainer}>
-              <Icon name={trashIcon} size={feathersStore.isTablet ? 28 : 21} color={Colors.secondaryColor}/>                       
-            </View>
-          </TouchableItem> 
+          { !(["pt", "psl"].includes(receiptKind)) &&
+            <TouchableItem style={styles.end} borderless  onPress={debitModal}>
+              <View style={styles.iconContainer}>
+                <Icon name={trashIcon} size={feathersStore.isTablet ? 28 : 21} color={Colors.secondaryColor}/>                       
+              </View>
+            </TouchableItem> 
+          }
+         
            
         </View>
       </View>
@@ -112,6 +126,7 @@ const HistoryScreen =({feathersStore}) => {
 
   const [indicatorModal, setIndicatorModal] = useState(false) ;
   const [deleteModal, setDeleteModal] = useState(false) ;
+  const [deleteTempModal, setDeleteTempModal] = useState(false) ;
   const [itemToDelete, setItemToDelete] = useState(null) ;
   const [from, setFrom] = useState(null) ;
   const [to, setTo] = useState(null) ;
@@ -204,44 +219,84 @@ const HistoryScreen =({feathersStore}) => {
 
   useEffect(() => {
     const filtered = realm_receipts.filtered('receiptKind TEXT $0 && createdAt > $1 && createdAt < $2'
-    , invoiceType, toTimeStamp(from), toTimeStamp(to)).sorted("createdAt",true);
+    , invoiceType, toTimeStampFrom(from), toTimeStampTo(to)).sorted("createdAt",true);
     setFilteredReceipts(filtered);
   }, [from, to, invoiceType])
 
-  const printThermal = req => async() =>{
+  const printThermal = item => async() =>{
     setIndicatorModal(true);   
     if(feathersStore.loggedInUser?.ble){
       if(feathersStore.bleDisconnected){        
         await startScan();
-        setBleReq(req)     
+        setBleReq(item.req)     
       }else{
-        await writeToBLE(req, realm_company[0].printerIp);
-      }      
-    }else await printLocally(req);    
+        await writeToBLE(item.req, realm_company[0].printerIp);
+      } 
+    }else if(feathersStore.loggedInUser?.ciontek){
+      console
+      await rePrintEmbedded(item);
+    }else await printLocally(item.req);    
     setIndicatorModal(false);
   }
 
   const createPDF = () => item => async() => {
-
   }
 
   const issueDebit = async() => {
     setDeleteModal(false);    
     const oldReceipt = {
       receiptKind : itemToDelete.receiptKind,
-      receiptItems: itemToDelete.receiptItems,
+      receiptItems: JSON.parse(itemToDelete.receiptItems),
       receiptTotal: itemToDelete.receiptTotal,
       totalNetPrice: itemToDelete.totalNetPrice,
-      vatAnalysis: itemToDelete.vatAnalysis,
-      paymentMethod: itemToDelete.paymentMethod,
+      vatAnalysis: JSON.parse(itemToDelete.vatAnalysis),
       companyData: itemToDelete?.companyData
     };   
-    await issueReceipt(oldReceipt);      
+    await issueReceipt(oldReceipt);    
+    setItemToDelete(null);  
   } 
+
+  const rePrintEmbedded = async(item) => {
+    setDeleteModal(false);    
+    const oldReceipt = {
+      receiptKind : item.receiptKind,
+      numericId: +item.numericId?.split("_")[1],
+      issuer: item.issuer,      
+      receiptTotal: parse_fix(item.receiptTotal),
+      totalNetPrice: parse_fix(item.totalNetPrice),
+      receiptDate: item.receiptDate,
+      receiptTime: item.receiptTime,    
+      createdAt: item.createdAt, 
+      receiptItems: JSON.parse(item.receiptItems),
+      paymentMethod: item.paymentMethod,
+      companyData: item?.companyData,
+      cash: item.cash,
+      change: item.change,
+      totalDiscounts: item.totalDiscounts,
+      footer: item.footer,
+      qrcode: item.qrcode
+    };   
+    await issueReceipt(oldReceipt);    
+  } 
+
+  const deleteTemporary = () => {
+    setDeleteTempModal(false);
+    setIndicatorModal(true);        
+    realm.write(()=>{ 
+      realm.delete(itemToDelete)                        
+    }); 
+    setIndicatorModal(false); 
+    setItemToDelete(null);
+  }
 
   const openDeleteModal = item => () => {
     setItemToDelete(item)
     setDeleteModal(true);
+  } 
+
+  const openDeleteTempModal = item => () => {
+    setItemToDelete(item)
+    setDeleteTempModal(true);
   } 
     
   const keyExtractor = (item, index) => index.toString();
@@ -249,8 +304,9 @@ const HistoryScreen =({feathersStore}) => {
   const renderReceiptItem = ({ item, index }) => (
     <Receipt
       key={item.numericId}
-      debitModal={openDeleteModal(item)}     
-      receiptKind={findInvoiceType(item?.receiptKind)?.invoiceTypeNumber}
+      debitModal={item?.temporary ? openDeleteTempModal(item) : openDeleteModal(item)}
+      receiptKind = {item.receiptKind}
+      invoiceTypeNumber={findInvoiceType(item?.receiptKind)?.invoiceTypeNumber}
       numericId={item.numericId?.split("_")[1]}
       receiptDate={item.receiptDate}
       receiptTime={item.receiptTime}
@@ -258,8 +314,9 @@ const HistoryScreen =({feathersStore}) => {
       receiptTotal={item.receiptTotal}
       paymentMethod={item.paymentMethod}
       companyName={item?.companyData?.legalName || ""} 
-      printThermal={printThermal(item.req)}
+      printThermal={printThermal(item)}
       itemIndex={index}
+      temporary={item?.temporary || false}
     />
   );
 
@@ -281,6 +338,10 @@ const HistoryScreen =({feathersStore}) => {
     setDeleteModal(false); 
   };
 
+  const closeDeleteTempModal = () => {    
+    setDeleteTempModal(false); 
+  };
+
   const closeErrorModal = () => {    
     setErrorModal(false); 
   };
@@ -295,12 +356,16 @@ const HistoryScreen =({feathersStore}) => {
 
   const toGreekLocale = date => { //--> Calendar operates internally with dates of the format: 2024-03-12
     if(date){
-      dateArray = date.split('-');
+      const dateArray = date.split('-');
       return dateArray[2] + "/" + dateArray[1] + "/" + dateArray[0];
     }else return "";  
   }
 
-  const toTimeStamp = isoDate => {
+  const toTimeStampFrom = isoDate => {
+    return DateTime.fromISO(isoDate).startOf('day').toMillis();
+  }
+
+  const toTimeStampTo = isoDate => {
     return DateTime.fromISO(isoDate).endOf('day').toMillis();
   }
 
@@ -380,10 +445,11 @@ const setNumericId = (invoiceType) => {
 
 const issueReceipt = async(oldReceipt) => {   
   setIssuingReceipt(true);
-  const paymentMethod = oldReceipt.paymentMethod;
-  const companyData = oldReceipt.companyData;
+  const companyData = oldReceipt?.companyData;
   let invoiceType = "psl";
   if(["tpy", "tda"].includes(oldReceipt.invoiceType))invoiceType = "pt";
+  if(oldReceipt?.numericId)invoiceType = oldReceipt.receiptKind;
+
   const date = new Date(); 
   const day = date.getDate().toString().padStart(2, "0"); 
   const month = (date.getMonth() + 1).toString().padStart(2, "0");
@@ -394,9 +460,10 @@ const issueReceipt = async(oldReceipt) => {
   const localDate = day + '/' + month + '/' + year;
   const isoTime = hours + ":" + minutes + ":" + seconds;
   let itemsList =""; 
+  let itemsArr = [];
   let vatAnalysis ="";  
-  let totalNetPrice = oldReceipt.totalNetPrice;   
-  let unReceiptedItems =  JSON.parse(oldReceipt.receiptItems); 
+  let vatAnalysisArr = [];
+  let unReceiptedItems =  oldReceipt.receiptItems;
 
   let vatAnalysisHeader = 
     '<align mode="left">' +    
@@ -405,31 +472,49 @@ const issueReceipt = async(oldReceipt) => {
     `<x-position>${feathersStore.loggedInUser.ble ? '141' : '245'}</x-position><text>ΦΠΑ%</text>` +
     `<x-position>${feathersStore.loggedInUser.ble ? '194' : '350'}</x-position><text>ΦΠΑ</text>` +
     `<x-position>${feathersStore.loggedInUser.ble ? '286' : '455'}</x-position><text>Κ. Αξία</text-line>` +
-    '</align>';          
+    '</align>';   
+    
+  if(feathersStore.loggedInUser?.ciontek){
+    vatAnalysisArr.push('-----------------------------------------------');
+    vatAnalysisArr.push("Ανάλυση ΦΠΑ");
+    vatAnalysisArr.push(`Συντελεστής${("ΦΠΑ%").padStart(8)}${("ΦΠΑ").padStart(8)}${("Κ.Αξία").padStart(10)}`);
+  }
     
   for (let item of unReceiptedItems){
+    const splittedName = splitName(item.name);
     itemsList = itemsList + 
       '<align mode="left">' +
-        `<text-line>${item.name}` + 
+        `<text-line>${splittedName[0]}` + 
         `<x-position>${feathersStore.loggedInUser.ble ? '141' : '245'}</x-position><text>${item.vatLabel}</text>` +
         `<x-position>${feathersStore.loggedInUser.ble ? '194' : '350'}</x-position><text>${parse_fix(item.underlyingValue)}</text>` +
         `<x-position>${feathersStore.loggedInUser.ble ? '286' : '455'}</x-position><text>${parse_fix(item.product_totalPrice)}<set-symbol-cp>€</set-symbol-cp></text-line>` +
-      '</align>';          
+      '</align>';    
+      
+    if(feathersStore.loggedInUser?.ciontek){
+      const itemLine = `${splittedName[0]} ${item.vatLabel} ${parse_fix(item.underlyingValue)} ${parse_fix(item.product_totalPrice)}€`;
+      itemsArr.push(itemLine);
+    }
   }  
 
-  let receipt ={
-    receiptKind: invoiceType,
-    numericId: setNumericId(invoiceType),
-    issuer: feathersStore.user.name,
-    receiptTotal: parse_fix(oldReceipt.receiptTotal),
-    receiptDate: localDate,
-    receiptTime: isoTime,    
-    createdAt: date.getTime(), 
-    receiptItems: unReceiptedItems,
-    paymentMethod
-  };
+  let receipt ={};
 
-  if( companyData?.afm )Object.assign(receipt, {companyData})
+  if(oldReceipt?.numericId){
+    receipt = cloneDeep(oldReceipt)
+  }else{
+    receipt ={
+      receiptKind: invoiceType,
+      numericId: setNumericId(invoiceType),
+      issuer: feathersStore.user.name,
+      receiptTotal: parse_fix(oldReceipt.receiptTotal),
+      totalNetPrice: itemToDelete.totalNetPrice,
+      receiptDate: localDate,
+      receiptTime: isoTime,    
+      createdAt: date.getTime(), 
+      receiptItems: unReceiptedItems,
+      paymentMethod : oldReceipt?.paymentMethod || ""
+    };
+    if( companyData?.afm )Object.assign(receipt, {companyData})
+  }
 
   const calcVats  = calculateVats([...unReceiptedItems]);
   Object.assign(receipt,  {...calcVats}, {vatAnalysis: JSON.stringify(calcVats)});
@@ -443,12 +528,23 @@ const issueReceipt = async(oldReceipt) => {
         `<x-position>${feathersStore.loggedInUser.ble ? '194' : '350'}</x-position><text>${parse_fix(receipt[`vat${vat.id}`].vatAmount)}</text>` +
         `<x-position>${feathersStore.loggedInUser.ble ? '286' : '455'}</x-position><text>${parse_fix(receipt[`vat${vat.id}`].underlyingValue)}</text-line>` +
       '</align>'; 
-    }
-  }
-  
-  Object.assign(receipt,  {totalNetPrice});
 
-  const response = await constructMyData(receipt);
+      if(feathersStore.loggedInUser?.ciontek){         
+        vatAnalysisArr.push(`Κατ. ΦΠΑ: ${vat.id}${(getVat(vat.id)).padStart(9)}${(parse_fix(receipt[`vat${vat.id}`].vatAmount)).padStart(9)}${(parse_fix(receipt[`vat${vat.id}`].underlyingValue)).padStart(10)}`);
+      }
+    }
+  }      
+ 
+  let response = null;
+
+  if(oldReceipt?.numericId){
+    response = {
+      qrcode:  oldReceipt.qrcode,
+      footer: oldReceipt.footer
+    }
+  }else{
+    response = await constructMyData(receipt);
+  }
 
   //---> Rollback
   if(!response?.qrcode){
@@ -470,12 +566,12 @@ const issueReceipt = async(oldReceipt) => {
     '<line-feed />' +
     '<bold>' +                             
       `<text-line>${findInvoiceType(invoiceType).invoiceTypeName}</text-line>` +              
-      `<text-line>ΧΕΙΡΙΣΤΗΣ: ${feathersStore.user.name}</text-line>` +
+      `<text-line>ΧΕΙΡΙΣΤΗΣ: ${receipt.issuer}</text-line>` +
     '</bold>' +
     '</align>' +
     '<line-feed />' +
     '<align mode="left">' +
-    `<text-line>${localDate} ${isoTime}</text-line>` +
+    `<text-line>${receipt.receiptDate} ${receipt.receiptTime}</text-line>` +
     `<text-line>ΑΡ. ΠΑΡΑΣΤΑΤΙΚΟΥ: ${receipt.numericId}</text-line>` +     
     '</align>' +
      (companyData?.afm ? 
@@ -528,23 +624,72 @@ const issueReceipt = async(oldReceipt) => {
     }else{
       await writeToBLE(req, realm_company[0].printerIp);
       setIssuingReceipt(false);
-    }      
+    }    
+  }else if(feathersStore.loggedInUser?.ciontek){
+    let titleArr=[];
+    let dateArr=[];
+    let totalsArr = [];
+    let footerArr = [];
+    titleArr = constructCompanyTitleEmbedded(receipt.receiptKind);
+    dateArr.push(`ΑΡ. ΠΑΡΑΣΤΑΤΙΚΟΥ: ${receipt.numericId}`);
+    dateArr.push(`${receipt.receiptDate} ${receipt.receiptTime}`);
+    dateArr.push('-----------------------------------------------');
+    companyData?.afm && dateArr.push(`Στοιχεία πελάτη: ${companyData.legalName}`);
+    companyData?.afm && dateArr.push(`ΑΦΜ: ${companyData.afm} ΔΟΥ: ${companyData.doyDescription}`);
+    companyData?.afm && dateArr.push('-----------------------------------------------');
+    vatAnalysisArr.push(`Σύνολο:${(parse_fix(receipt.receiptTotal - receipt.totalNetPrice)).padStart(22)}${(parse_fix(receipt.totalNetPrice)).padStart(10)}`);
+    totalsArr.push('-----------------------------------------------');
+    receipt?.paymentMethod && totalsArr.push(`${receipt?.paymentMethod === "VISA" ? "ΚΑΡΤΑ" : "ΜΕΤΡΗΤΑ"}${(parse_fix(receipt?.paymentMethod === "VISA" ? receipt.receiptTotal : receipt.cash)).padStart(28)}`);      
+    receipt?.paymentMethod && totalsArr.push('-----------------------------------------------');
+    totalsArr.push(`Σύνολο: ${(parse_fix(receipt.receiptTotal)).padStart(29)}€`); 
+    receipt?.paymentMethod === "CASH" && totalsArr.push(`Ρέστα: ${(parse_fix(receipt?.change)).padStart(30)}€`);    
+    receipt?.totalDiscounts > 0  && totalsArr.push(`Εκπτώσεις εφαρμοσμένες: ${(parse_fix(receipt.totalDiscounts)).padStart(20)}€`);
+    footerArr.push('-----------------------------------------------');
+    footerArr.push(`${centerString(receipt.issuer)}`);
+    footerArr.push(centerString('ULTRAKIOSK'));
+
+    await CiontekModule.printCustomReceipt(titleArr, dateArr, itemsArr, totalsArr, 
+    response?.footer, response?.qrcode, footerArr, vatAnalysisArr)  
   }else await printLocally(req);  
   Object.assign(receipt, {footer: response.footer, req});
   
   //--------> Persist in Realm
-
-  Object.assign(receipt, {
-    numericId: invoiceType + "_" + receipt.numericId.toString(),
-    receiptItems: JSON.stringify(receipt.receiptItems)
-  })
-  realm.write(()=>{     
-    realm.create('Receipt', receipt);
-  });
+  if(!oldReceipt?.numericId){
+    Object.assign(receipt, {
+      numericId: invoiceType + "_" + receipt.numericId.toString(),
+      receiptItems: JSON.stringify(receipt.receiptItems),
+      companyData : JSON.stringify(receipt?.companyData || ""),
+      payment: "",
+      temporary: false,
+      totalDiscounts: receipt?.totalDiscounts || 0, 
+      qrcode: response.qrcode,
+      footer: response.footer 
+    })
+    realm.write(()=>{     
+      realm.create('Receipt', receipt);
+    });
+  }
 
   //------------>
  
   setIssuingReceipt(false);
+}
+
+const splitName = (name) => {
+  let returnArray = [];
+  if(feathersStore.loggedInUser?.ciontek || feathersStore.loggedInUser?.ble){          
+    returnArray[0] = name.substring(0, 16).padEnd(16, " ");
+    returnArray[1] = name.substring(16);
+  }else{
+    returnArray[0] = name.substring(0, 24);
+    returnArray[1] = name.substring(24);
+  }  
+  return returnArray;
+}
+
+const centerString = (str) => {
+  const suffix = (34 - str.length) / 2;
+  return str.padStart(+suffix + +str.length)
 }
 
 const constructCompanyTitleNonEpos = () => {
@@ -561,6 +706,19 @@ const constructCompanyTitleNonEpos = () => {
       (realm_company[0].companyEmail ? `<text-line>E-mail: ${realm_company[0].companyEmail}</text-line>` : '') +
     '</bold>'
   )
+}
+
+const constructCompanyTitleEmbedded = (receiptKind) => {
+  let returnArr = [];    
+  returnArr.push(`${findInvoiceType(receiptKind).invoiceTypeName}`);
+  returnArr.push(`${centerString(realm_company[0].name)}`);
+  returnArr.push(`${realm_company[0]?.legalName || realm_company[0].name}`);
+  returnArr.push(`${realm_company[0].postalAddress} ${realm_company[0].postalAddressNo} ${realm_company[0].postalAreaDescription} ${realm_company[0].postalZipCode}`);
+  returnArr.push(`ΑΦΜ: ${realm_company[0].afm} ΔΟΥ ${realm_company[0].doyDescription}`);
+  returnArr.push(`${realm_company[0].firmActDescription}`)
+  realm_company[0].companyPhone && returnArr.push(`ΤΗΛ: ${realm_company[0].companyPhone}`);    
+  realm_company[0].companyEmail && returnArr.push(`E-mail: ${realm_company[0].companyEmail}`);
+  return returnArr;   
 }
 
 const constructMyData = async(persistedReceipt) => {
@@ -595,7 +753,7 @@ const constructMyData = async(persistedReceipt) => {
       "UnitPrice": +parse_fix(item.underlyingValue),
       "UnitDesc": 0,
       "IncomeCode": "category1_1",
-      "EInvoiceIncomeClassTypeCode": "E3_561_003",
+      "EInvoiceIncomeClassTypeCode": "pt" === persistedReceipt.receiptKind ? "E3_561_001" : "E3_561_003",
       "ExpenseCode": "",
       "EInvoiceExpenseClassTypeCode": null,
       "ReasonForTaxExp": "15",
@@ -692,21 +850,21 @@ const constructMyData = async(persistedReceipt) => {
         {
           "PaymentMethodType": "ΜΕΤΡΗΤΟΙΣ",
           "PaymentMethodTypeCode": 3,
-          "PaymentAmount": persistedReceipt.receiptTotal,
+          "PaymentAmount": +parse_fix(persistedReceipt.receiptTotal),
           "PaymentNotes": "ΜΕΤΡΗΤΟΙΣ"
         }
       ]
     ,    
     "lstLineItem": details,    
     "Summary": {
-      "totalNetValue": totalNetAmount,
+      "totalNetValue": +parse_fix(totalNetAmount),
       "totalWithheldAmount": 0.00,
       "totalFeesAmount": 0.00,
       "totalStampDutyAmount": 0.00,  
-      "TotalVATAmount": (persistedReceipt.receiptTotal - totalNetAmount).toFixed(2),
+      "TotalVATAmount": +parse_fix(persistedReceipt.receiptTotal - totalNetAmount),
       "totalOtherTaxesAmount": 0.00,
       "totalDeductionsAmount": 0.00,
-      "totalGrossValue": persistedReceipt.receiptTotal,
+      "totalGrossValue": +parse_fix(persistedReceipt.receiptTotal),
       "totalAllowances": 0.00,
       "totalAllowancesWithoutLines": 0.00,
       "totalCharges": 0.00,
@@ -850,7 +1008,7 @@ const constructMyData = async(persistedReceipt) => {
           </View>
         </View> 
         {filteredReceipts?.length > 0 ?
-          <View style={styles.container}>
+          <View style={styles.listContainer}>
             <FlatList
               data={filteredReceipts}
               keyExtractor={keyExtractor}
@@ -890,7 +1048,15 @@ const constructMyData = async(persistedReceipt) => {
           cancelButton={closeDeleteModal}
           deleteButton={issueDebit}
           visible={deleteModal}
-        />     
+        />  
+        <DeleteModal
+          titleText={common.deleteTemp}
+          cancelText={common.cancel}
+          deleteText={common.delete}
+          cancelButton={closeDeleteTempModal}
+          deleteButton={deleteTemporary}
+          visible={deleteTempModal}
+        />    
         <CalendarModal
           title={common.fromDate}
           cancelButton={() => setShowFromModal(false)}
@@ -927,8 +1093,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background
   },
-  container: {
-    padding: 12
+  listContainer: {
+    padding: 12,
+    marginBottom: 48
   },
   header: {
     width: "100%",
@@ -954,7 +1121,6 @@ const styles = StyleSheet.create({
     width: "100%"
   },
   receiptList: {
-    paddingVertical: 8
   },
   receiptCard: {
     flex: 1,
@@ -983,6 +1149,11 @@ const styles = StyleSheet.create({
   sectionText: { paddingVertical: 4 },
   buttonsContainer: { 
     flex:2,  
+    flexDirection: "row",
+    justifyContent: "space-between"
+  },
+  buttonsContainerTemp: { 
+    flex:3,  
     flexDirection: "row",
     justifyContent: "space-between"
   },

@@ -122,6 +122,8 @@ dependencies {
    // implementation 'com.mypos:glasssdk:1.0.5'
    // implementation 'com.mypos:mypossmartsdk:1.0.5'
     implementation project(':react-native-immersive-mode')
+    implementation files('libs/libposapi.jar')
+
 
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")

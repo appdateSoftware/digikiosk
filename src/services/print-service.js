@@ -180,4 +180,8 @@ export const logError = async(error, persistedReceipt, file, line) => {
   await feathersStore.createLogEntry(payload)
 }
 
+export const parse_fix = price => {
+  return price ? parseFloat(price).toFixed(2) : 0;
+} 
+
 

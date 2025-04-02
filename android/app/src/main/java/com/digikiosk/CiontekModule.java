@@ -52,7 +52,7 @@ import com.ctk.sdk.PosApiHelper;
 //import com.ctk.sdk.PrintInitException;
 //import com.ctk.keypad.EMVCOHelper;
 
-import gr.appdate.ultrakiosk.service.MyService;
+import com.digikiosk.service.MyService;
 
 import com.facebook.react.bridge.ReadableArray;
 //import android.graphics.Bitmap;

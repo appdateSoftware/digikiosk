@@ -207,7 +207,11 @@ export class AppSchema extends Realm.Object {
       vatAnalysis: {type:'string' },
       req: {type: 'string'},
       footer:  {type: 'string'},
-      companyData: {type: "mixed"}     
+      companyData: {type: "mixed"},
+      payment: {type: "string", default : ""}, 
+      temporary: {type: 'bool', default: 'false'},
+      footer: {type: "string", default : ""}, 
+      qrcode: {type: "string", default : ""},     
     }
   }; 
   
@@ -242,7 +246,7 @@ export class AppSchema extends Realm.Object {
   static InvoiceTypeSchema = {
     name: 'InvoiceType',      
     properties: {
-      name: {type: 'string', default: 'el'},       
+      name: {type: 'string', default: 'alp'},       
     }
   };
 

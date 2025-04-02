@@ -423,5 +423,8 @@ export const commonEL = {
     refundButtonTitle: "myPos Επιστροφή",
     newVersion: "Υπάρχει Ενημέρωση",
     myDataError: "Σφάλμα στη σύνδεση MyData!",
-    discount: "Έκπτωση"
+    discount: "Έκπτωση",
+    deleteTemp: "Θέλετε πραγματικά να διαγράψετε την προσωρινή απόδειξη;",
+    temporary: "ΠΡΟΣΩΡΙΝΟ",
+
 }

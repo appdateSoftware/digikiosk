@@ -1,4 +1,4 @@
-package com.digikiosk;
+package com.digikiosk.service;
 
 import android.app.Service;
 import android.content.Intent;

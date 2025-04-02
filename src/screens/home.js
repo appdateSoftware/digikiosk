@@ -47,6 +47,7 @@ import { handleGetConnectedDevices, writeToBLE, sendPayment } from "../services/
 import { inject, observer } from "mobx-react";
 
 import useTranslate from '../hooks/useTranslate';
+import { DateTime } from "luxon";
 
 const checkIcon = "checkmark";
 const checkIconCircle = "checkmark-circle-outline";
@@ -58,7 +59,7 @@ const upArrow = "caret-up";
 
 const DEFAULT_EMAIL = "defaultUser@gmail.com";
 
-const {VivaModule, MyPosModule, MyPosProModule} = NativeModules;
+const {VivaModule, MyPosModule, MyPosProModule, CiontekModule} = NativeModules;
 
 const BleManagerModule = NativeModules.BleManager;
 const BleManagerEmitter = new NativeEventEmitter(BleManagerModule);
@@ -86,7 +87,6 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   const [cancelModalVisible, setCancelModalVisible] = useState(false);
   const [indexToCancel, setIndexToCancel] = useState(null);
   const [enterPrice, setEnterPrice] = useState(true); 
-  const [cashPaying, setCashPaying] = useState(false);
   const [visaPaying, setVisaPaying] = useState(false);
   const [nativePosPaying, setNativePosPaying] = useState(false);
   const [invoiceTypeModal, setInvoiceTypeModal] = useState(false);
@@ -102,10 +102,14 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   const [checkingVisa, setCheckingVisa] = useState(false);
 
   const paymentSessionIdRef = useRef("");
+  const paymentMethodRef = useRef("");
+  const paymentRef = useRef(null);
  
   useEffect( () => { //Check for updates  
     checkForUpdates();
   }, []);
+
+  //-----> BLE
 
   useEffect(() => {
     if(feathersStore?.loggedInUser?.ble){
@@ -171,6 +175,8 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     asyncFn();
   }, [bleReq, isScanning, feathersStore.bleDisconnected])
 
+  //-------> BLE END
+
   useEffect( () => { //Check for updates
     let _sectionsShowing = [];
     if(realm_sections.length > 3){
@@ -198,8 +204,8 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   }, [feathersStore?.loggedInUser]);
 
   const sendBackup = async() => {
-    if(realm_sections?.length > 0){ // Check if there is a backup
-      const from = DateTime.now().minus({ monyhs: 1 }).startOf("month").toMillis();
+    if(realm_products?.length > 0){ // Check if there is a backup
+      const from = DateTime.now().minus({ months: 1 }).startOf("month").toMillis();
       const to = DateTime.now().toMillis();
       const filtered_receipts = realm_receipts.filtered('createdAt > $0 && createdAt < $1'
         , from, to);
@@ -210,7 +216,8 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
         counter: realm_counter,
         user: realm.objects("User"),
         company: realm_company,
-        section:  realm_sections,      
+        section:  realm_sections, 
+        product: realm_products     
       }
       await feathersStore.patchUser({backup})  
     }
@@ -444,8 +451,8 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     return AppSchema.colorsArray.find(color => color.id === id)?.value || ""
   }
 
-  const findInvoiceType = () => {
-    return AppSchema.invoiceTypes.find(it => it.name === feathersStore.invoiceType)
+  const findInvoiceType = (receiptKind = undefined) => {
+    return AppSchema.invoiceTypes.find(it => it.name === (receiptKind ? receiptKind : feathersStore.invoiceType))
   }
 
   const getVat = id => {
@@ -487,6 +494,24 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     Object.assign(vatsObj, {[`vat${vat.id}`]: {vatId: +vat.id, vatAmount, underlyingValue}})
     }  
     return vatsObj;
+  } 
+
+  const openMyDataErrorAlertContinue = (paymentMethod, payment) => {
+    Alert.alert( `${pickLanguageWord(feathersStore.language, "myDataError")}`, 
+      `${pickLanguageWord(feathersStore.language, "retry")}`,[
+        {
+          text: `${pickLanguageWord(feathersStore.language, "temporary")}`,
+          onPress: () => issueTemporary(paymentMethod, payment) ,
+          style: 'default',
+        },
+        {
+          text: `${pickLanguageWord(feathersStore.language, "cancel").toUpperCase()}`,
+          onPress: () => cancelError,
+          style: 'cancel',
+        }
+      ],
+      {cancelable: false},
+    );
   }
 
   const openMyDataErrorAlert = () => {
@@ -639,7 +664,6 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   const payVisa = async() => {
     !feathersStore.nativePos && setVisaPaying(true);
     try{
-      setCashPaying(false);
       let paymentAmounts = calculatePaymentAmounts();      
       Object.assign(paymentAmounts, {tip: 0});
       try{
@@ -794,7 +818,6 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
   } 
 
   const cashPayment= async() => {   
-    setCashPaying(true); 
     const payment = {
       PaymentMethodType: "ΜΕΤΡΗΤΟΙΣ",
       PaymentMethodTypeCode: 3,
@@ -809,16 +832,36 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     await issueReceiptFn("CASH", payment);   
   }  
 
-   const issueReceiptFn = async(paymentMethod, payment) => { 
+  const issueReceiptFn = async(paymentMethod, payment) => { 
     if(["tpy", "tda", "pt"].includes(feathersStore.invoiceType)){
+      paymentMethodRef.current = paymentMethod;
+      paymentRef.current =  payment;
       setInvoiceDataModal(true);
     }else{
       await _issueReceipt(paymentMethod, payment);
     }
   }
 
-  const _issueReceipt = async(paymentMethod, payment) => { 
+  const issueInvoice = async() => {
+    await _issueReceipt( paymentMethodRef.current, paymentRef.current);
+  }
+
+  const issueTemporary = async(paymentMethod, payment) => {
+    await _issueReceipt(paymentMethod , payment, true);
+  }
+
+  const cancelError = () => {
+    setVisaPaying(false);
+    setNativePosPaying(false);
+    feathersStore.setCompanyData({});
+  }
+
+  const diakopi = `ΑΠΩΛΕΙΑ ΔΙΑΣΥΝΔΕΣΗΣ ΠΑΡΟΧΟΥ-ΑΑΔΕ - Transmission Failure_2`;
+  const diakopiQR = `PROVIDER-AADE CONNECTION FAILURE - Transmission Failure_2`;
+
+  const _issueReceipt = async(paymentMethod, payment, temporary = false, tempReceipt = null) => { 
     const companyData = feathersStore.companyData;
+    setInvoiceDataModal(false);
     setIssuingReceipt(true);
     const date = new Date(); 
     const day = date.getDate().toString().padStart(2, "0"); 
@@ -830,9 +873,12 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     const localDate = day + '/' + month + '/' + year;
     const isoTime = hours + ":" + minutes + ":" + seconds;
     let itemsList =""; 
+    let itemsArr = [];
     let vatAnalysis ="";  
+    let vatAnalysisArr = [];
     let totalNetPrice = 0.0;   
-    let unReceiptedItems =  orderItems.filter(i => i?.toBePaid); 
+    let unReceiptedItems =  tempReceipt?.numericId ? JSON.parse(tempReceipt.receiptItems) 
+      : orderItems.filter(i => i?.toBePaid);  
 
     let vatAnalysisHeader = 
       '<align mode="left">' +    
@@ -841,21 +887,48 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       `<x-position>${feathersStore.loggedInUser.ble ? '141' : '245'}</x-position><text>ΦΠΑ%</text>` +
       `<x-position>${feathersStore.loggedInUser.ble ? '194' : '350'}</x-position><text>ΦΠΑ</text>` +
       `<x-position>${feathersStore.loggedInUser.ble ? '286' : '455'}</x-position><text>Κ. Αξία</text-line>` +
-      '</align>';          
+      '</align>';  
+      
+    if(feathersStore.loggedInUser?.ciontek){
+      vatAnalysisArr.push('-----------------------------------------------');
+      vatAnalysisArr.push("Ανάλυση ΦΠΑ");
+      vatAnalysisArr.push(`Συντελεστής${("ΦΠΑ%").padStart(8)}${("ΦΠΑ").padStart(8)}${("Κ.Αξία").padStart(10)}`);
+    }
       
     for (let item of unReceiptedItems){
+      const splittedName = splitName(item.name);
       itemsList = itemsList + 
         '<align mode="left">' +
           `<text-line>${item.name}` + 
           `<x-position>${feathersStore.loggedInUser.ble ? '141' : '245'}</x-position><text>${item.vatLabel}</text>` +
           `<x-position>${feathersStore.loggedInUser.ble ? '194' : '350'}</x-position><text>${parse_fix(item.underlyingValue)}</text>` +
           `<x-position>${feathersStore.loggedInUser.ble ? '286' : '455'}</x-position><text>${parse_fix(item.product_totalPrice)}<set-symbol-cp>${feathersStore.loggedInUser.ble ? '' : '€'}</set-symbol-cp></text-line>` +
-        '</align>';          
+        '</align>';    
+        
+      if(feathersStore.loggedInUser?.ciontek){
+        const itemLine = `${splittedName[0]} ${item.vatLabel} ${parse_fix(item.underlyingValue)} ${parse_fix(item.product_totalPrice)}€`;
+        itemsArr.push(itemLine);
+      }
     }
     
     const receiptTotal = parseFloat(cashToPay).toFixed(2);
 
-    let receipt ={
+    let receipt ={};   
+
+    if(tempReceipt?.numericId)receipt ={
+      receiptKind: tempReceipt.receiptKind,
+      numericId: +tempReceipt.numericId?.split("_")[1],
+      issuer: tempReceipt.issuer,
+      receiptTotal: parse_fix(tempReceipt.receiptTotal),
+      receiptDate: tempReceipt.receiptDate,
+      receiptTime: tempReceipt.receiptTime,    
+      createdAt: tempReceipt.createdAt, 
+      receiptItems: JSON.parse(tempReceipt.receiptItems),
+      paymentMethod,
+      payment,
+      cash: tempReceipt.cash,
+      change: tempReceipt.change
+    };else receipt = {
       receiptKind: feathersStore.invoiceType,
       numericId: setNumericId(),
       issuer: feathersStore.user.name,
@@ -867,10 +940,10 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       paymentMethod,
       payment,
       cash,
-      change     
+      change
     };
 
-    if( companyData?.afm )Object.assign(receipt, {companyData})
+    if( companyData?.afm && !tempReceipt?.numericId )Object.assign(receipt, {companyData});
 
     const calcVats  = calculateVats([...unReceiptedItems]);
     Object.assign(receipt,  {...calcVats}, {vatAnalysis: JSON.stringify(calcVats)});
@@ -885,23 +958,38 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
           `<x-position>${feathersStore.loggedInUser.ble ? '286' : '455'}</x-position><text>${parse_fix(receipt[`vat${vat.id}`].underlyingValue)}</text-line>` +
         '</align>'; 
         totalNetPrice = +totalNetPrice + +receipt[`vat${vat.id}`].underlyingValue;
+
+        if(feathersStore.loggedInUser?.ciontek){         
+          vatAnalysisArr.push(`Κατ. ΦΠΑ: ${vat.id}${(getVat(vat.id)).padStart(9)}${(parse_fix(receipt[`vat${vat.id}`].vatAmount)).padStart(9)}${(parse_fix(receipt[`vat${vat.id}`].underlyingValue)).padStart(10)}`);
+        }
       }
     }
     
     Object.assign(receipt,  {totalNetPrice});
 
-    const response = await constructMyData(receipt);
+    let response = null;
+
+    if(temporary){
+      Object.assign(receipt, {temporary});
+      response = {
+        qrcode:  diakopiQR,
+        footer: diakopi
+      }
+    }else{
+      response = await constructMyData(receipt);
+    }
 
     //---> Rollback
     if(!response?.qrcode){
-      realm.write(()=>{     
+      if(!tempReceipt?.numericId)realm.write(()=>{     
         realm_counter[0][`${feathersStore.invoiceType}`] = receipt.numericId - 1;      
       });           
       setIssuingReceipt(false);
-      openMyDataErrorAlert();
+      if((findInvoiceType().name === 'alp') && !tempReceipt?.numericId)openMyDataErrorAlertContinue(paymentMethod, payment);     
+      else openMyDataErrorAlert();
       return;
     }
-    //------->  
+    //-------> 
 
     const req =  
     '<?xml version="1.0" encoding="UTF-8"?>' +
@@ -911,13 +999,13 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
         constructCompanyTitleNonEpos() +             
       '<line-feed />' +
       '<bold>' +                             
-        `<text-line>${findInvoiceType().invoiceTypeName}</text-line>` +              
-        `<text-line>ΧΕΙΡΙΣΤΗΣ: ${feathersStore.user.name}</text-line>` +
+        `<text-line>${findInvoiceType(receipt.receiptKind).invoiceTypeName}</text-line>` +              
+        `<text-line>ΧΕΙΡΙΣΤΗΣ: ${receipt.issuer}</text-line>` +
       '</bold>' +
       '</align>' +
       '<line-feed />' +
       '<align mode="left">' +
-      `<text-line>${localDate} ${isoTime}</text-line>` +
+      `<text-line>${receipt.receiptDate} ${receipt.receiptTime}</text-line>` +
       `<text-line>ΑΡ. ΠΑΡΑΣΤΑΤΙΚΟΥ: ${receipt.numericId}</text-line>` +     
       '</align>' +
        (companyData?.afm ? 
@@ -941,7 +1029,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
         vatAnalysis +
       '<align mode="left">' +
       `<text-line>Σύνολο:` + 
-      `<x-position>${feathersStore.loggedInUser.ble ? '194' : '350'}</x-position><text>${parse_fix(receiptTotal - receipt.totalNetPrice)}</text>` +
+      `<x-position>${feathersStore.loggedInUser.ble ? '194' : '350'}</x-position><text>${parse_fix(receipt.receiptTotal - receipt.totalNetPrice)}</text>` +
       `<x-position>${feathersStore.loggedInUser.ble ? '286' : '455'}</x-position><text>${parse_fix(receipt.totalNetPrice)}</text-line>` +
       '</align>' +   
       '<align mode="center">' +
@@ -949,18 +1037,18 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       '</align>' +
       '<align mode="left">' +
       `<text-line>${paymentMethod === "VISA" ? "ΚΑΡΤΑ" : "ΜΕΤΡΗΤΑ"}` + 
-      `<x-position>${feathersStore.loggedInUser.ble ? '286' : '455'}</x-position><text>${parse_fix(paymentMethod === "VISA" ? receiptTotal : cash)}</text-line>` +
+      `<x-position>${feathersStore.loggedInUser.ble ? '286' : '455'}</x-position><text>${parse_fix(paymentMethod === "VISA" ? receipt.receiptTotal : receipt.cash)}</text-line>` +
       '</align>' +
       '<align mode="center">' +
       `<text-line>${'-------------------------------' + (feathersStore.loggedInUser.ble ? '' :'---------------')}</text-line>` +                
       '</align>' +
       '<align mode="left">' +  
       `<text-line>Σύνολο:` + 
-      `<x-position>${feathersStore.loggedInUser.ble ? '286' : '455'}</x-position><text>${parse_fix(receiptTotal)}<set-symbol-cp>${feathersStore.loggedInUser.ble ? '' : '€'}</set-symbol-cp></text></text-line>` +  
+      `<x-position>${feathersStore.loggedInUser.ble ? '286' : '455'}</x-position><text>${parse_fix(receipt.receiptTotal)}<set-symbol-cp>${feathersStore.loggedInUser.ble ? '' : '€'}</set-symbol-cp></text></text-line>` +  
       (paymentMethod === "CASH" ?
       '<open-cash-drawer/>' +
       `<text-line>Ρέστα:` + 
-      `<x-position>${feathersStore.loggedInUser.ble ? '286' : '455'}</x-position><text>${parse_fix(change)}<set-symbol-cp>${feathersStore.loggedInUser.ble ? '' : '€'}</set-symbol-cp></text></text-line>`
+      `<x-position>${feathersStore.loggedInUser.ble ? '286' : '455'}</x-position><text>${parse_fix(receipt.change)}<set-symbol-cp>${feathersStore.loggedInUser.ble ? '' : '€'}</set-symbol-cp></text></text-line>`
       : "") +  
       '<line-feed/>' +   
       '</align>' +  
@@ -979,21 +1067,60 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
         setBleReq(req)     
       }else{
         await writeToBLE(req, realm_company[0].printerIp);
-      }      
+      }     
+    }else if(feathersStore.loggedInUser?.ciontek){
+      let titleArr=[];
+      let dateArr=[];
+      let totalsArr = [];
+      let footerArr = [];
+      titleArr = constructCompanyTitleEmbedded(receipt.receiptKind); 
+      dateArr.push(`ΑΡ. ΠΑΡΑΣΤΑΤΙΚΟΥ: ${receipt.numericId}`);
+      dateArr.push(`${receipt.receiptDate} ${receipt.receiptTime}`);
+      dateArr.push('-----------------------------------------------');
+      companyData?.afm && dateArr.push(`Στοιχεία πελάτη: ${companyData.legalName}`);
+      companyData?.afm && dateArr.push(`ΑΦΜ: ${companyData.afm} ΔΟΥ: ${companyData.doyDescription}`);
+      companyData?.afm && dateArr.push('-----------------------------------------------');
+      vatAnalysisArr.push(`Σύνολο:${(parse_fix(receipt.receiptTotal - receipt.totalNetPrice)).padStart(22)}${(parse_fix(receipt.totalNetPrice)).padStart(10)}`);
+      totalsArr.push('-----------------------------------------------');
+      totalsArr.push(`${paymentMethod === "VISA" ? "ΚΑΡΤΑ" : "ΜΕΤΡΗΤΑ"}${(parse_fix(paymentMethod === "VISA" ? receipt.receiptTotal : receipt.cash)).padStart(28)}`);      
+      totalsArr.push('-----------------------------------------------');
+      totalsArr.push(`Σύνολο: ${(parse_fix(receipt.receiptTotal)).padStart(29)}€`); 
+      paymentMethod === "CASH" && totalsArr.push(`Ρέστα: ${(parse_fix(receipt.change)).padStart(30)}€`);    
+      footerArr.push('-----------------------------------------------');
+      footerArr.push(`${centerString(receipt.issuer)}`);
+      footerArr.push(centerString('DIGIKIOSK'));
+
+      await CiontekModule.printCustomReceipt(titleArr, dateArr, itemsArr, totalsArr, 
+      response?.footer, response?.qrcode, footerArr, vatAnalysisArr) 
     }else await printLocally(req);
     Object.assign(receipt, {footer: response.footer, req});
     
     //--------> Persist in Realm
 
-    Object.assign(receipt, {
-      numericId: feathersStore.invoiceType + "_" + receipt.numericId.toString(),
-      receiptItems: JSON.stringify(receipt.receiptItems)
-    })
-    realm.write(()=>{     
-      realm.create('Receipt', receipt);
-    });
+    if(!tempReceipt?.numericId){
+      Object.assign(receipt, {
+        numericId: feathersStore.invoiceType + "_" + receipt.numericId.toString(),
+        receiptItems: JSON.stringify(receipt.receiptItems),
+        companyData : JSON.stringify(receipt?.companyData || ""),
+        payment: JSON.stringify(payment),
+        temporary, 
+        qrcode: response.qrcode,
+        footer: response.footer     
+      })
+      realm.write(()=>{     
+        realm.create('Receipt', receipt);
+      });
+    }else{  //update receipt and set temporary to false
+      const ind = realm_receipts.findIndex(r => r.numericId === tempReceipt.numericId);
+      realm.write(()=>{  
+        realm_receipts[+ind].temporary = false;
+        realm_receipts[+ind].qrcode = response.qrcode;
+        realm_receipts[+ind].footer = response.footer; 
+      })
+    }
 
     //------------>
+
     setTotal(prevVal => prevVal - receiptTotal);
     setUnpaid(prevVal => prevVal - receiptTotal);
     resetCashInputs();
@@ -1001,7 +1128,23 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       if(listItem.toBePaid)Object.assign(listItem, {paid: true, toBePaid: false});
     }
     if(orderItems.filter(item => item?.paid)?.length === orderItems?.length)setOrderItems([]);
+    
+    if(!temporary && !tempReceipt?.numericId){
+      await rePrintTemporaryReceipts();
+    }
+
+    cancelError();
     setIssuingReceipt(false);
+  }
+
+  const rePrintTemporaryReceipts = async() => {
+    const temporaryReceipts = realm_receipts.filter(r => r?.temporary);
+    if(temporaryReceipts.length > 0){
+       temporaryReceipts?.forEach(async receipt => {
+        const payment = JSON.parse(receipt.payment);
+        await _issueReceipt(receipt.paymentMethod, payment, false, receipt)
+      })
+    }   
   }
 
   const constructCompanyTitleNonEpos = () => {
@@ -1033,6 +1176,36 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
         (realm_company[0].companyEmail ? `<text-line>E-mail: ${realm_company[0].companyEmail}</text-line>` : '') +
       '</bold>'
     )
+  }
+
+  const constructCompanyTitleEmbedded = (receiptKind) => {
+    let returnArr = [];    
+    returnArr.push(`${findInvoiceType(receiptKind).invoiceTypeName}`);
+    returnArr.push(`${centerString(realm_company[0].name)}`);
+    returnArr.push(`${realm_company[0]?.legalName || realm_company[0].name}`);
+    returnArr.push(`${realm_company[0].postalAddress} ${realm_company[0].postalAddressNo} ${realm_company[0].postalAreaDescription} ${realm_company[0].postalZipCode}`);
+    returnArr.push(`ΑΦΜ: ${realm_company[0].afm} ΔΟΥ ${realm_company[0].doyDescription}`);
+    returnArr.push(`${realm_company[0].firmActDescription}`)
+    realm_company[0].companyPhone && returnArr.push(`ΤΗΛ: ${realm_company[0].companyPhone}`);    
+    realm_company[0].companyEmail && returnArr.push(`E-mail: ${realm_company[0].companyEmail}`);
+    return returnArr;   
+  }
+
+  const splitName = (name) => {
+    let returnArray = [];
+    if(feathersStore.loggedInUser?.ciontek || feathersStore.loggedInUser?.ble){          
+      returnArray[0] = name.substring(0, 16).padEnd(16, " ");
+      returnArray[1] = name.substring(16);
+    }else{
+      returnArray[0] = name.substring(0, 24);
+      returnArray[1] = name.substring(24);
+    }  
+    return returnArray;
+  }
+
+  const centerString = (str) => {
+    const suffix = (34 - str.length) / 2;
+    return str.padStart(+suffix + +str.length)
   }
 
   const constructMyData = async(persistedReceipt) => {
@@ -1069,8 +1242,8 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
         "TotalWithVAT": +parse_fix(item.product_totalPrice),
         "UnitPrice": +parse_fix(item.underlyingValue),
         "UnitDesc": 0,
-        "IncomeCode": "category1_1",
-        "EInvoiceIncomeClassTypeCode": "E3_561_003",
+        "IncomeCode": ["tpy", "apy"].includes(findInvoiceType(persistedReceipt.receiptKind).name) ? "category1_3" : "category1_1",
+        "EInvoiceIncomeClassTypeCode": ["pt", "tpy", "tda"].includes(findInvoiceType(persistedReceipt.receiptKind).name)  ? "E3_561_001" : "E3_561_003",
         "ExpenseCode": "",
         "EInvoiceExpenseClassTypeCode": null,
         "ReasonForTaxExp": "15",
@@ -1109,12 +1282,12 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
     {
       "ActionTypeId": 1,
       "InvoiceDate": isoDate,
-      "InvoiceTypeCode": findInvoiceType().id,
-      "InvoiceTypeName": findInvoiceType().invoiceTypeName,
+      "InvoiceTypeCode": findInvoiceType(persistedReceipt.receiptKind).id,
+      "InvoiceTypeName": findInvoiceType(persistedReceipt.receiptKind).invoiceTypeName,
       "InvoiceTypeSeries": `${persistedReceipt.numericId}`,
       "InvoiceTypeSeriesName": "",
-      "InvoiceTypeNumber": findInvoiceType().invoiceTypeNumber,
-      "InvoiceTypeNumberName": findInvoiceType().invoiceTypeNumberName,
+      "InvoiceTypeNumber": findInvoiceType(persistedReceipt.receiptKind).invoiceTypeNumber,
+      "InvoiceTypeNumberName": findInvoiceType(persistedReceipt.receiptKind).invoiceTypeNumberName,
       "Currency": "EURO",
       "CurrencyCode": "EUR",
       "IsRetailInvoice": true,
@@ -1173,20 +1346,20 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       ,   
       "lstLineItem": details,    
       "Summary": {
-        "totalNetValue": totalNetAmount,
+        "totalNetValue": +parse_fix(totalNetAmount),
         "totalWithheldAmount": 0.00,
         "totalFeesAmount": 0.00,
         "totalStampDutyAmount": 0.00,  
-        "TotalVATAmount": (persistedReceipt.receiptTotal - totalNetAmount).toFixed(2),
+        "TotalVATAmount": +parse_fix(persistedReceipt.receiptTotal - totalNetAmount),
         "totalOtherTaxesAmount": 0.00,
         "totalDeductionsAmount": 0.00,
-        "totalGrossValue": persistedReceipt.receiptTotal,
+        "totalGrossValue": +parse_fix(persistedReceipt.receiptTotal),
         "totalAllowances": 0.00,
         "totalAllowancesWithoutLines": 0.00,
         "totalCharges": 0.00,
         "totalSpecialCharges": 0.00      
    //     "TotalPayableAmount": persistedReceipt.receiptTotal
-      },    
+      },       
       "VatAnalysis": vatAnalysis,
       "AllowancesCharges": [
         {
@@ -1869,7 +2042,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
                   <TouchableOpacity 
                     onPress={cashPayment} 
                     style={styles.greenButton}
-                    disabled={!(cashToPay > 0) || feathersStore?.demoMode || cashPaying || visaPaying || nativePosPaying }
+                    disabled={cashToPay === 0 || feathersStore?.demoMode || visaPaying || nativePosPaying }
                   >
                     <Text style={styles.icon}>
                       <Icon name={checkIconCircle} size={feathersStore?.isTablet ? 32 : 22} color={Colors.onAccentColor} />
@@ -1878,7 +2051,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
                   <TouchableOpacity 
                     onPress={payVisa} 
                     style={styles.greenButton}
-                    disabled={!(cashToPay > 0) || feathersStore?.demoMode || cashPaying || visaPaying || nativePosPaying}
+                    disabled={cashToPay === 0 || feathersStore?.demoMode || visaPaying || nativePosPaying}
                   >
                     <Text style={styles.number}>VISA</Text>
                   </TouchableOpacity>  
@@ -1901,7 +2074,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
       <InvoiceDataModal
         cancelButton={closeInvoiceDataModal}        
         visible={invoiceDataModal}
-        issueReceipt={_issueReceipt}
+        issueReceipt={issueInvoice}
       />
       <ErrorModal
         cancelButton={closeErrorModal}

@@ -153,7 +153,7 @@ const SplashScreen = ({navigation, feathersStore}) => {
         await feathersStore.login(DEFAULT_EMAIL, DEFAULT_PSW);
         feathersStore.setIsAuthenticated(true);      
       }else{
-        await feathersStore.login(_uniqueId + "@gmail.com", DEFAULT_PSW);
+        await feathersStore.login(_uniqueId + "@digikiosk.com", DEFAULT_PSW);
         feathersStore.setIsAuthenticated(true);               
       }      
      
