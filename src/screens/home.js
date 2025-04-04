@@ -260,7 +260,7 @@ const HomeScreen = ({navigation, route, feathersStore}) => {
  }
 
  const goToPlayStore = () => {
-    Linking.openURL("https://play.google.com/store/apps/details?id=com.bringfood_db_android")
+    Linking.openURL("https://play.google.com/store/apps/details?id=com.digikiosk")
   } 
 
   const selectAll = () => {
