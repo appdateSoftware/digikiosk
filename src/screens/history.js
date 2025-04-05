@@ -646,7 +646,7 @@ const issueReceipt = async(oldReceipt) => {
     receipt?.totalDiscounts > 0  && totalsArr.push(`Εκπτώσεις εφαρμοσμένες: ${(parse_fix(receipt.totalDiscounts)).padStart(20)}€`);
     footerArr.push('-----------------------------------------------');
     footerArr.push(`${centerString(receipt.issuer)}`);
-    footerArr.push(centerString('ULTRAKIOSK'));
+    footerArr.push(centerString('DIGIKIOSK'));
 
     await CiontekModule.printCustomReceipt(titleArr, dateArr, itemsArr, totalsArr, 
     response?.footer, response?.qrcode, footerArr, vatAnalysisArr)  
