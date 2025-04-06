@@ -37,7 +37,7 @@ class FeathersStore{
   bleDisconnected = true;
   nativePos = false;
  
-  currentVersion = "1.0.8";
+  currentVersion = "1.0.9";
 
   constructor(){
     makeObservable(this,  {     
